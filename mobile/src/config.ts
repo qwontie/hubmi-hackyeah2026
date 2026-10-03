@@ -8,5 +8,5 @@ export const API_BASE =
     ? ""
     : (process.env.EXPO_PUBLIC_API_URL ?? "https://hubmi.qwontie.dev");
 
-export const TEXT_MIN = 10;
+export const TEXT_MIN = 5;
 export const TEXT_MAX = 2000;

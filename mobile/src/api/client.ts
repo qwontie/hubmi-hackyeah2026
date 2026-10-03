@@ -9,8 +9,10 @@ import type {
   MatchResponse,
   NeedPatch,
   NeedPatchResponse,
+  NeedThread,
   Page,
   Powiat,
+  ThreadMessage,
 } from "./types";
 
 const FALLBACK_MESSAGES: Record<ErrorCode, string> = {
@@ -24,7 +26,9 @@ const FALLBACK_MESSAGES: Record<ErrorCode, string> = {
   not_found: "Nie znaleźliśmy tej strony.",
   rate_limited: "Za dużo zapytań w krótkim czasie. Spróbuj za chwilę.",
   text_too_long: "Opis jest za długi. Skróć go do 2000 znaków.",
-  text_too_short: "Opisz problem w co najmniej 10 znakach.",
+  text_too_short: "Opisz problem w co najmniej 5 znakach.",
+  too_many_messages:
+    "Wysłano już kilka wiadomości bez odpowiedzi. Poczekaj, aż ROPS odpisze.",
   unauthorized: "Brak dostępu.",
   unclear_text:
     "Nie rozumiemy tego opisu. Napisz zwykłymi słowami, z jakim problemem przychodzisz.",
@@ -198,6 +202,17 @@ export const api = {
     }),
   powiats: (signal?: AbortSignal) =>
     request<Powiat[]>("/api/powiats", { signal }),
+  sendMessage: (id: string, token: string, body: string) =>
+    request<ThreadMessage>(`/api/needs/${encodeURIComponent(id)}/messages`, {
+      body: { body },
+      headers: { "x-need-token": token },
+      method: "POST",
+    }),
+  thread: (id: string, token: string, signal?: AbortSignal) =>
+    request<NeedThread>(`/api/needs/${encodeURIComponent(id)}/thread`, {
+      headers: { "x-need-token": token },
+      signal,
+    }),
 };
 
 export const errorMessage = (error: unknown) =>

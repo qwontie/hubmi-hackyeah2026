@@ -69,3 +69,6 @@ export const useStoredNeeds = () => {
 
   return needs;
 };
+
+export const getNeed = async (id: string) =>
+  (await read()).find((item) => item.id === id) ?? null;

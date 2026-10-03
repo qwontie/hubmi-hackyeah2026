@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import Head from "expo-router/head";
-import { Mail, Search, Trash2 } from "lucide-react-native";
+import { Mail, MessageSquareText, Search, Trash2 } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
@@ -38,7 +38,9 @@ function NeedEntry({ need }: { need: StoredNeed }) {
       <Txt tone="soft" variant="detail">
         {meta}
       </Txt>
-      <Txt weight="500">{need.text}</Txt>
+      <Txt weight="500">
+        {need.text || "Zgłoszenie otwarte z linku od ROPS."}
+      </Txt>
       {need.contactEmail ? (
         <Txt tone="soft">Odpowiedź przyjdzie na adres {need.contactEmail}.</Txt>
       ) : null}
@@ -62,6 +64,17 @@ function NeedEntry({ need }: { need: StoredNeed }) {
         />
       ) : null}
       <View style={styles.actions}>
+        <Button
+          icon={MessageSquareText}
+          label="Rozmowa z ROPS"
+          onPress={() =>
+            router.push({
+              params: { id: need.id },
+              pathname: "/zgloszenie/[id]",
+            })
+          }
+          variant="primary"
+        />
         {need.contactEmail || adding ? null : (
           <Button
             icon={Mail}

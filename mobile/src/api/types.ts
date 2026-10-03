@@ -95,9 +95,29 @@ export type ErrorCode =
   | "rate_limited"
   | "ai_unavailable"
   | "internal"
+  | "too_many_messages"
   | "network";
 
 export interface FieldError {
   field: string;
   message: string;
+}
+
+export interface ThreadMessage {
+  body: string;
+  direction: "to_author" | "from_author";
+  id: string;
+  sent_at: string;
+}
+
+export interface NeedThread {
+  can_email: boolean;
+  messages: ThreadMessage[];
+  need: {
+    id: string;
+    number: number | null;
+    text: string;
+    status: "new" | "answered" | "closed";
+    created_at: string;
+  };
 }

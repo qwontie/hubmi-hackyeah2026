@@ -7,6 +7,7 @@ import { Txt } from "@/ui/text";
 interface StampProps {
   at: Date;
   number?: number | null;
+  tone?: "stamp" | "ok";
   word: string;
 }
 
@@ -16,7 +17,7 @@ const dayFormat = (date: Date) =>
 const timeFormat = (date: Date) =>
   date.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 
-export function Stamp({ word, at, number }: StampProps) {
+export function Stamp({ word, at, number, tone = "stamp" }: StampProps) {
   const { colors, reduceMotion } = useTheme();
   const progress = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
 
@@ -69,8 +70,8 @@ export function Stamp({ word, at, number }: StampProps) {
         ],
       }}
     >
-      <View style={[styles.outer, { borderColor: colors.stamp }]}>
-        <View style={[styles.inner, { borderColor: colors.stamp }]}>
+      <View style={[styles.outer, { borderColor: colors[tone] }]}>
+        <View style={[styles.inner, { borderColor: colors[tone] }]}>
           <Txt
             style={{
               fontFamily: fonts["700"],
@@ -78,18 +79,18 @@ export function Stamp({ word, at, number }: StampProps) {
               letterSpacing: 2,
               lineHeight: 18,
             }}
-            tone="stamp"
+            tone={tone}
           >
             {word}
           </Txt>
           <Txt
             style={{ fontSize: 14, lineHeight: 18 }}
-            tone="stamp"
+            tone={tone}
             weight="500"
           >
             {day}
           </Txt>
-          <Txt mono style={{ fontSize: 13, lineHeight: 17 }} tone="stamp">
+          <Txt mono style={{ fontSize: 13, lineHeight: 17 }} tone={tone}>
             {code ? `godz. ${time} · ${code}` : `godz. ${time}`}
           </Txt>
         </View>
