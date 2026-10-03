@@ -80,17 +80,14 @@ async def login(
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
-    request: Request,
-    response: Response,
-    admin: StaffPerson,
-    session: FromDishka[AsyncSession],
+    request: Request, response: Response, session: FromDishka[AsyncSession]
 ) -> None:
     claims = session_claims(request.cookies.get(env.auth.cookie_name, ""))
     if claims is not None:
         await session.exec(
             delete(AdminSession).where(
                 col(AdminSession.id) == claims.session_id,
-                col(AdminSession.admin_id) == admin.id,
+                col(AdminSession.admin_id) == claims.admin_id,
             )
         )
     await session.commit()
