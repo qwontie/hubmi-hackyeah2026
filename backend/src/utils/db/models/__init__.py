@@ -4,6 +4,7 @@ from .admin_user import AdminUser
 from .ai_call import AiCall
 from .category import Category
 from .challenge import Challenge
+from .demo_record import DemoRecord
 from .feedback import Feedback, FeedbackKind
 from .idea import Idea, IdeaStage, IdeaStatus
 from .import_run import ImportRun, ImportStatus, ImportTrigger
@@ -25,6 +26,7 @@ __all__ = [
     "AiCall",
     "Category",
     "Challenge",
+    "DemoRecord",
     "Feedback",
     "FeedbackKind",
     "Idea",

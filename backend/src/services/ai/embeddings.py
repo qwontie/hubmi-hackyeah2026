@@ -76,5 +76,9 @@ async def embed_documents(texts: list[str], *, kind: str) -> list[list[float]]:
     return await _embed(texts, kind=kind, query=False)
 
 
+async def embed_queries(texts: list[str], *, kind: str) -> list[list[float]]:
+    return await _embed(texts, kind=kind, query=True)
+
+
 async def embed_query(text: str, *, kind: str) -> list[float]:
-    return (await _embed([text], kind=kind, query=True))[0]
+    return (await embed_queries([text], kind=kind))[0]

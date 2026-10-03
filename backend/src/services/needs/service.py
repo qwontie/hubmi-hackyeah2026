@@ -170,10 +170,14 @@ def _publish_created(
 
 
 async def match_need(
-    session: AsyncSession, text: str, *, powiat: str | None
+    session: AsyncSession,
+    text: str,
+    *,
+    powiat: str | None,
+    vector: list[float] | None = None,
 ) -> MatchOutcome:
     text = clean_text(text)
-    vector = await embed_query(text, kind="embed_need")
+    vector = vector or await embed_query(text, kind="embed_need")
     hits = await hybrid_search(session, text, vector, limit=CANDIDATES)
     try:
         decision = await decide(text, hits) if hits else None
@@ -222,10 +226,15 @@ async def match_need(
 
 
 async def create_need(
-    session: AsyncSession, text: str, *, powiat: str | None, contact_email: str | None
+    session: AsyncSession,
+    text: str,
+    *,
+    powiat: str | None,
+    contact_email: str | None,
+    vector: list[float] | None = None,
 ) -> FormOutcome:
     text = clean_text(text)
-    vector = await embed_query(text, kind="embed_need")
+    vector = vector or await embed_query(text, kind="embed_need")
     check = await run_agent(check_agent, f"<need>{text}</need>", kind="need_check")
     if not check.is_problem:
         raise rejected(UNCLEAR)
