@@ -21,9 +21,14 @@ export function FigureView({ figure }: { figure: Figure }) {
     <View style={[styles.figure, { backgroundColor: colors.sunk }]}>
       <View style={styles.figureHead}>
         <Txt
-          mono
-          style={{ fontSize: type.h2, lineHeight: Math.round(type.h2 * 1.2) }}
+          style={{
+            fontSize: type.h2,
+            fontVariant: ["tabular-nums"],
+            letterSpacing: type.h2 * -0.03,
+            lineHeight: Math.round(type.h2 * 1.2),
+          }}
           tone="stamp"
+          weight="600"
         >
           {figure.value}
         </Txt>

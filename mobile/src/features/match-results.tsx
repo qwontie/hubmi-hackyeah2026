@@ -306,6 +306,8 @@ const styles = StyleSheet.create({
   bandBar: {
     alignItems: "center",
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space.sm,
     justifyContent: "space-between",
     marginBottom: space.sm,
   },

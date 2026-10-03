@@ -328,7 +328,10 @@ function FieldFeedback({ match }: { match: Match }) {
 
 function Intro({ loading }: { loading: boolean }) {
   const { wide, type } = useTheme();
-  const display = wide ? Math.round(type.display * 1.6) : type.display;
+  const { width } = useWindowDimensions();
+  const display = wide
+    ? Math.round(type.display * 1.6)
+    : Math.min(type.display, Math.floor((width - 44) / 6.5));
   return (
     <View style={styles.intro}>
       <Heading

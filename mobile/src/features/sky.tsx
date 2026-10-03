@@ -11,7 +11,7 @@ export function Sky({ rise }: { rise: Animated.Value }) {
   const { colors, wide } = useTheme();
   const { width } = useWindowDimensions();
   const shape = wide ? WIDE : NARROW;
-  const tones = [colors.nightRise, colors.stamp, colors.horizon];
+  const tones = [colors.nightRise, colors.dusk, colors.horizon];
   return (
     <View
       aria-hidden

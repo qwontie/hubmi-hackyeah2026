@@ -2,6 +2,7 @@ export interface Palette {
   bad: string;
   board: string;
   desk: string;
+  dusk: string;
   glass: string;
   glassEdge: string;
   glassNight: string;
@@ -42,6 +43,7 @@ export const palettes: Record<PaletteKey, Palette> = {
     bad: "#9e0f18",
     board: "#ffffff",
     desk: "#ffffff",
+    dusk: "#1d1470",
     glass: "#ffffff",
     glassEdge: "#000000",
     glassNight: "#000000",
@@ -78,6 +80,7 @@ export const palettes: Record<PaletteKey, Palette> = {
     bad: "#f97770",
     board: "#0f101e",
     desk: "#0f101e",
+    dusk: "#191048",
     glass: "rgba(26, 27, 45, 0.78)",
     glassEdge: "rgba(237, 237, 246, 0.16)",
     glassNight: "rgba(3, 3, 18, 0.72)",
@@ -114,6 +117,7 @@ export const palettes: Record<PaletteKey, Palette> = {
     bad: "#c51d28",
     board: "#eeeeff",
     desk: "#eeeeff",
+    dusk: "#4137a6",
     glass: "rgba(252, 252, 255, 0.78)",
     glassEdge: "rgba(255, 255, 255, 0.8)",
     glassNight: "rgba(17, 9, 56, 0.72)",

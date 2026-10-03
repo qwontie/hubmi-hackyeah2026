@@ -37,6 +37,7 @@ function Shell() {
       </Head>
       <StatusBar style={night || dark ? "light" : "dark"} />
       <SkipLink />
+      {Platform.OS === "web" ? <WideChrome /> : null}
       <Stack
         screenOptions={{
           animation: reduceMotion ? "none" : "default",
@@ -44,7 +45,6 @@ function Shell() {
           headerShown: false,
         }}
       />
-      {Platform.OS === "web" ? <WideChrome /> : null}
     </View>
   );
 }
