@@ -4,8 +4,8 @@ from zoneinfo import ZoneInfo
 
 WARSAW = ZoneInfo("Europe/Warsaw")
 SPAN_DAYS = 42
-RISING_SHAPE = 1.8
-FLAT_SHAPE = 0.9
+RISING_SHAPE = 2.2
+FLAT_SHAPE = 1.0
 FIRST_HOUR = 7
 LAST_HOUR = 22
 MARGIN = timedelta(hours=1)
@@ -27,12 +27,17 @@ def _local_hour(moment: datetime, rng: random.Random) -> datetime:
     return local.astimezone(UTC)
 
 
-def need_time(
-    key: str, *, rising: bool, thread_hours: float, now: datetime
-) -> datetime:
-    rng = _rng(f"need:{key}")
+def topic_ages(keys: list[str], *, rising: bool) -> dict[str, float]:
     shape = RISING_SHAPE if rising else FLAT_SHAPE
-    days = SPAN_DAYS * rng.random() ** shape
+    ordered = sorted(keys, key=lambda key: _rng(f"order:{key}").random())
+    return {
+        key: SPAN_DAYS * ((index + _rng(f"age:{key}").random()) / len(ordered)) ** shape
+        for index, key in enumerate(ordered)
+    }
+
+
+def need_time(key: str, days: float, *, thread_hours: float, now: datetime) -> datetime:
+    rng = _rng(f"need:{key}")
     moment = _local_hour(now - timedelta(days=days), rng)
     latest = now - timedelta(hours=thread_hours) - MARGIN
     if moment > latest:

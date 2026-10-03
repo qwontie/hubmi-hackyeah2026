@@ -145,14 +145,17 @@ def plan_needs(
     data: dict[str, Any], limit: int | None, now: datetime
 ) -> list[tuple[datetime, dict[str, Any]]]:
     rising = set(data["rising_topics"])
+    topics: dict[str, list[str]] = {}
+    for item in data["needs"]:
+        topics.setdefault(item["topic"], []).append(item["key"])
+    ages: dict[str, float] = {}
+    for topic, keys in topics.items():
+        ages |= timeline.topic_ages(keys, rising=topic in rising)
     needs = data["needs"][:limit] if limit else data["needs"]
     planned = [
         (
             timeline.need_time(
-                n["key"],
-                rising=n["topic"] in rising,
-                thread_hours=thread_hours(n),
-                now=now,
+                n["key"], ages[n["key"]], thread_hours=thread_hours(n), now=now
             ),
             n,
         )
