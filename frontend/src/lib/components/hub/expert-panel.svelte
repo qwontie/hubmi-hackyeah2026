@@ -4,8 +4,10 @@
     type Assignment,
     assignExpert,
     type Expert,
+    forwardToExpert,
     listAssignments,
     listExperts,
+    resendToExpert,
     unassign,
   } from "$lib/api/admin";
   import { ApiError } from "$lib/api/client";
@@ -20,14 +22,24 @@
   let open = $state(false);
   let chosen = $state("");
   let note = $state("");
+  let email = $state("");
+  let name = $state("");
+  let expertise = $state("");
   let busy = $state(false);
   let failed = $state(false);
+
+  const deliveryWords: Record<string, string> = {
+    failed: "list nie dotarł",
+    pending: "wysyłanie listu…",
+    sent: "list wysłany",
+    skipped: "bez listu, wysyłka wyłączona",
+  };
 
   async function load(target: string) {
     try {
       const [a, e] = await Promise.all([
         listAssignments(kind, target),
-        listExperts(),
+        listExperts().catch(() => [] as Expert[]),
       ]);
       if (target === id) {
         assignments = a;
@@ -46,6 +58,9 @@
       open = false;
       chosen = "";
       note = "";
+      email = "";
+      name = "";
+      expertise = "";
       load(target);
     });
   });
@@ -73,13 +88,29 @@
       showTip(button, "Wybierz eksperta", "bad");
       return;
     }
+    if (chosen === "email" && !email.trim()) {
+      showTip(button, "Podaj adres e-mail eksperta", "bad");
+      return;
+    }
     busy = true;
     try {
-      const a = await assignExpert(kind, id, chosen, note.trim());
+      const a =
+        chosen === "email"
+          ? await forwardToExpert(kind, id, {
+              email: email.trim(),
+              expertise: expertise.trim() || null,
+              name: name.trim() || null,
+              note: note.trim() || null,
+            })
+          : await assignExpert(kind, id, chosen, note.trim());
       assignments = [...assignments, a];
       open = false;
       chosen = "";
       note = "";
+      email = "";
+      name = "";
+      expertise = "";
+      showTip(button, chosen === "email" ? "List wysłany" : "Prośba wysłana");
     } catch (e) {
       showTip(
         button,
@@ -88,6 +119,21 @@
       );
     } finally {
       busy = false;
+    }
+  }
+
+  async function resend(a: Assignment, event: MouseEvent) {
+    const button = event.currentTarget as HTMLElement;
+    try {
+      const next = await resendToExpert(a.id);
+      assignments = assignments.map((x) => (x.id === a.id ? next : x));
+      showTip(button, "Wysłano ponownie");
+    } catch (e) {
+      showTip(
+        button,
+        e instanceof ApiError ? e.message : "Nie udało się.",
+        "bad"
+      );
     }
   }
 
@@ -106,13 +152,13 @@
   }
 </script>
 
-{#if !failed && (experts.length > 0 || assignments.length > 0)}
+{#if !failed}
   <section aria-labelledby="expert-h-{id}" class="grid gap-2">
     <div class="flex items-center justify-between gap-3">
       <h3 class="font-semibold text-[13px]" id="expert-h-{id}">
         Opinia eksperta
       </h3>
-      {#if free.length > 0 && !open}
+      {#if !open}
         <button
           class="ghost cladd-clickable"
           id="ask-expert-{id}"
@@ -140,6 +186,9 @@
                 {#if a.expert.expertise}
                   <span class="text-hm-ink-soft">{a.expert.expertise}</span>
                 {/if}
+                {#if a.expert.email}
+                  <span class="text-hm-ink-soft">{a.expert.email}</span>
+                {/if}
               </span>
               <span class={["st", a.status === "answered" && "ok"]}
                 >{a.status === "answered" ? "Opinia wydana" : "Czeka na opinię"}</span
@@ -147,7 +196,7 @@
             </span>
             <span class="text-hm-ink-soft text-xs">
               Kto prosił: {a.assigned_by} ·
-              {when(a.created_at)}{a.note ? ` · „${a.note}”` : ""}
+              {when(a.created_at)}{a.note ? ` · „${a.note}”` : ""}{a.expert.email && a.delivery_status ? ` · ${deliveryWords[a.delivery_status] ?? a.delivery_status}` : ""}
             </span>
             {#each a.private_notes ?? [] as n (n.id)}
               <p class="pnote text-sm">
@@ -155,13 +204,24 @@
               </p>
             {/each}
             {#if a.status === "open"}
-              <button
-                class="link relative justify-self-start text-xs"
-                onclick={(event) => remove(a, event)}
-                type="button"
-              >
-                Cofnij prośbę
-              </button>
+              <span class="flex flex-wrap gap-3">
+                <button
+                  class="link relative justify-self-start text-xs"
+                  onclick={(event) => remove(a, event)}
+                  type="button"
+                >
+                  Cofnij prośbę
+                </button>
+                {#if a.expert.email}
+                  <button
+                    class="link relative justify-self-start text-xs"
+                    onclick={(event) => resend(a, event)}
+                    type="button"
+                  >
+                    Wyślij list ponownie
+                  </button>
+                {/if}
+              </span>
             {/if}
           </li>
         {/each}
@@ -194,7 +254,51 @@
               >
             </label>
           {/each}
+          <label class="pick">
+            <input
+              name="expert-{id}"
+              type="radio"
+              value="email"
+              bind:group={chosen}
+            >
+            <span class="flex flex-wrap gap-x-1.5">
+              <b class="font-semibold">Ekspert bez konta, przez e-mail</b>
+              <span class="text-hm-ink-soft"
+                >dostanie list z&nbsp;osobistym linkiem do odpowiedzi</span
+              >
+            </span>
+          </label>
         </fieldset>
+        {#if chosen === "email"}
+          <div class="grid gap-2 min-[900px]:grid-cols-3">
+            <label class="grid gap-1 font-semibold text-[13px]">
+              Adres e-mail
+              <input
+                class="well h-9 font-normal"
+                inputmode="email"
+                required
+                type="email"
+                bind:value={email}
+              >
+            </label>
+            <label class="grid gap-1 font-semibold text-[13px]">
+              Imię i nazwisko
+              <input
+                class="well h-9 font-normal"
+                maxlength="200"
+                bind:value={name}
+              >
+            </label>
+            <label class="grid gap-1 font-semibold text-[13px]">
+              Dziedzina
+              <input
+                class="well h-9 font-normal"
+                maxlength="200"
+                bind:value={expertise}
+              >
+            </label>
+          </div>
+        {/if}
         <label class="font-semibold text-[13px]" for="assign-note-{id}"
           >Prośba do eksperta</label
         >
@@ -223,7 +327,7 @@
             id="assign-expert"
             type="submit"
           >
-            <span>Wyślij prośbę</span>
+            <span>{chosen === "email" ? "Wyślij list" : "Wyślij prośbę"}</span>
           </button>
         </span>
       </form>

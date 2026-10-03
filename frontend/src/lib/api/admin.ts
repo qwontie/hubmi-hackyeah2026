@@ -65,6 +65,7 @@ export interface NeedMatch {
 
 export interface Message {
   admin: { id: string; login: string } | null;
+  application_id?: string | null;
   body: string;
   delivery_status: "pending" | "sent" | "skipped" | "failed" | null;
   direction: "to_author" | "from_author";
@@ -484,7 +485,13 @@ export interface Assignment {
   answered_at: string | null;
   assigned_by: string;
   created_at: string;
-  expert: { display_name: string; expertise: string | null; id: string };
+  delivery_status?: "pending" | "sent" | "skipped" | "failed" | null;
+  expert: {
+    display_name: string;
+    email?: string | null;
+    expertise: string | null;
+    id: string | null;
+  };
   id: string;
   idea_id: string | null;
   kind: "need" | "idea";
@@ -532,6 +539,37 @@ export const assignExpert = (
   });
 
 export const unassign = (id: string) => api.del(`/admin/assignments/${id}`);
+
+export const forwardToExpert = (
+  kind: "needs" | "ideas",
+  id: string,
+  body: {
+    email: string;
+    expertise?: string | null;
+    name?: string | null;
+    note?: string | null;
+  }
+) => api.post<Assignment>(`/admin/${kind}/${id}/forward`, body);
+
+export const resendToExpert = (id: string) =>
+  api.post<Assignment>(`/admin/assignments/${id}/resend`, {});
+
+export interface ExpertContact {
+  assignments: number;
+  email: string;
+  expertise: string | null;
+  last_at: string | null;
+  name: string | null;
+}
+
+export const expertContacts = () =>
+  api.get<ExpertContact[]>("/admin/experts/contacts");
+
+export const applicationMessages = (id: string) =>
+  api.get<Message[]>(`/admin/applications/${id}/messages`);
+
+export const replyToApplication = (id: string, body: string) =>
+  api.post<Message>(`/admin/applications/${id}/reply`, { body });
 
 export const myAssignments = () => api.get<Assignment[]>("/expert/assignments");
 

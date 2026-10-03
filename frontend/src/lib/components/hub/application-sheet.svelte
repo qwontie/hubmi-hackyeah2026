@@ -4,10 +4,12 @@
   import {
     type AdminApplication,
     type AdminIdeaDetail,
+    applicationMessages,
     getApplication,
     getIdea,
     listIdeaMessages,
     type Message,
+    replyToApplication,
     replyToIdea,
     setApplicationStatus,
   } from "$lib/api/admin";
@@ -54,6 +56,8 @@
         ]);
         messages = thread;
         idea = full;
+      } else {
+        messages = await applicationMessages(next.id).catch(() => []);
       }
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") {
@@ -86,7 +90,10 @@
     }),
     live.on("message.created", (data) => {
       const m = data as Message;
-      if (detail?.idea && m.idea_id === detail.idea.id) {
+      if (
+        (detail?.idea && m.idea_id === detail.idea.id) ||
+        (detail && m.application_id === detail.id)
+      ) {
         messages = [...messages.filter((x) => x.id !== m.id), m];
       }
     }),
@@ -126,10 +133,12 @@
   }
 
   async function reply(body: string) {
-    if (!detail?.idea) {
-      throw new Error("Ten wniosek nie ma pomysłu, do którego można pisać.");
+    if (!detail) {
+      throw new Error("Brak wniosku.");
     }
-    const message = await replyToIdea(detail.idea.id, body);
+    const message = detail.idea
+      ? await replyToIdea(detail.idea.id, body)
+      : await replyToApplication(detail.id, body);
     messages = [...messages.filter((m) => m.id !== message.id), message];
     return message;
   }
@@ -290,16 +299,13 @@
         {/each}
       </ol>
 
-      {#if detail.idea}
-        <section aria-label="Rozmowa z autorem pomysłu">
-          <ThreadReply canEmail={detail.idea_contact} {messages} send={reply} />
-        </section>
-      {:else}
-        <p class="text-[13px] text-hm-ink-soft">
-          Ten wniosek złożono bez pomysłu z&nbsp;Kreatora.
-          {detail.contact_email ? `Autor podał adres ${detail.contact_email}; wysyłka z HubMi do takich wniosków jest w przygotowaniu.` : "Autor nie zostawił adresu."}
-        </p>
-      {/if}
+      <section aria-label="Rozmowa z autorem wniosku">
+        <ThreadReply
+          canEmail={detail.idea ? detail.idea_contact : Boolean(detail.contact_email && detail.contact_consent)}
+          {messages}
+          send={reply}
+        />
+      </section>
     </div>
   {:else if loadError}
     <ErrorState error={loadError} retry={() => load(id)} />
