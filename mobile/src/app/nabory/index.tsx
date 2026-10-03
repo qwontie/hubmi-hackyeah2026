@@ -12,10 +12,12 @@ import { Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
+const NBSP = "\u00a0";
+
 const date = (value: string) =>
-  new Intl.DateTimeFormat("pl-PL", { dateStyle: "long" }).format(
-    new Date(value)
-  );
+  new Intl.DateTimeFormat("pl-PL", { dateStyle: "long" })
+    .format(new Date(value))
+    .replaceAll(" ", NBSP);
 
 function CallCard({ call }: { call: GrantCall }) {
   const open = call.phase === "open";

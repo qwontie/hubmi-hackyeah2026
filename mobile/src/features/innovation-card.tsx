@@ -166,6 +166,60 @@ interface InnovationCardProps {
   reason?: string;
 }
 
+function Media({
+  beside,
+  index,
+  picture,
+  slug,
+}: {
+  beside: boolean;
+  index?: number;
+  picture: { uri: string } | null;
+  slug: string;
+}) {
+  const { colors, reduceMotion } = useTheme();
+  const rank =
+    index === undefined ? null : (
+      <Txt tone="stamp" variant="small" weight="600">
+        {`Propozycja ${index}`}
+      </Txt>
+    );
+  if (!picture) {
+    return (
+      <View style={styles.head}>
+        <View style={[styles.tile, { backgroundColor: colors.tone }]}>
+          <CategoryIcon size={26} slug={slug} />
+        </View>
+        {rank}
+      </View>
+    );
+  }
+  return (
+    <View
+      style={[
+        styles.picture,
+        beside && styles.pictureBeside,
+        { backgroundColor: colors.tone },
+      ]}
+    >
+      <Image
+        accessible={false}
+        alt=""
+        aria-hidden
+        contentFit="cover"
+        source={{ uri: picture.uri }}
+        style={styles.image}
+        transition={reduceMotion ? 0 : 240}
+      />
+      {rank ? (
+        <View style={[styles.rank, { backgroundColor: colors.paper }]}>
+          {rank}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 export function InnovationCard({
   innovation,
   reason,
@@ -173,108 +227,86 @@ export function InnovationCard({
   needId,
   featured = false,
 }: InnovationCardProps) {
-  const { colors, type, wide, reduceMotion } = useTheme();
+  const { colors, type, wide } = useTheme();
   const [hovered, setHovered] = useState(false);
   const [footWidth, setFootWidth] = useState(0);
   const picture = pictureOf(innovation);
   const titleSize = featured && wide ? type.h2 : type.h3;
   const votes = innovation.votes ?? null;
+  const beside = featured && wide && picture !== null;
   return (
-    <Sheet raised={featured} style={styles.card}>
-      {picture ? (
-        <View style={[styles.picture, { backgroundColor: colors.tone }]}>
-          <Image
-            accessible={false}
-            alt=""
-            aria-hidden
-            contentFit="cover"
-            source={{ uri: picture.uri }}
-            style={styles.image}
-            transition={reduceMotion ? 0 : 240}
-          />
-          {index === undefined ? null : (
-            <View style={[styles.rank, { backgroundColor: colors.paper }]}>
-              <Txt tone="stamp" variant="small" weight="600">
-                {`Propozycja ${index}`}
+    <Sheet raised={featured} style={[styles.card, beside && styles.cardBeside]}>
+      <Media
+        beside={beside}
+        index={index}
+        picture={picture}
+        slug={innovation.category.slug}
+      />
+      <View style={[styles.rest, beside && styles.restBeside]}>
+        <View style={styles.body}>
+          <Link asChild href={innovationHref(innovation.slug, needId)}>
+            <Pressable
+              onHoverIn={() => setHovered(true)}
+              onHoverOut={() => setHovered(false)}
+              role="link"
+            >
+              <Txt
+                style={{
+                  color: hovered ? colors.stamp : colors.ink,
+                  fontSize: titleSize,
+                  letterSpacing: titleSize * -0.025,
+                  lineHeight: Math.round(titleSize * 1.15),
+                }}
+                weight="600"
+              >
+                {innovation.title}
               </Txt>
-            </View>
-          )}
+            </Pressable>
+          </Link>
+          <Txt tone="soft" variant={featured ? "body" : "label"}>
+            {reason ?? innovation.lead}
+          </Txt>
+          <Txt tone="soft" variant="small">
+            {[metaLine(innovation), picture?.label]
+              .filter(Boolean)
+              .join(" · ")
+              .replaceAll(" · ", "\u00a0· ")}
+          </Txt>
         </View>
-      ) : (
-        <View style={styles.head}>
-          <View style={[styles.tile, { backgroundColor: colors.tone }]}>
-            <CategoryIcon size={26} slug={innovation.category.slug} />
-          </View>
-          {index === undefined ? null : (
-            <Txt tone="stamp" variant="small" weight="600">
-              {`Propozycja ${index}`}
-            </Txt>
-          )}
+        <View
+          onLayout={(event) => setFootWidth(event.nativeEvent.layout.width)}
+          style={styles.foot}
+        >
+          <Votes
+            initial={votes}
+            needId={needId}
+            slug={innovation.slug}
+            worded={featured || footWidth >= WORDED_FOOT}
+          />
+          <Link asChild href={innovationHref(innovation.slug, needId)}>
+            <Pressable
+              aria-label={`Zobacz rozwiązanie: ${innovation.title}`}
+              role="link"
+              style={StyleSheet.flatten([
+                styles.open,
+                { backgroundColor: featured ? colors.stamp : "transparent" },
+              ])}
+            >
+              <Txt
+                style={{ color: featured ? colors.onStamp : colors.stamp }}
+                variant="label"
+                weight="600"
+              >
+                Zobacz
+              </Txt>
+              <ArrowRight
+                aria-hidden
+                color={featured ? colors.onStamp : colors.stamp}
+                size={22}
+              />
+            </Pressable>
+          </Link>
         </View>
-      )}
-      <View style={styles.body}>
-        <Link asChild href={innovationHref(innovation.slug, needId)}>
-          <Pressable
-            onHoverIn={() => setHovered(true)}
-            onHoverOut={() => setHovered(false)}
-            role="link"
-          >
-            <Txt
-              style={{
-                color: hovered ? colors.stamp : colors.ink,
-                fontSize: titleSize,
-                letterSpacing: titleSize * -0.025,
-                lineHeight: Math.round(titleSize * 1.15),
-              }}
-              weight="600"
-            >
-              {innovation.title}
-            </Txt>
-          </Pressable>
-        </Link>
-        <Txt tone="soft" variant={featured ? "body" : "label"}>
-          {reason ?? innovation.lead}
-        </Txt>
-        <Txt tone="soft" variant="small">
-          {[metaLine(innovation), picture?.label]
-            .filter(Boolean)
-            .join(" · ")
-            .replaceAll(" · ", "\u00a0· ")}
-        </Txt>
-      </View>
-      <View
-        onLayout={(event) => setFootWidth(event.nativeEvent.layout.width)}
-        style={styles.foot}
-      >
-        <Votes
-          initial={votes}
-          needId={needId}
-          slug={innovation.slug}
-          worded={featured || footWidth >= WORDED_FOOT}
-        />
-        <Link asChild href={innovationHref(innovation.slug, needId)}>
-          <Pressable
-            aria-label={`Zobacz rozwiązanie: ${innovation.title}`}
-            role="link"
-            style={StyleSheet.flatten([
-              styles.open,
-              { backgroundColor: featured ? colors.stamp : "transparent" },
-            ])}
-          >
-            <Txt
-              style={{ color: featured ? colors.onStamp : colors.stamp }}
-              variant="label"
-              weight="600"
-            >
-              Zobacz
-            </Txt>
-            <ArrowRight
-              aria-hidden
-              color={featured ? colors.onStamp : colors.stamp}
-              size={22}
-            />
-          </Pressable>
-        </Link>
       </View>
     </Sheet>
   );
@@ -318,6 +350,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: space.md + 2,
   },
+  cardBeside: {
+    alignItems: "stretch",
+    flexDirection: "row",
+    gap: space.xl,
+  },
   cell: {
     flex: 1,
   },
@@ -355,6 +392,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: "hidden",
   },
+  pictureBeside: {
+    aspectRatio: 4 / 3,
+    width: "42%",
+  },
   rank: {
     alignItems: "center",
     borderRadius: radius.pill,
@@ -364,6 +405,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: space.sm + 2,
     top: space.sm + 2,
+  },
+  rest: {
+    flexGrow: 1,
+    gap: space.md + 2,
+  },
+  restBeside: {
+    flex: 1,
+    justifyContent: "space-between",
   },
   stack: {
     gap: space.lg,

@@ -15,10 +15,23 @@ import { Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
+const NBSP = "\u00a0";
+
 const date = (value: string) =>
-  new Intl.DateTimeFormat("pl-PL", { dateStyle: "long" }).format(
-    new Date(value)
-  );
+  new Intl.DateTimeFormat("pl-PL", { dateStyle: "long" })
+    .format(new Date(value))
+    .replaceAll(" ", NBSP);
+
+const dateRange = (from: string, to: string) => {
+  const start = new Date(from);
+  const end = new Date(to);
+  const sameMonth =
+    start.getFullYear() === end.getFullYear() &&
+    start.getMonth() === end.getMonth();
+  return sameMonth
+    ? `Od ${start.getDate()} do${NBSP}${date(to)}`
+    : `Od ${date(from)} do${NBSP}${date(to)}`;
+};
 
 const phaseLabel = {
   closed: "Nabór zakończony",
@@ -159,7 +172,7 @@ export default function GrantCallScreen() {
       </Txt>
       <Heading level={1}>{call.title}</Heading>
       <Txt tone="soft" variant="lead">
-        {`Od ${date(call.opens_at)} do ${date(call.closes_at)}`}
+        {dateRange(call.opens_at, call.closes_at)}
       </Txt>
     </View>
   );
