@@ -124,6 +124,7 @@ export type ErrorCode =
   | "too_few_words"
   | "too_many_links"
   | "spam_rejected"
+  | "report_locked"
   | "rate_limited"
   | "ai_unavailable"
   | "internal"
@@ -557,4 +558,47 @@ export interface VoteResponse {
   kind?: FeedbackKind;
   summary: FeedbackSummary;
   votes?: Votes;
+}
+
+export interface DemandRequest {
+  contact_consent: boolean;
+  email?: string;
+  powiat: string;
+  website?: string;
+}
+
+export interface DemandResult {
+  count: number;
+  duplicate: boolean;
+}
+
+export interface VolunteerRequest {
+  contact_consent: boolean;
+  email: string;
+  organization?: string;
+  powiat: string;
+  proposal: string;
+  website?: string;
+  who: TesterRole;
+}
+
+export type VolunteerRecommend = "yes" | "after_changes" | "no";
+
+export interface VolunteerReport {
+  activity: string;
+  not_worked: string;
+  participants: number;
+  recommend: VolunteerRecommend;
+  worked: string;
+}
+
+export interface VolunteerView {
+  editable: boolean;
+  id: string;
+  innovation: { slug: string; title: string };
+  powiat: string;
+  powiat_name: string;
+  proposal: string;
+  report: VolunteerReport | null;
+  status: "new" | "accepted" | "rejected" | "reported" | "closed";
 }

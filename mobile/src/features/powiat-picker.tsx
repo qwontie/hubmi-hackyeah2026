@@ -11,13 +11,41 @@ import { Txt } from "@/ui/text";
 const EVERYWHERE = "Cała Małopolska";
 
 interface PowiatPickerProps {
+  night?: boolean;
   onChange: (slug: string) => void;
   options: SelectOption[];
+  required?: boolean;
   value: string;
 }
 
-function RegionMap({ onChange, value }: Omit<PowiatPickerProps, "options">) {
-  const { colors, highContrast } = useTheme();
+const usePalette = (night: boolean) => {
+  const { colors } = useTheme();
+  return night
+    ? {
+        chosen: colors.onNight,
+        chosenEdge: colors.night,
+        edge: colors.onNightSoft,
+        ink: colors.onNight,
+        land: colors.nightRise,
+        soft: colors.onNightSoft,
+      }
+    : {
+        chosen: colors.stamp,
+        chosenEdge: colors.paper,
+        edge: colors.ruleStrong,
+        ink: colors.ink,
+        land: colors.tone,
+        soft: colors.inkSoft,
+      };
+};
+
+function RegionMap({
+  night = true,
+  onChange,
+  value,
+}: Omit<PowiatPickerProps, "options">) {
+  const { highContrast } = useTheme();
+  const palette = usePalette(night);
   const { projection } = useMap();
   if (!projection) {
     return null;
@@ -37,10 +65,10 @@ function RegionMap({ onChange, value }: Omit<PowiatPickerProps, "options">) {
           return (
             <Path
               d={shape.d}
-              fill={active ? colors.onNight : colors.nightRise}
+              fill={active ? palette.chosen : palette.land}
               key={shape.slug}
               onPress={() => onChange(active ? "" : shape.slug)}
-              stroke={active ? colors.night : colors.onNightSoft}
+              stroke={active ? palette.chosenEdge : palette.edge}
               strokeLinejoin="round"
               strokeWidth={highContrast ? 4 : 2.5}
             />
@@ -51,8 +79,13 @@ function RegionMap({ onChange, value }: Omit<PowiatPickerProps, "options">) {
   );
 }
 
-function NameList({ onChange, options, value }: PowiatPickerProps) {
-  const { colors } = useTheme();
+function NameList({
+  night = true,
+  onChange,
+  options,
+  value,
+}: PowiatPickerProps) {
+  const palette = usePalette(night);
   return (
     <View aria-label="Powiaty" role="group" style={styles.names}>
       {options.map((option) => {
@@ -66,11 +99,13 @@ function NameList({ onChange, options, value }: PowiatPickerProps) {
             style={styles.name}
           >
             {active ? (
-              <Check aria-hidden color={colors.onNight} size={20} />
+              <Check aria-hidden color={palette.ink} size={20} />
             ) : null}
             <Txt
-              style={styles.grow}
-              tone={active ? "onNight" : "onNightSoft"}
+              style={[
+                styles.grow,
+                { color: active ? palette.ink : palette.soft },
+              ]}
               variant="label"
               weight={active ? "600" : "400"}
             >
@@ -83,8 +118,16 @@ function NameList({ onChange, options, value }: PowiatPickerProps) {
   );
 }
 
-export function PowiatPicker({ onChange, options, value }: PowiatPickerProps) {
-  const { colors, wide } = useTheme();
+export function PowiatPicker({
+  night = true,
+  onChange,
+  options,
+  required = false,
+  value,
+}: PowiatPickerProps) {
+  const { wide } = useTheme();
+  const palette = usePalette(night);
+  const nothing = required ? "Wybierz powiat" : EVERYWHERE;
   const [open, setOpen] = useState(false);
   const name = options.find((option) => option.value === value)?.label;
   const Chevron = open ? ChevronUp : ChevronDown;
@@ -98,26 +141,32 @@ export function PowiatPicker({ onChange, options, value }: PowiatPickerProps) {
   return (
     <View style={styles.wrap}>
       <View style={styles.head}>
-        <Txt tone="onNightSoft" variant="label">
+        <Txt style={{ color: palette.soft }} variant="label">
           {wide
             ? "Gdzie to jest? Powiat można wskazać na mapie."
             : "Gdzie to jest? Powiat można wybrać z listy."}
         </Txt>
       </View>
-      {showMap ? <RegionMap onChange={pick} value={value} /> : null}
+      {showMap ? (
+        <RegionMap night={night} onChange={pick} value={value} />
+      ) : null}
       <View style={styles.bar}>
         <Pressable
           aria-expanded={open}
-          aria-label={`Powiat, nieobowiązkowo: ${name ?? EVERYWHERE}. ${open ? "Zwiń listę" : "Wybierz z listy"}`}
+          aria-label={`Powiat${required ? "" : ", nieobowiązkowo"}: ${name ?? nothing}. ${open ? "Zwiń listę" : "Wybierz z listy"}`}
           onPress={() => setOpen((current) => !current)}
           role="button"
           style={styles.trigger}
         >
-          <MapPin aria-hidden color={colors.onNight} size={24} />
-          <Txt style={styles.grow} tone="onNight" variant="label" weight="600">
-            {name ?? EVERYWHERE}
+          <MapPin aria-hidden color={palette.ink} size={24} />
+          <Txt
+            style={[styles.grow, { color: palette.ink }]}
+            variant="label"
+            weight="600"
+          >
+            {name ?? nothing}
           </Txt>
-          <Chevron aria-hidden color={colors.onNightSoft} size={22} />
+          <Chevron aria-hidden color={palette.soft} size={22} />
         </Pressable>
         {value ? (
           <Pressable
@@ -126,12 +175,17 @@ export function PowiatPicker({ onChange, options, value }: PowiatPickerProps) {
             role="button"
             style={styles.clear}
           >
-            <X aria-hidden color={colors.onNightSoft} size={22} />
+            <X aria-hidden color={palette.soft} size={22} />
           </Pressable>
         ) : null}
       </View>
       {open ? (
-        <NameList onChange={pick} options={options} value={value} />
+        <NameList
+          night={night}
+          onChange={pick}
+          options={options}
+          value={value}
+        />
       ) : null}
     </View>
   );

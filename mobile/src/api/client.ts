@@ -9,6 +9,8 @@ import type {
   ChallengeDetail,
   ChallengeSummary,
   CountedRef,
+  DemandRequest,
+  DemandResult,
   ErrorCode,
   FeedbackKind,
   FeedbackSummary,
@@ -43,6 +45,9 @@ import type {
   ProblemDetail,
   TestSignup,
   ThreadMessage,
+  VolunteerReport,
+  VolunteerRequest,
+  VolunteerView,
   VoteResponse,
 } from "./types";
 
@@ -57,6 +62,7 @@ const FALLBACK_MESSAGES: Record<ErrorCode, string> = {
     "Nie możemy połączyć się z serwerem. Sprawdź internet i spróbuj ponownie.",
   not_found: "Nie znaleźliśmy tej strony.",
   rate_limited: "Za dużo zapytań w krótkim czasie. Spróbuj za chwilę.",
+  report_locked: "Tego raportu nie można już zmienić.",
   spam_rejected:
     "Nie udało się wysłać zgłoszenia. Odśwież stronę i spróbuj jeszcze raz.",
   text_too_long: "Opis jest za długi. Skróć go do 2000 znaków.",
@@ -162,7 +168,7 @@ const toApiError = async (response: Response): Promise<ApiError> => {
 interface RequestOptions {
   body?: unknown;
   headers?: Record<string, string>;
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   signal?: AbortSignal;
 }
 
@@ -255,6 +261,16 @@ export const api = {
     request<IdeaCreated>("/api/ideas", { body, method: "POST" }),
   createNeed: (body: NeedCreate) =>
     request<NeedCreated>("/api/needs", { body, method: "POST" }),
+  demand: (slug: string, body: DemandRequest) =>
+    request<DemandResult>(
+      `/api/innovations/${encodeURIComponent(slug)}/demand`,
+      { body, method: "POST" }
+    ),
+  demandCount: (slug: string, signal?: AbortSignal) =>
+    request<{ count: number }>(
+      `/api/innovations/${encodeURIComponent(slug)}/demand`,
+      { signal }
+    ),
   feedbackSummary: (slug: string, signal?: AbortSignal) =>
     request<FeedbackSummary>(
       `/api/innovations/${encodeURIComponent(slug)}/feedback`,
@@ -430,6 +446,22 @@ export const api = {
       body: { sections },
       headers: { "x-idea-token": token },
       method: "PATCH",
+    }),
+  volunteer: (slug: string, body: VolunteerRequest) =>
+    request<{ duplicate: boolean; id: string }>(
+      `/api/innovations/${encodeURIComponent(slug)}/volunteers`,
+      { body, method: "POST" }
+    ),
+  volunteerReport: (id: string, token: string, body: VolunteerReport) =>
+    request<VolunteerView>(`/api/volunteers/${encodeURIComponent(id)}/report`, {
+      body,
+      headers: { "x-volunteer-token": token },
+      method: "PUT",
+    }),
+  volunteerView: (id: string, token: string, signal?: AbortSignal) =>
+    request<VolunteerView>(`/api/volunteers/${encodeURIComponent(id)}`, {
+      headers: { "x-volunteer-token": token },
+      signal,
     }),
   vote: (
     slug: string,

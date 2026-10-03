@@ -1,5 +1,8 @@
 import { AccessibilityInfo, findNodeHandle, Platform } from "react-native";
 
+const WIDE = 900;
+const UNDER_NAV = 120;
+
 export const focusElement = (node: unknown) => {
   if (Platform.OS !== "web" || !node) {
     return false;
@@ -11,6 +14,7 @@ export const focusElement = (node: unknown) => {
   if (!element.hasAttribute("tabindex")) {
     element.setAttribute("tabindex", "-1");
   }
+  element.style.scrollMarginTop = `${window.innerWidth >= WIDE ? UNDER_NAV : 16}px`;
   element.focus({ preventScroll: false });
   element.scrollIntoView?.({ behavior: "auto", block: "start" });
   return true;

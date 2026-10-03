@@ -14,6 +14,7 @@ import { StyleSheet, type Text, View } from "react-native";
 import type { InnovationDetail } from "@/api/types";
 import { API_BASE, APP_NAME } from "@/config";
 import { CategoryTile } from "@/features/category-icon";
+import { DemandBlock } from "@/features/demand";
 import { ReadAloudPill } from "@/features/read-aloud-button";
 import { RichText } from "@/features/rich-text";
 import { ImprovementBlock, VoteBlock } from "@/features/tester";
@@ -185,7 +186,11 @@ export default function InnovationScreen() {
           </Sheet>
 
           <Sheet>
-            <Heading level={2}>Chcesz wprowadzić to u siebie?</Heading>
+            <DemandBlock slug={state.data.slug} />
+          </Sheet>
+
+          <Sheet>
+            <Heading level={2}>Pracujesz w gminie albo instytucji?</Heading>
             <Txt>
               Opisz swoją gminę lub instytucję, a przygotujemy plan usługi
               opartej na tym rozwiązaniu.
@@ -199,7 +204,6 @@ export default function InnovationScreen() {
                   pathname: "/innowacje/[slug]/dostosuj",
                 })
               }
-              variant="primary"
             />
           </Sheet>
 
