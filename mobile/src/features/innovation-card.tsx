@@ -157,6 +157,8 @@ const pictureOf = (innovation: InnovationSummary) => {
   };
 };
 
+const WORDED_FOOT = 430;
+
 interface InnovationCardProps {
   featured?: boolean;
   index?: number;
@@ -174,6 +176,7 @@ export function InnovationCard({
 }: InnovationCardProps) {
   const { colors, type, wide, reduceMotion } = useTheme();
   const [hovered, setHovered] = useState(false);
+  const [footWidth, setFootWidth] = useState(0);
   const picture = pictureOf(innovation);
   const titleSize = featured && wide ? type.h2 : type.h3;
   const votes = innovation.votes ?? null;
@@ -235,12 +238,15 @@ export function InnovationCard({
           {[metaLine(innovation), picture?.label].filter(Boolean).join(" · ")}
         </Txt>
       </View>
-      <View style={styles.foot}>
+      <View
+        onLayout={(event) => setFootWidth(event.nativeEvent.layout.width)}
+        style={styles.foot}
+      >
         <Votes
           initial={votes}
           needId={needId}
           slug={innovation.slug}
-          worded={wide || featured}
+          worded={featured || footWidth >= WORDED_FOOT}
         />
         <Link asChild href={innovationHref(innovation.slug, needId)}>
           <Pressable
