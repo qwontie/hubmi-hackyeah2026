@@ -1,12 +1,17 @@
+from datetime import UTC, datetime
+
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, HTTPException, Request, Response, status
+from sqlalchemy import delete
+from sqlmodel import col
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.security import StaffPerson
 from services.auth.admins import AdminRepository
-from services.auth.crypto import create_session
+from services.auth.crypto import create_session, session_claims, session_expiry
 from services.auth.guard import LoginBlockedError, LoginGuard
 from services.auth.schemas import LoginBody, Me
+from utils.db.models import AdminSession
 from utils.env import env
 
 router = APIRouter(route_class=DishkaRoute)
@@ -58,7 +63,18 @@ async def login(
         await guard.failed(request, body.login)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Wrong login or password")
     await guard.succeeded(request, body.login)
-    set_session_cookie(request, response, create_session(admin.id, admin.token_version))
+    await session.exec(
+        delete(AdminSession).where(col(AdminSession.expires_at) <= datetime.now(UTC))
+    )
+    expires_at = session_expiry()
+    auth_session = AdminSession(admin_id=admin.id, expires_at=expires_at)
+    session.add(auth_session)
+    await session.commit()
+    set_session_cookie(
+        request,
+        response,
+        create_session(admin.id, admin.token_version, auth_session.id, expires_at),
+    )
     return Me.of(admin)
 
 
@@ -69,8 +85,14 @@ async def logout(
     admin: StaffPerson,
     session: FromDishka[AsyncSession],
 ) -> None:
-    admin.token_version += 1
-    session.add(admin)
+    claims = session_claims(request.cookies.get(env.auth.cookie_name, ""))
+    if claims is not None:
+        await session.exec(
+            delete(AdminSession).where(
+                col(AdminSession.id) == claims.session_id,
+                col(AdminSession.admin_id) == admin.id,
+            )
+        )
     await session.commit()
     response.delete_cookie(
         key=env.auth.cookie_name,
@@ -82,6 +104,25 @@ async def logout(
 
 
 @router.get("/me")
-async def me(request: Request, response: Response, admin: StaffPerson) -> Me:
-    set_session_cookie(request, response, create_session(admin.id, admin.token_version))
+async def me(
+    request: Request,
+    response: Response,
+    admin: StaffPerson,
+    session: FromDishka[AsyncSession],
+) -> Me:
+    claims = session_claims(request.cookies.get(env.auth.cookie_name, ""))
+    if claims is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not signed in")
+    auth_session = await session.get(AdminSession, claims.session_id)
+    if auth_session is None or auth_session.admin_id != admin.id:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not signed in")
+    expires_at = session_expiry()
+    auth_session.expires_at = expires_at
+    session.add(auth_session)
+    await session.commit()
+    set_session_cookie(
+        request,
+        response,
+        create_session(admin.id, admin.token_version, auth_session.id, expires_at),
+    )
     return Me.of(admin)

@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -5,7 +6,7 @@ from starlette.requests import HTTPConnection
 
 from services.auth.crypto import session_claims
 from utils.db import session_scope
-from utils.db.models import AdminRole, AdminUser
+from utils.db.models import AdminRole, AdminSession, AdminUser
 from utils.env import env
 
 
@@ -18,6 +19,13 @@ async def admin_from_secret(secret: str | None) -> AdminUser | None:
     async with session_scope() as session:
         admin = await session.get(AdminUser, claims.admin_id)
         if admin is None or admin.token_version != claims.token_version:
+            return None
+        auth_session = await session.get(AdminSession, claims.session_id)
+        if (
+            auth_session is None
+            or auth_session.admin_id != admin.id
+            or auth_session.expires_at <= datetime.now(UTC)
+        ):
             return None
         return admin
 

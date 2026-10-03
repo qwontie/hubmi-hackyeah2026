@@ -20,6 +20,7 @@ _bcrypt_pool = ThreadPoolExecutor(
 class SessionClaims(NamedTuple):
     admin_id: uuid.UUID
     token_version: int
+    session_id: uuid.UUID
 
 
 def _encode(password: str) -> bytes:
@@ -59,13 +60,20 @@ def _secret() -> str:
     return secret
 
 
-def create_session(admin_id: uuid.UUID, token_version: int) -> str:
+def session_expiry() -> datetime:
+    return datetime.now(UTC) + timedelta(hours=env.auth.session_hours)
+
+
+def create_session(
+    admin_id: uuid.UUID, token_version: int, session_id: uuid.UUID, expires_at: datetime
+) -> str:
     now = datetime.now(UTC)
     payload = {
         "sub": str(admin_id),
         "ver": token_version,
+        "jti": str(session_id),
         "iat": now,
-        "exp": now + timedelta(hours=env.auth.session_hours),
+        "exp": expires_at,
     }
     return jwt.encode(payload, _secret(), algorithm=ALGORITHM)
 
@@ -74,7 +82,9 @@ def session_claims(token: str) -> SessionClaims | None:
     try:
         payload = jwt.decode(token, _secret(), algorithms=[ALGORITHM])
         return SessionClaims(
-            uuid.UUID(str(payload.get("sub", ""))), int(payload.get("ver", -1))
+            uuid.UUID(str(payload.get("sub", ""))),
+            int(payload.get("ver", -1)),
+            uuid.UUID(str(payload.get("jti", ""))),
         )
     except (jwt.PyJWTError, TypeError, ValueError):
         return None

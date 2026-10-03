@@ -1,12 +1,13 @@
 import asyncio
 from collections.abc import AsyncGenerator
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from pydantic_core import to_json
 
-from api.security import AdminPerson
+from api.security import AdminPerson, admin_from_secret
 from services.bus import Message, bus
+from utils.env import env
 from utils.logging import logger
 
 router = APIRouter()
@@ -25,20 +26,27 @@ def frame(message: Message) -> str:
     return f"{head}event: {message.topic}\ndata: {data}\n\n"
 
 
-async def events() -> AsyncGenerator[str]:
+async def events(secret: str) -> AsyncGenerator[str]:
     async with bus.subscribe() as queue:
         yield "retry: 3000\n\n"
         while True:
+            if await admin_from_secret(secret) is None:
+                return
             try:
                 message = await asyncio.wait_for(queue.get(), PING_SECONDS)
             except TimeoutError:
-                yield ": ping\n\n"
-                continue
-            text = frame(message)
+                text = ": ping\n\n"
+            else:
+                text = frame(message)
+            if await admin_from_secret(secret) is None:
+                return
             if text:
                 yield text
 
 
 @router.get("")
-async def stream(_admin: AdminPerson) -> StreamingResponse:
-    return StreamingResponse(events(), media_type="text/event-stream", headers=HEADERS)
+async def stream(request: Request, _admin: AdminPerson) -> StreamingResponse:
+    secret = request.cookies.get(env.auth.cookie_name, "")
+    return StreamingResponse(
+        events(secret), media_type="text/event-stream", headers=HEADERS
+    )

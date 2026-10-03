@@ -1,5 +1,6 @@
 from .adaptation import Adaptation
 from .admin_action import AdminAction
+from .admin_session import AdminSession
 from .admin_user import AdminRole, AdminUser
 from .ai_call import AiCall
 from .assignment import Assignment, AssignmentStatus, ExpertNote
@@ -36,6 +37,7 @@ __all__ = [
     "Adaptation",
     "AdminAction",
     "AdminRole",
+    "AdminSession",
     "AdminUser",
     "AiCall",
     "ApplicationStatus",
