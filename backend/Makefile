@@ -1,12 +1,12 @@
 COMPOSE := cd .. && docker compose
 IMAGE := hubmi/backend
 IMAGE_INPUTS := pyproject.toml uv.lock Dockerfile
-CODE := src
+CODE := src scripts
 SERVICES := api
 changed = ! git diff --quiet $(1) -- $(2) 2>/dev/null
 stamp = { git update-ref $(1) HEAD 2>/dev/null || true; }
 
-.PHONY: fmt check build pre-deploy post-deploy migrate revision
+.PHONY: fmt check build pre-deploy post-deploy migrate revision script
 
 fmt:
 	uv run ruff format
@@ -39,6 +39,9 @@ migrate:
 
 revision:
 	$(COMPOSE) run --rm migrator revision --autogenerate -m "$(m)"
+
+script:
+	@$(COMPOSE) run --rm api scripts.$(word 2,$(MAKECMDGOALS)) $(wordlist 3,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 
 %:
 	@:

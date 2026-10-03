@@ -1,1 +1,3 @@
-__all__: list[str] = []
+from .admin_user import AdminUser
+
+__all__ = ["AdminUser"]

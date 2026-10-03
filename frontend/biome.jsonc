@@ -7,11 +7,6 @@
   "javascript": { "globals": ["Bun"] },
   "overrides": [
     {
-      "includes": ["src/lib/components/ui/**"],
-      "linter": { "enabled": false },
-      "assist": { "enabled": false }
-    },
-    {
       "includes": ["src/lib/utils.ts"],
       "linter": { "rules": { "suspicious": { "noExplicitAny": "off" } } }
     },
@@ -31,6 +26,15 @@
     {
       "includes": ["src/app.d.ts"],
       "linter": { "rules": { "style": { "noNamespace": "off" } } }
+    },
+    {
+      "includes": ["src/lib/components/ui/**"],
+      "linter": { "enabled": false },
+      "assist": { "enabled": false }
+    },
+    {
+      "includes": ["src/routes/claddcn.css"],
+      "linter": { "enabled": false }
     }
   ]
 }

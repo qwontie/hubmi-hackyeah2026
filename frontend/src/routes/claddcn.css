@@ -1,0 +1,878 @@
+/* claddcn: tokens, surfaces and color math from cladd (MIT, © 2026 cladd-ui, https://github.com/cladd-ui/cladd). */
+
+@import "@fontsource-variable/geist/index.css";
+@import "@fontsource-variable/geist-mono/index.css";
+
+@property --cladd-overlay {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+
+:root,
+.cladd-color-neutral {
+  --cladd-theme: #fff;
+}
+.cladd-color-brand {
+  --cladd-theme: #388aff;
+}
+.cladd-color-red {
+  --cladd-theme: #ff0b0b;
+}
+.cladd-color-pink {
+  --cladd-theme: #ff0bac;
+}
+.cladd-color-purple {
+  --cladd-theme: #a20bff;
+}
+.cladd-color-blue {
+  --cladd-theme: #0047ff;
+}
+.cladd-color-cyan {
+  --cladd-theme: #00f9ff;
+}
+.cladd-color-lime {
+  --cladd-theme: #7dff0b;
+}
+.cladd-color-green {
+  --cladd-theme: #0bff23;
+}
+.cladd-color-yellow {
+  --cladd-theme: #fff800;
+}
+.cladd-color-orange {
+  --cladd-theme: #ff7a00;
+}
+
+:root,
+.cladd-color-neutral {
+  --cladd-bg: #fff;
+  --cladd-backdrop: oklch(0.91 0 0);
+  --cladd-primary: oklch(0.1 0 0);
+  --cladd-on-primary: oklch(0.96 0 0);
+  --cladd-surface: oklch(0.97 0 0);
+  --cladd-surface-cut: oklch(0.93 0 0);
+  --cladd-fg: oklch(0.32 0 0);
+  --cladd-fg-soft: oklch(0.5 0 0);
+  --cladd-fg-softer: oklch(0.65 0 0);
+  --cladd-fg-softest: oklch(0.75 0 0);
+  --cladd-surface-white: oklch(1 0 0);
+  --cladd-surface-black: oklch(0 0 0);
+  --cladd-bg-outline: oklch(0.89 0 0);
+  --cladd-outline: oklch(0.89 0 0);
+  --cladd-surface-hover: color-mix(
+    in oklab,
+    var(--cladd-surface-black) 3%,
+    transparent
+  );
+  --cladd-surface-pressed: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 6%,
+    transparent
+  );
+  --cladd-surface-hover-fill: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 20%,
+    transparent
+  );
+  --cladd-surface-mix-color: var(--cladd-surface-black);
+  --cladd-surface-mix-amount: 4%;
+  --cladd-highlight-mix: 50%;
+  --cladd-fill-fade: 20%;
+
+  --shadow-cladd-cut-outline:
+    0.5px 0.5px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-black) 10%, transparent) inset,
+    0px 0px 0px 0.5px
+    color-mix(in oklab, var(--cladd-surface-black) 5%, transparent) inset;
+  --shadow-cladd-outline-fill:
+    0px 0px 0px 0.5px
+    color-mix(in oklab, var(--cladd-surface-black) 20%, transparent) inset,
+    1px 1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 30%, transparent) inset;
+  --shadow-cladd-outline:
+    0px 0px 0px 1px var(--color-cladd-outline) inset,
+    1.5px 1.5px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 60%, transparent) inset;
+  --shadow-cladd-popover: 0 24px 64px -12px rgb(0 0 0 / 0.18);
+}
+
+.dark,
+.dark .cladd-color-neutral {
+  --cladd-bg: #0f0f0f;
+  --cladd-backdrop: #000;
+  --cladd-primary: oklch(0.95 0 0);
+  --cladd-on-primary: oklch(0.2 0 0);
+  --cladd-surface: oklch(0.21 0 0);
+  --cladd-surface-cut: oklch(0.19 0 0);
+  --cladd-fg: oklch(0.9 0 0);
+  --cladd-fg-soft: oklch(0.65 0 0);
+  --cladd-fg-softer: oklch(0.5 0 0);
+  --cladd-fg-softest: oklch(0.4 0 0);
+  --cladd-surface-white: oklch(1 0 0);
+  --cladd-surface-black: oklch(0 0 0);
+  --cladd-bg-outline: oklch(0.23 0 0);
+  --cladd-outline: oklch(0.3 0 0);
+  --cladd-surface-hover: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 5%,
+    transparent
+  );
+  --cladd-surface-pressed: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 3%,
+    transparent
+  );
+  --cladd-surface-hover-fill: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 20%,
+    transparent
+  );
+  --cladd-surface-mix-color: var(--cladd-surface-white);
+  --cladd-surface-mix-amount: 6%;
+  --cladd-highlight-mix: 3%;
+  --cladd-fill-fade: 15%;
+
+  --shadow-cladd-cut-outline:
+    -1px -1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 2%, transparent) inset,
+    0px 0px 0px 1px
+    color-mix(in oklab, var(--cladd-surface-white) 7%, transparent) inset;
+  --shadow-cladd-outline:
+    1px 1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 8%, transparent) inset,
+    -1px -1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 7%, transparent) inset;
+  --shadow-cladd-outline-fill:
+    1px 1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 20%, transparent) inset,
+    -1px -1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 20%, transparent) inset;
+  --shadow-cladd-popover: 0 24px 64px -12px rgb(0 0 0 / 0.5);
+}
+
+[class*="cladd-color-"]:not(.cladd-color-neutral) {
+  --cladd-bg: oklch(from var(--cladd-theme) 1 0.015 h);
+  --cladd-backdrop: oklch(0.74 0.018 100);
+  --cladd-primary: oklch(from var(--cladd-theme) 0.5 0.18 h);
+  --cladd-on-primary: oklch(from var(--cladd-theme) 0.97 0.04 h);
+  --cladd-surface: oklch(from var(--cladd-theme) 0.97 0.015 h);
+  --cladd-surface-cut: oklch(from var(--cladd-theme) 0.93 0.02 h);
+  --cladd-fg: oklch(from var(--cladd-theme) 0.25 0.015 h);
+  --cladd-fg-soft: oklch(from var(--cladd-theme) 0.5 0.025 h);
+  --cladd-fg-softer: oklch(from var(--cladd-theme) 0.65 0.025 h);
+  --cladd-fg-softest: oklch(from var(--cladd-theme) 0.75 0.025 h);
+  --cladd-surface-white: oklch(from var(--cladd-theme) 0.98 0.04 h);
+  --cladd-surface-black: oklch(from var(--cladd-theme) 0.4 0.07 h);
+  --cladd-bg-outline: oklch(from var(--cladd-theme) 0.74 0.03 h);
+  --cladd-outline: oklch(from var(--cladd-theme) 0.88 0.025 h);
+  --cladd-surface-hover: color-mix(
+    in oklab,
+    var(--cladd-surface-black) 6%,
+    transparent
+  );
+  --cladd-surface-hover-fill: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 10%,
+    transparent
+  );
+  --cladd-surface-pressed: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 6%,
+    transparent
+  );
+  --cladd-surface-mix-amount: 5%;
+  --cladd-surface-mix-color: var(--cladd-surface-black);
+
+  --shadow-cladd-cut-outline:
+    0.5px 0.5px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-black) 10%, transparent) inset,
+    0px 0px 0px 0.5px
+    color-mix(in oklab, var(--cladd-surface-black) 5%, transparent) inset;
+  --shadow-cladd-outline-fill:
+    0px 0px 0px 1px
+    color-mix(in oklab, var(--cladd-surface-black) 40%, transparent) inset,
+    1px 1px 0px 0.25px
+    color-mix(in oklab, var(--cladd-surface-white) 30%, transparent) inset;
+  --shadow-cladd-outline:
+    0px 0px 0px 1px var(--color-cladd-outline) inset,
+    1.5px 1.5px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 80%, transparent) inset;
+}
+
+.dark [class*="cladd-color-"]:not(.cladd-color-neutral),
+.dark[class*="cladd-color-"]:not(.cladd-color-neutral) {
+  --cladd-bg: oklch(from var(--cladd-theme) 0.18 0.02 h);
+  --cladd-backdrop: #000;
+  --cladd-primary: oklch(from var(--cladd-theme) 0.95 0.18 h);
+  --cladd-on-primary: oklch(from var(--cladd-theme) 0.2 0.05 h);
+  --cladd-surface: oklch(from var(--cladd-theme) 0.23 0.027 h);
+  --cladd-surface-cut: oklch(from var(--cladd-theme) 0.19 0.027 h);
+  --cladd-fg: oklch(from var(--cladd-theme) 0.9 0.04 h);
+  --cladd-fg-soft: oklch(from var(--cladd-theme) 0.65 0.04 h);
+  --cladd-fg-softer: oklch(from var(--cladd-theme) 0.5 0.04 h);
+  --cladd-fg-softest: oklch(from var(--cladd-theme) 0.4 0.04 h);
+  --cladd-surface-white: oklch(from var(--cladd-theme) 0.92 0.05 h);
+  --cladd-surface-black: oklch(from var(--cladd-theme) 0.08 0.02 h);
+  --cladd-bg-outline: oklch(from var(--cladd-theme) 0.25 0.02 h);
+  --cladd-outline: oklch(from var(--cladd-theme) 0.28 0.025 h);
+  --cladd-surface-hover: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 5%,
+    transparent
+  );
+  --cladd-surface-pressed: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 3%,
+    transparent
+  );
+  --cladd-surface-hover-fill: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 40%,
+    transparent
+  );
+  --cladd-surface-mix-color: var(--cladd-surface-white);
+  --cladd-surface-mix-amount: 6%;
+
+  --shadow-cladd-cut-outline:
+    -1px -1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 2%, transparent) inset,
+    0px 0px 0px 1px
+    color-mix(in oklab, var(--cladd-surface-white) 7%, transparent) inset;
+  --shadow-cladd-outline:
+    1px 1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 8%, transparent) inset,
+    -1px -1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 7%, transparent) inset;
+  --shadow-cladd-outline-fill:
+    1px 1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 30%, transparent) inset,
+    -1px -1px 0px 0px
+    color-mix(in oklab, var(--cladd-surface-white) 30%, transparent) inset;
+}
+
+.cladd-surface {
+  --cladd-surface-multiplier: 0;
+}
+.cladd-surface .cladd-surface {
+  --cladd-surface-multiplier: 1;
+}
+.cladd-surface .cladd-surface .cladd-surface {
+  --cladd-surface-multiplier: 2;
+}
+.cladd-surface .cladd-surface .cladd-surface .cladd-surface {
+  --cladd-surface-multiplier: 3;
+}
+.cladd-surface .cladd-surface .cladd-surface .cladd-surface .cladd-surface {
+  --cladd-surface-multiplier: 4;
+}
+.cladd-level-1.cladd-level-1.cladd-level-1.cladd-level-1.cladd-level-1.cladd-level-1 {
+  --cladd-surface-multiplier: 0;
+}
+.cladd-level-2.cladd-level-2.cladd-level-2.cladd-level-2.cladd-level-2.cladd-level-2 {
+  --cladd-surface-multiplier: 1;
+}
+.cladd-level-3.cladd-level-3.cladd-level-3.cladd-level-3.cladd-level-3.cladd-level-3 {
+  --cladd-surface-multiplier: 2;
+}
+.cladd-level-4.cladd-level-4.cladd-level-4.cladd-level-4.cladd-level-4.cladd-level-4 {
+  --cladd-surface-multiplier: 3;
+}
+.cladd-level-5.cladd-level-5.cladd-level-5.cladd-level-5.cladd-level-5.cladd-level-5 {
+  --cladd-surface-multiplier: 4;
+}
+
+:root,
+.dark,
+.cladd-surface,
+.cladd-cut,
+[class*="cladd-level-"],
+[class*="cladd-color-"] {
+  --cladd-step: calc(
+    var(--cladd-surface-mix-amount) *
+    var(--cladd-surface-multiplier, 0)
+  );
+  --color-cladd-bg: var(--cladd-bg);
+  --color-cladd-backdrop: var(--cladd-backdrop);
+  --color-cladd-primary: var(--cladd-primary);
+  --color-cladd-on-primary: var(--cladd-on-primary);
+  --color-cladd-surface-white: var(--cladd-surface-white);
+  --color-cladd-surface-black: var(--cladd-surface-black);
+  --color-cladd-surface-hover: var(--cladd-surface-hover);
+  --color-cladd-surface-hover-fill: var(--cladd-surface-hover-fill);
+  --color-cladd-surface-pressed: var(--cladd-surface-pressed);
+  --color-cladd-bg-outline: var(--cladd-bg-outline);
+  --color-cladd-surface: color-mix(
+    in oklab,
+    var(--cladd-surface-mix-color) var(--cladd-step),
+    var(--cladd-surface)
+  );
+  --color-cladd-surface-prev: color-mix(
+    in oklab,
+    var(--cladd-surface-mix-color)
+      calc(
+        var(--cladd-surface-mix-amount) *
+        (var(--cladd-surface-multiplier, 0) - 1)
+      ),
+    var(--cladd-surface)
+  );
+  --color-cladd-surface-next: color-mix(
+    in oklab,
+    var(--cladd-surface-mix-color)
+      calc(
+        var(--cladd-surface-mix-amount) *
+        (var(--cladd-surface-multiplier, 0) + 1)
+      ),
+    var(--cladd-surface)
+  );
+  --color-cladd-surface-cut: color-mix(
+    in oklab,
+    var(--cladd-surface-mix-color) var(--cladd-step),
+    var(--cladd-surface-cut)
+  );
+  --color-cladd-outline: color-mix(
+    in oklab,
+    var(--cladd-surface-mix-color) var(--cladd-step),
+    var(--cladd-outline)
+  );
+  --color-cladd-fg: var(--cladd-fg);
+  --color-cladd-fg-soft: color-mix(
+    in oklab,
+    var(--cladd-surface-mix-color) var(--cladd-step),
+    var(--cladd-fg-soft)
+  );
+  --color-cladd-fg-softer: color-mix(
+    in oklab,
+    var(--cladd-surface-mix-color) var(--cladd-step),
+    var(--cladd-fg-softer)
+  );
+  --color-cladd-fg-softest: color-mix(
+    in oklab,
+    var(--cladd-surface-mix-color) var(--cladd-step),
+    var(--cladd-fg-softest)
+  );
+  --color-cladd-surface-highlight: color-mix(
+    in oklab,
+    var(--cladd-surface-white) var(--cladd-highlight-mix),
+    var(--color-cladd-surface)
+  );
+}
+
+@theme {
+  --color-cladd-bg: var(--cladd-bg);
+  --color-cladd-backdrop: var(--cladd-backdrop);
+  --color-cladd-primary: var(--cladd-primary);
+  --color-cladd-on-primary: var(--cladd-on-primary);
+  --color-cladd-surface: var(--cladd-surface);
+  --color-cladd-surface-cut: var(--cladd-surface-cut);
+  --color-cladd-surface-prev: var(--cladd-surface);
+  --color-cladd-surface-next: var(--cladd-surface);
+  --color-cladd-surface-highlight: var(--cladd-surface);
+  --color-cladd-surface-white: var(--cladd-surface-white);
+  --color-cladd-surface-black: var(--cladd-surface-black);
+  --color-cladd-surface-hover: var(--cladd-surface-hover);
+  --color-cladd-surface-hover-fill: var(--cladd-surface-hover-fill);
+  --color-cladd-surface-pressed: var(--cladd-surface-pressed);
+  --color-cladd-fg: var(--cladd-fg);
+  --color-cladd-fg-soft: var(--cladd-fg-soft);
+  --color-cladd-fg-softer: var(--cladd-fg-softer);
+  --color-cladd-fg-softest: var(--cladd-fg-softest);
+  --color-cladd-bg-outline: var(--cladd-bg-outline);
+  --color-cladd-outline: var(--cladd-outline);
+
+  --shadow-cladd-outline: var(--shadow-cladd-outline);
+  --shadow-cladd-outline-fill: var(--shadow-cladd-outline-fill);
+  --shadow-cladd-cut-outline: var(--shadow-cladd-cut-outline);
+  --shadow-cladd-popover: var(--shadow-cladd-popover);
+
+  --spacing-cladd-3xs: 12px;
+  --spacing-cladd-2xs: 16px;
+  --spacing-cladd-xs: 20px;
+  --spacing-cladd-sm: 24px;
+  --spacing-cladd-md: 28px;
+  --spacing-cladd-lg: 32px;
+  --spacing-cladd-xl: 40px;
+  --spacing-cladd-2xl: 48px;
+  --spacing-cladd-thumb-xs: 16px;
+  --spacing-cladd-thumb-sm: 20px;
+  --spacing-cladd-thumb-md: 24px;
+  --spacing-cladd-nested-sm: 16px;
+  --spacing-cladd-nested-md: 20px;
+  --spacing-cladd-nested-lg: 24px;
+
+  --cladd-radius: 8px;
+  --radius-cladd: var(--cladd-radius);
+  --radius-cladd-3xs: calc(var(--cladd-radius) * 12 / 28);
+  --radius-cladd-2xs: calc(var(--cladd-radius) * 16 / 28);
+  --radius-cladd-xs: calc(var(--cladd-radius) * 20 / 28);
+  --radius-cladd-sm: calc(var(--cladd-radius) * 24 / 28);
+  --radius-cladd-md: var(--cladd-radius);
+  --radius-cladd-lg: calc(var(--cladd-radius) * 32 / 28);
+  --radius-cladd-xl: calc(var(--cladd-radius) * 40 / 28);
+  --radius-cladd-2xl: calc(var(--cladd-radius) * 48 / 28);
+  --radius-cladd-wrap-md: calc(var(--cladd-radius) + 4px);
+  --radius-cladd-panel: 24px;
+  --radius-cladd-popover: 24px;
+  --radius-cladd-dialog: 24px;
+  --radius-cladd-toast: 24px;
+  --radius-cladd-tooltip: 12px;
+
+  --text-cladd-md: 16px;
+  --text-cladd-sm: 14px;
+  --text-cladd-xs: 12px;
+  --text-cladd-2xs: 10px;
+  --text-cladd-3xs: 8px;
+
+  --ease-cladd-spring: cubic-bezier(0, 1, 0.2, 1.1);
+  --ease-cladd-pop: cubic-bezier(0, 1, 0, 1.025);
+  --animate-cladd-spinner: cladd-spinner 1.5s infinite linear;
+
+  @keyframes cladd-spinner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+:root {
+  --radius: 8px;
+  --background: var(--cladd-bg);
+  --foreground: var(--cladd-fg);
+  --card: var(--cladd-surface);
+  --card-foreground: var(--cladd-fg);
+  --popover: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 50%,
+    var(--cladd-surface)
+  );
+  --popover-foreground: var(--cladd-fg);
+  --primary: var(--cladd-primary);
+  --primary-foreground: var(--cladd-on-primary);
+  --secondary: var(--cladd-surface);
+  --secondary-foreground: var(--cladd-fg);
+  --muted: var(--cladd-surface-cut);
+  --muted-foreground: var(--cladd-fg-soft);
+  --accent: color-mix(
+    in oklab,
+    var(--cladd-surface-mix-color) var(--cladd-surface-mix-amount),
+    var(--cladd-surface)
+  );
+  --accent-foreground: var(--cladd-fg);
+  --border: var(--cladd-bg-outline);
+  --input: var(--cladd-outline);
+
+  --brand: oklch(from #388aff 0.5 0.18 h);
+  --brand-foreground: oklch(from #388aff 0.97 0.04 h);
+  --brand-soft: oklch(from #388aff 0.95 0.03 h);
+  --destructive: oklch(from #ff0b0b 0.55 0.2 h);
+  --destructive-foreground: oklch(from #ff0b0b 0.97 0.04 h);
+  --success: oklch(from #0bff23 0.5 0.15 h);
+  --success-soft: oklch(from #0bff23 0.95 0.04 h);
+  --warning: oklch(from #ff7a00 0.58 0.15 h);
+  --warning-soft: oklch(from #fff800 0.96 0.05 h);
+  --ring: var(--brand);
+
+  --chart-1: var(--brand);
+  --chart-2: var(--success);
+  --chart-3: var(--cladd-fg-soft);
+  --chart-4: oklch(from #00f9ff 0.6 0.12 h);
+  --chart-5: var(--destructive);
+
+  --sidebar: var(--cladd-surface);
+  --sidebar-foreground: var(--cladd-fg);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
+  --sidebar-accent: color-mix(
+    in oklab,
+    var(--cladd-surface-mix-color) var(--cladd-surface-mix-amount),
+    var(--cladd-surface)
+  );
+  --sidebar-accent-foreground: var(--cladd-fg);
+  --sidebar-border: var(--cladd-bg-outline);
+  --sidebar-ring: var(--brand);
+}
+
+.dark {
+  --popover: color-mix(
+    in oklab,
+    var(--cladd-surface-white) 12%,
+    var(--cladd-surface)
+  );
+  --brand: oklch(from #388aff 0.85 0.13 h);
+  --brand-foreground: oklch(from #388aff 0.2 0.05 h);
+  --brand-soft: oklch(from #388aff 0.23 0.027 h);
+  --destructive: oklch(from #ff0b0b 0.75 0.16 h);
+  --destructive-foreground: oklch(from #ff0b0b 0.2 0.05 h);
+  --success: oklch(from #0bff23 0.82 0.17 h);
+  --success-soft: oklch(from #0bff23 0.23 0.027 h);
+  --warning: oklch(from #fff800 0.88 0.16 h);
+  --warning-soft: oklch(from #fff800 0.23 0.027 h);
+}
+
+@theme inline {
+  --font-sans:
+    "Geist Variable", "Geist", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --font-mono:
+    "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo,
+    monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer components {
+  .cladd-surface,
+  .cladd-cut,
+  .cladd-ghost {
+    --cladd-sheen: linear-gradient(transparent, transparent);
+    background-color: var(--color-cladd-surface);
+    background-image:
+      linear-gradient(var(--cladd-overlay), var(--cladd-overlay)),
+      var(--cladd-sheen);
+    transition-timing-function: ease;
+    transition-duration: 200ms;
+    transition-property:
+      --cladd-overlay, background-color, color, box-shadow, opacity, scale,
+      outline-color, outline-offset;
+  }
+
+  .cladd-gradient {
+    --cladd-sheen: linear-gradient(
+      to bottom right,
+      color-mix(
+        in oklab,
+        var(--cladd-surface-white) var(--cladd-highlight-mix),
+        transparent
+      ),
+      transparent
+    );
+  }
+
+  .cladd-fill,
+  .cladd-gradient-fill,
+  .cladd-fill-checked:is([data-state="checked"], [data-state="indeterminate"]) {
+    color: var(--color-cladd-on-primary);
+    background-color: var(--color-cladd-primary);
+  }
+  .cladd-gradient-fill,
+  .cladd-fill-checked:is([data-state="checked"], [data-state="indeterminate"]) {
+    --cladd-sheen: linear-gradient(
+      to bottom right,
+      transparent,
+      color-mix(
+        in oklab,
+        var(--color-cladd-surface) var(--cladd-fill-fade),
+        transparent
+      )
+    );
+  }
+  :root:not(.dark)
+    :is(
+      .cladd-gradient-fill,
+      .cladd-fill-checked:is(
+        [data-state="checked"],
+        [data-state="indeterminate"]
+      )
+    ) {
+    --cladd-sheen: linear-gradient(
+      to bottom right,
+      color-mix(
+        in oklab,
+        var(--cladd-surface-white) var(--cladd-fill-fade),
+        transparent
+      ),
+      transparent
+    );
+  }
+
+  .cladd-outline {
+    box-shadow: var(--shadow-cladd-outline);
+  }
+  .cladd-outline:is(.cladd-fill, .cladd-gradient-fill),
+  .cladd-outline.cladd-fill-checked:is(
+    [data-state="checked"],
+    [data-state="indeterminate"]
+  ) {
+    box-shadow: var(--shadow-cladd-outline-fill);
+  }
+
+  .cladd-cut {
+    background-color: var(--color-cladd-surface-cut);
+    box-shadow: var(--shadow-cladd-cut-outline);
+  }
+
+  .cladd-ghost {
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  @media (hover: hover) {
+    .cladd-hoverable:hover {
+      --cladd-overlay: var(--color-cladd-surface-hover);
+    }
+    .cladd-hoverable:is(.cladd-fill, .cladd-gradient-fill):hover,
+    .cladd-hoverable.cladd-fill-checked:is(
+        [data-state="checked"],
+        [data-state="indeterminate"]
+      ):hover {
+      --cladd-overlay: var(--color-cladd-surface-hover-fill);
+    }
+    .cladd-ghost.cladd-hoverable:hover {
+      --cladd-overlay: transparent;
+      background-color: var(--color-cladd-surface);
+    }
+  }
+
+  .cladd-clickable:active:not(:has(.cladd-clickable:active)),
+  .cladd-pressed {
+    --cladd-overlay: var(--color-cladd-surface-pressed);
+  }
+  .cladd-ghost.cladd-pressed,
+  .cladd-ghost.cladd-clickable:active {
+    background-color: var(--color-cladd-surface);
+  }
+  .cladd-clickable:active:not(:has(.cladd-clickable:active)) > *,
+  .cladd-press-content:active > * {
+    opacity: 0.75;
+    scale: 0.95;
+  }
+  .cladd-clickable > * {
+    transition:
+      scale 200ms ease,
+      opacity 200ms ease;
+  }
+
+  .cladd-button-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: inherit;
+    flex-wrap: inherit;
+    gap: inherit;
+    align-items: inherit;
+    align-self: stretch;
+    justify-content: inherit;
+    min-width: 0;
+    overflow: inherit;
+    text-overflow: inherit;
+  }
+
+  .cladd-focusable,
+  .cladd-focusable-within {
+    outline: 2px solid transparent;
+    outline-offset: 0px;
+  }
+  .cladd-focusable:focus-visible,
+  .cladd-focusable-within:has(:focus-visible) {
+    outline: var(--cladd-focus-ring, 2px) solid var(--ring);
+    outline-offset: 2px;
+  }
+  .cladd-focusable-input {
+    outline: none;
+  }
+  .cladd-focusable-input:is(:focus, :has(:focus)) {
+    box-shadow:
+      inset 0 0 0 var(--cladd-field-ring, 1.5px) var(--ring),
+      var(--shadow-cladd-cut-outline);
+  }
+  .cladd-focusable-input:is(
+    [aria-invalid="true"],
+    :has([aria-invalid="true"])
+  ) {
+    box-shadow:
+      inset 0 0 0 var(--cladd-field-ring, 1.5px) var(--destructive),
+      var(--shadow-cladd-cut-outline);
+  }
+
+  .cladd-segment {
+    background-color: transparent;
+    transition-duration: 200ms;
+    transition-property:
+      background-color, box-shadow, color, opacity, scale, outline-color,
+      outline-offset;
+  }
+  @media (hover: hover) {
+    .cladd-segment:hover {
+      background-color: var(--color-cladd-surface-next);
+    }
+  }
+  .cladd-segment:is(
+    [data-state="active"],
+    [aria-current="page"],
+    [aria-selected="true"],
+    .cladd-active
+  ) {
+    background-color: var(--color-cladd-surface-next);
+    background-image: linear-gradient(
+      to bottom right,
+      color-mix(
+        in oklab,
+        var(--cladd-surface-white) var(--cladd-highlight-mix),
+        transparent
+      ),
+      transparent
+    );
+    box-shadow: var(--shadow-cladd-outline);
+  }
+  .cladd-segment:active {
+    scale: 0.97;
+  }
+
+  .cladd-section-title {
+    font-size: var(--text-cladd-xs);
+    font-weight: 500;
+    color: var(--color-cladd-fg-soft);
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  .cladd-backdrop {
+    background-color: color-mix(
+      in oklab,
+      var(--cladd-backdrop) 50%,
+      transparent
+    );
+  }
+  .dark .cladd-backdrop {
+    background-color: color-mix(
+      in oklab,
+      var(--cladd-backdrop) 70%,
+      transparent
+    );
+  }
+
+  .cladd-anim-dialog[data-state="open"] {
+    animation: cladd-pop-in 500ms var(--ease-cladd-spring);
+  }
+  .cladd-anim-dialog[data-state="closed"] {
+    animation: cladd-pop-out 200ms ease-out forwards;
+  }
+  .cladd-anim-popover[data-state="open"] {
+    animation: cladd-grow-in 300ms var(--ease-cladd-pop);
+  }
+  .cladd-anim-popover[data-state="closed"] {
+    animation: cladd-grow-out 200ms ease-in-out forwards;
+  }
+  .cladd-anim-tooltip[data-state="delayed-open"],
+  .cladd-anim-tooltip[data-state="instant-open"] {
+    animation: cladd-tip-in 200ms ease;
+  }
+  .cladd-anim-tooltip[data-state="closed"] {
+    animation: cladd-tip-out 200ms ease forwards;
+  }
+  .cladd-anim-fade[data-state="open"] {
+    animation: cladd-fade-in 200ms ease;
+  }
+  .cladd-anim-fade[data-state="closed"] {
+    animation: cladd-fade-out 200ms ease forwards;
+  }
+}
+
+@keyframes cladd-pop-in {
+  from {
+    opacity: 0;
+    scale: 0.75;
+  }
+}
+@keyframes cladd-pop-out {
+  to {
+    opacity: 0;
+    scale: 0.75;
+  }
+}
+@keyframes cladd-grow-in {
+  from {
+    opacity: 0;
+    scale: 0;
+  }
+}
+@keyframes cladd-grow-out {
+  to {
+    opacity: 0;
+    scale: 0;
+  }
+}
+@keyframes cladd-tip-in {
+  from {
+    opacity: 0;
+    scale: 0.5;
+  }
+}
+@keyframes cladd-tip-out {
+  to {
+    opacity: 0;
+    scale: 0.5;
+  }
+}
+@keyframes cladd-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes cladd-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--brand) 30%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cladd-surface,
+    .cladd-cut,
+    .cladd-ghost,
+    .cladd-clickable > * {
+      transition-duration: 0ms;
+    }
+    [class*="cladd-anim-"] {
+      animation-duration: 1ms !important;
+    }
+  }
+}

@@ -14,6 +14,7 @@ services:
       TZ: ${TZ:-UTC}
     volumes:
       - ./backend/src:/app/src
+      - ./backend/scripts:/app/scripts
     command: [api]
     depends_on:
       postgres:

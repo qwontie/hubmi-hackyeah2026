@@ -48,6 +48,12 @@ class ApiSettings(Section):
     docs: bool = False
 
 
+class AuthSettings(Section):
+    secret: SecretStr = SecretStr("")
+    cookie_name: str = "hubmi_session"
+    session_days: int = 30
+
+
 class LlmSettings(Section):
     model: str = "google-gla:gemini-2.5-flash"
     gemini_api_key: SecretStr = SecretStr("")
@@ -57,6 +63,7 @@ class Settings(BaseSettings):
     log: LogSettings = Field(default_factory=LogSettings)
     db: DatabaseSettings = Field(default_factory=DatabaseSettings)
     api: ApiSettings = Field(default_factory=ApiSettings)
+    auth: AuthSettings = Field(default_factory=AuthSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
 
     model_config = SettingsConfigDict(

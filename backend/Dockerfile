@@ -15,6 +15,8 @@ RUN uv sync --frozen --no-install-project --no-dev
 COPY src ./src
 RUN uv sync --frozen --no-dev
 
+COPY scripts ./scripts
+
 COPY alembic.ini ./
 COPY migrations ./migrations
 
