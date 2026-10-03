@@ -1,0 +1,1279 @@
+{
+  "rising_topics": [
+    "youth_mental",
+    "digital",
+    "homeless"
+  ],
+  "needs": [
+    {
+      "key": "n001",
+      "topic": "dementia",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Mama ma demencję i coraz częściej wychodzi sama z domu, wczoraj szukaliśmy jej z policją do drugiej w nocy. Pracuję na etat, nie mogę jej pilnować cały dzień. Co robić?",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 4,
+          "body": "Dzień dobry, bardzo dziękujemy za opisanie sytuacji, wiemy, jak trudne są takie noce. W bibliotece innowacji jest rozwiązanie „{top}”, które pomaga szybciej odnaleźć osobę z zaburzeniami pamięci. Proszę też skontaktować się z ośrodkiem pomocy społecznej w swojej dzielnicy w sprawie usług opiekuńczych i dziennego domu pobytu. Jeśli zgodzi się Pani, przekażemy kontakt do organizacji, która w Krakowie prowadzi grupę wsparcia dla rodzin osób z demencją."
+        },
+        {
+          "from": "author",
+          "after_hours": 20,
+          "body": "Dziękuję, tak, proszę o kontakt do tej grupy. Do OPS zadzwonię w poniedziałek."
+        },
+        {
+          "from": "rops",
+          "after_hours": 6,
+          "body": "Przekazaliśmy prośbę do organizacji, odezwą się do Pani w tym tygodniu. Trzymamy kciuki."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n002",
+      "topic": "dementia",
+      "powiat": "powiat-myslenicki",
+      "origin": "match",
+      "text": "tata (82 l.) ma alzheimera, gubi się nawet na własnej ulicy. sąsiadka przyprowadziła go wczoraj ze sklepu bo nie wiedział gdzie mieszka",
+      "nothing_fits": false,
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Pomóc może rozwiązanie „{top}”. Warto też poprosić GOPS o ocenę sytuacji taty i usługi opiekuńcze, a lekarza rodzinnego o skierowanie do poradni geriatrycznej."
+        }
+      ]
+    },
+    {
+      "key": "n003",
+      "topic": "dementia",
+      "powiat": "powiat-myslenicki",
+      "origin": "form",
+      "email": "opiekunka.dulowa@example.org",
+      "text": "Jestem opiekunką środowiskową w gminie. Mamy kilkoro podopiecznych z otępieniem, którzy mieszkają sami albo z bardzo starym współmałżonkiem. Zdarza się, że wychodzą w nocy i błądzą. Szukamy prostego sposobu, żeby rodzina albo sąsiedzi wiedzieli, gdzie są, i żeby ktoś obcy mógł szybko oddać ich bliskim.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 26,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie z perspektywy opiekunki. Proponujemy przyjrzeć się innowacji „Kody QR na pomoc seniorom”: kod na ubraniu lub opasce prowadzi do numeru bliskiej osoby bez podawania danych publicznie. Materiały do wdrożenia są do pobrania na stronie innowacji. Chętnie pomożemy przygotować krótkie spotkanie dla rodzin w gminie."
+        }
+      ]
+    },
+    {
+      "key": "n004",
+      "topic": "dementia",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Babcia z demencją, gubi się, nie poznaje nas już czasem. Szukam czegoś co pomoże jak wyjdzie z domu"
+    },
+    {
+      "key": "n005",
+      "topic": "dementia",
+      "powiat": "powiat-wadowicki",
+      "origin": "match",
+      "text": "Moja żona choruje na otępienie. Ja mam 79 lat i już nie daję rady w nocy, ona chodzi po mieszkaniu i chce wychodzić. Dzieci za granicą.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, bardzo dziękujemy za wiadomość. Przysługują Panu usługi opiekuńcze i, przy otępieniu żony, specjalistyczne usługi opiekuńcze: wniosek przyjmuje ośrodek pomocy społecznej. Proszę też zapytać o dzienny dom pobytu dla osób z otępieniem, który da Panu kilka godzin odpoczynku."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n006",
+      "topic": "dementia",
+      "powiat": "powiat-myslenicki",
+      "origin": "match",
+      "text": "Mieszkamy na wsi pod Myślenicami, teściowa ma zaniki pamięci i już dwa razy zaszła do lasu. Boimy się, że kiedyś jej nie znajdziemy.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 30,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Dobrym pierwszym krokiem może być rozwiązanie „{top}”. Warto też zapytać w Gminnym Ośrodku Pomocy Społecznej o asystenta lub usługi opiekuńcze. Jeżeli w Państwa gminie jest więcej takich rodzin, możemy pomóc ośrodkowi wdrożyć innowację dla całej gminy."
+        }
+      ]
+    },
+    {
+      "key": "n007",
+      "topic": "dementia",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "osoba starsza z alzheimerem wychodzi z domu i się gubi, jak zabezpieczyć"
+    },
+    {
+      "key": "n008",
+      "topic": "dementia",
+      "powiat": null,
+      "origin": "match",
+      "text": "Dziadek z chorobą otępienną coraz częściej nie wie gdzie jest, raz wsiadł do autobusu i pojechał do innej miejscowości. Co można zrobić żeby był bezpieczny?"
+    },
+    {
+      "key": "n009",
+      "topic": "lonely",
+      "powiat": "powiat-nowosadecki",
+      "origin": "match",
+      "text": "Mieszkam sama od śmierci męża, dzieci w Anglii. Czasem przez tydzień z nikim nie rozmawiam. Chciałabym gdzieś chodzić, ale u nas nic dla starszych nie ma.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 18,
+          "body": "Dzień dobry, bardzo dziękujemy, że Pani do nas napisała. W wielu gminach powiatu nowosądeckiego działają Kluby Seniora i Koła Gospodyń Wiejskich, które przyjmują nowe osoby. Prosimy zapytać w urzędzie gminy albo w GOPS, co jest najbliżej. Przekazaliśmy też informację o potrzebie do koordynatora, który zbiera takie zgłoszenia z regionu."
+        },
+        {
+          "from": "author",
+          "after_hours": 48,
+          "body": "Dziękuję bardzo. W gminie powiedzieli, że klub jest, ale w drugiej wsi i nie mam jak dojechać. Autobus jeździ dwa razy dziennie."
+        },
+        {
+          "from": "rops",
+          "after_hours": 22,
+          "body": "Rozumiemy. Zapytaliśmy GOPS, czy klub może zorganizować wspólny dojazd albo wolontariusza z samochodem. Odezwiemy się, gdy dostaniemy odpowiedź."
+        }
+      ]
+    },
+    {
+      "key": "n010",
+      "topic": "lonely",
+      "powiat": "powiat-nowosadecki",
+      "origin": "match",
+      "text": "samotność ludzi starszych na wsi, mój sąsiad 87 lat siedzi cały dzień sam, rodziny brak. ktoś powinien do niego zaglądać"
+    },
+    {
+      "key": "n011",
+      "topic": "lonely",
+      "powiat": "powiat-nowosadecki",
+      "origin": "form",
+      "email": "kgw.przyslop@example.org",
+      "text": "Jako Koło Gospodyń Wiejskich widzimy, że coraz więcej starszych osób u nas jest samotnych, szczególnie zimą. Chcemy coś zrobić, np. wspólne obiady albo odwiedziny, ale nie wiemy od czego zacząć i skąd wziąć na to pieniądze.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 28,
+          "body": "Dzień dobry, dziękujemy za tę inicjatywę. Zachęcamy, żeby opisać pomysł w Kreatorze pomysłów na naszej stronie: asystent pomoże uzupełnić kanwę, a my wrócimy z informacją o najbliższych naborach. Inspiracją może być innowacja „Mobilne centrum pomocy dla osób starszych”, opracowana z myślą o terenach wiejskich."
+        },
+        {
+          "from": "author",
+          "after_hours": 30,
+          "body": "Dziękujemy, wypełnimy kreator w tym tygodniu."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n012",
+      "topic": "lonely",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Mój tata po śmierci mamy mieszka sam i jest bardzo samotny. Nie wychodzi z mieszkania, nie ma z kim porozmawiać. Mieszkam w innym mieście i nie wiem, jak mu pomóc.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy, że Pani o tacie pomyślała. Warto zapytać w dzielnicy o Klub Seniora i program odwiedzin wolontariuszy u samotnych osób. Jeżeli smutek się przedłuża, warto też porozmawiać z lekarzem rodzinnym o depresji."
+        }
+      ]
+    },
+    {
+      "key": "n013",
+      "topic": "lonely",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Samotne osoby starsze w bloku, nikt do nich nie zagląda, jedna pani leżała dwa dni zanim ktoś zauważył.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy za sygnał. W takich sytuacjach można zgłosić osobę do ośrodka pomocy społecznej, pracownik socjalny odwiedzi ją w domu. Coraz więcej spółdzielni wprowadza też sąsiedzkie sieci wsparcia: chętnie podeślemy przykłady."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n014",
+      "topic": "lonely",
+      "powiat": "powiat-gorlicki",
+      "origin": "match",
+      "text": "Starsi ludzie w naszej wsi są bardzo samotni, siedzą sami w domach i nie mają z kim porozmawiać, a nie ma nawet świetlicy żeby się spotkać."
+    },
+    {
+      "key": "n015",
+      "topic": "lonely",
+      "powiat": "powiat-miechowski",
+      "origin": "match",
+      "text": "jestem na emeryturze od roku i czuję się niepotrzebna i samotna, nie mam z kim pogadać",
+      "nothing_fits": true
+    },
+    {
+      "key": "n016",
+      "topic": "lonely",
+      "powiat": "powiat-olkuski",
+      "origin": "match",
+      "text": "Babcia mieszka sama, prawie nie wychodzi, mówi że nie ma po co żyć. Szukam miejsca gdzie mogłaby spotykać ludzi w swoim wieku."
+    },
+    {
+      "key": "n017",
+      "topic": "digital",
+      "powiat": "tarnow",
+      "origin": "match",
+      "text": "Lekarz kazał mi wszystko załatwiać przez internet, e-recepty, IKP, a ja nie umiem obsługiwać smartfona. Wnuczka pokazuje, ale zapominam. Mam 74 lata."
+    },
+    {
+      "key": "n018",
+      "topic": "digital",
+      "powiat": "tarnow",
+      "origin": "match",
+      "text": "seniorzy nie radzą sobie z internetem, bankowością i profilem zaufanym, a przez to łatwo padają ofiarą oszustów",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, bardzo nam przykro z powodu straty. Prosimy zgłosić oszustwo na policję, jeśli to jeszcze nie nastąpiło. W bibliotece innowacji jest „{top}”, a bezpłatną poradę prawną seniorzy mogą dostać w punktach nieodpłatnej pomocy prawnej w powiecie."
+        }
+      ]
+    },
+    {
+      "key": "n019",
+      "topic": "digital",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Wszystko jest teraz w internecie i w aplikacjach: przychodnia, urząd, bilety. Seniorzy, którzy nie umieją obsługiwać smartfona, są z tego wykluczeni."
+    },
+    {
+      "key": "n020",
+      "topic": "digital",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Mam 81 lat i nie umiem zapisać się do lekarza przez internet, a w rejestracji nikt nie odbiera telefonu. Jestem bezradna.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 5,
+          "body": "Dzień dobry, dziękujemy za wiadomość. W Krakowie bezpłatne zajęcia z obsługi telefonu i internetu dla seniorów prowadzą m.in. biblioteki miejskie i centra aktywności seniorów. Zainspirowało nas też rozwiązanie „{top}”. Jeśli poda nam Pani dzielnicę, wskażemy najbliższe miejsce."
+        },
+        {
+          "from": "author",
+          "after_hours": 10,
+          "body": "Mieszkam na Prądniku Czerwonym."
+        },
+        {
+          "from": "rops",
+          "after_hours": 3,
+          "body": "Dziękujemy. Na Prądniku Czerwonym zajęcia cyfrowe dla seniorów prowadzą filie Biblioteki Kraków i Centrum Aktywności Seniorów, najlepiej zapytać o najbliższy termin w filii przy swoim osiedlu. Zapraszamy też do napisania, jak poszło."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n021",
+      "topic": "digital",
+      "powiat": "tarnow",
+      "origin": "form",
+      "email": "klub.seniora.tarnow@example.org",
+      "text": "Prowadzimy klub seniora. Nasi członkowie nie radzą sobie z internetem i smartfonem: e-recepta, mObywatel, płatności. Potrzebujemy wolontariuszy albo gotowego programu zajęć cyfrowych dla seniorów.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Polecamy innowację „Wirtualne izby pamięci”, która jest modelem pracy z seniorami wykluczonymi cyfrowo, oraz symulator „Merkury” do ćwiczenia obsługi kiosków samoobsługowych. Oba mają materiały do pobrania. Możemy też połączyć Państwa z Regionalnym Centrum Wolontariatu w sprawie wolontariuszy."
+        }
+      ]
+    },
+    {
+      "key": "n022",
+      "topic": "digital",
+      "powiat": "powiat-bochenski",
+      "origin": "match",
+      "text": "seniorzy nie umią obsługiwać smartfonów, biletomatów i kas samoobsługowych, wstydzą się zapytać o pomoc"
+    },
+    {
+      "key": "n023",
+      "topic": "digital",
+      "powiat": "powiat-chrzanowski",
+      "origin": "match",
+      "text": "Wykluczenie cyfrowe seniorów. Moi rodzice nie umieją korzystać z internetu ani ze smartfona, a coraz więcej spraw da się załatwić tylko online.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy. Bezpłatne kursy obsługi komputera i telefonu dla seniorów prowadzą biblioteki i Uniwersytety Trzeciego Wieku, także w powiecie chrzanowskim. Wiele spraw, np. w ZUS czy NFZ, nadal można załatwić osobiście lub przez pełnomocnika."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n024",
+      "topic": "digital",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Babcia dostała nowy telefon i nie wie jak odebrać e-receptę ani jak zadzwonić na wideo. Gdzie są kursy dla seniorów z obsługi telefonu?"
+    },
+    {
+      "key": "n025",
+      "topic": "youth_mental",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Córka (15 lat) się okalecza, czekamy na psychiatrę dziecięcego 5 miesięcy. Psycholog szkolny jest raz w tygodniu. Nie wiem gdzie szukać pomocy teraz, nie za pół roku.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 2,
+          "body": "Dzień dobry, dziękujemy, że Pani napisała. Jeśli córka jest w zagrożeniu, proszę dzwonić pod 112 albo jechać na izbę przyjęć. Całodobowo działa też Centrum Wsparcia dla Osób w Stanie Kryzysu Psychicznego, tel. 800 70 2222, oraz telefon dla dzieci i młodzieży 116 111. Bez skierowania i bez długiego czekania przyjmuje środowiskowe centrum zdrowia psychicznego dla dzieci i młodzieży (I poziom referencyjny). W bibliotece innowacji są materiały „{top}”, które mogą pomóc w szkole."
+        },
+        {
+          "from": "author",
+          "after_hours": 6,
+          "body": "Dziękuję, nie wiedziałam o tych centrach. Zadzwonię jutro."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n026",
+      "topic": "youth_mental",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Syn ma 16 lat, od pół roku nie chodzi do szkoły, mówi że nic nie ma sensu. Psychiatra dziecięcy na NFZ dopiero za kilka miesięcy."
+    },
+    {
+      "key": "n027",
+      "topic": "youth_mental",
+      "powiat": "nowy-sacz",
+      "origin": "match",
+      "text": "W naszej szkole coraz więcej uczniów z depresją i atakami paniki. Jako nauczycielka nie wiem jak reagować, a do poradni czeka się miesiącami.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Polecamy materiały „Bez presji z depresji”, przygotowane dla nauczycieli, uczniów i rodziców. Szkoła może też poprosić o wsparcie poradnię psychologiczno-pedagogiczną oraz środowiskowe centrum zdrowia psychicznego dla dzieci i młodzieży, które przyjmuje bez skierowania."
+        }
+      ]
+    },
+    {
+      "key": "n028",
+      "topic": "youth_mental",
+      "powiat": "nowy-sacz",
+      "origin": "form",
+      "email": "pedagog.sp.ns@example.org",
+      "text": "Jestem pedagogiem szkolnym. Po pandemii mamy wysyp problemów psychicznych u dzieci: lęki, samookaleczenia, myśli samobójcze. Brakuje nam narzędzi do pracy z klasą i z rodzicami, a specjaliści w mieście mają terminy na wiosnę.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 22,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Polecamy komplet materiałów psychoedukacyjnych „Bez presji z depresji”, przygotowany do pracy z uczniami, nauczycielami i rodzicami, licencja pozwala na bezpłatne użycie. Jeśli szkoła zechce testować materiały, prosimy zapisać się przez przycisk „Chcę testować” przy innowacji."
+        }
+      ]
+    },
+    {
+      "key": "n029",
+      "topic": "youth_mental",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "nastolatki w kryzysie psychicznym nie mają gdzie iść, kolejki do psychologa dziecięcego na NFZ to pół roku"
+    },
+    {
+      "key": "n030",
+      "topic": "youth_mental",
+      "powiat": "nowy-sacz",
+      "origin": "match",
+      "text": "moja przyjaciółka ma depresję i ciągle mówi że chce zniknąć, boje się o nią ale ona nie chce żeby mówić dorosłym. mam 14 lat co mam zrobić",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 1,
+          "body": "Cześć, dobrze, że napisałaś. To bardzo poważne i nie musisz z tym zostawać sama. Zadzwoń pod 116 111 (Telefon Zaufania dla Dzieci i Młodzieży, bezpłatny, całą dobę) i opowiedz, co się dzieje, doradzą Ci, jak pomóc przyjaciółce. Jeśli ona mówi, że chce sobie coś zrobić teraz, dzwoń pod 112. Powiedzenie zaufanemu dorosłemu, np. pedagogowi, to nie zdrada, tylko troska."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n031",
+      "topic": "youth_mental",
+      "powiat": "powiat-wielicki",
+      "origin": "match",
+      "text": "Brakuje wsparcia psychologicznego dla młodzieży w małych miejscowościach. U nas nie ma ani jednego psychologa dziecięcego w całej gminie."
+    },
+    {
+      "key": "n032",
+      "topic": "youth_mental",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Dziecko 13 lat po próbie samobójczej wyszło ze szpitala i nie mamy żadnej dalszej opieki. Terapia prywatnie 200 zł za godzinę, nie stać nas."
+    },
+    {
+      "key": "n033",
+      "topic": "youth_mental",
+      "powiat": "powiat-oswiecimski",
+      "origin": "match",
+      "text": "Młodzież w naszym mieście ma depresję i stany lękowe, a do psychologa dziecięcego nie ma gdzie iść, kolejki na miesiące."
+    },
+    {
+      "key": "n034",
+      "topic": "youth_mental",
+      "powiat": null,
+      "origin": "match",
+      "text": "depresja u nastolatków, rodzice nie wiedzą jak rozmawiać z dzieckiem, potrzebne wsparcie dla rodzin"
+    },
+    {
+      "key": "n035",
+      "topic": "respite",
+      "powiat": "powiat-nowotarski",
+      "origin": "match",
+      "text": "Opiekuję się synem z głęboką niepełnosprawnością 24 godziny na dobę od 19 lat. Nie miałam urlopu od jego urodzenia. Potrzebuję chociaż kilku dni opieki wytchnieniowej.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 26,
+          "body": "Dzień dobry, bardzo dziękujemy za tę wiadomość. Opieka wytchnieniowa jest finansowana m.in. z programów, które realizują gminy i powiaty, nabór zwykle prowadzi GOPS lub PCPR. Zapytaliśmy PCPR w Nowym Targu o najbliższe terminy i wrócimy do Pani z odpowiedzią."
+        },
+        {
+          "from": "rops",
+          "after_hours": 50,
+          "body": "PCPR potwierdził, że w tym roku gmina prowadzi usługi opieki wytchnieniowej w formie dziennej. Wniosek składa się w GOPS, prosimy powołać się na naszą rozmowę."
+        }
+      ]
+    },
+    {
+      "key": "n036",
+      "topic": "respite",
+      "powiat": "powiat-nowotarski",
+      "origin": "match",
+      "text": "brak opieki wytchnieniowej dla rodziców dzieci niepełnosprawnych w naszym powiecie, matki są wykończone",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy. Zbieramy zgłoszenia o braku opieki wytchnieniowej z powiatu nowotarskiego i przekażemy je samorządom jako sygnał na najbliższe nabory. Prosimy pytać w GOPS o bieżącą edycję programu opieki wytchnieniowej."
+        }
+      ]
+    },
+    {
+      "key": "n037",
+      "topic": "respite",
+      "powiat": "powiat-nowotarski",
+      "origin": "form",
+      "email": "stowarzyszenie.podhale@example.org",
+      "text": "Stowarzyszenie rodziców dzieci z niepełnosprawnościami. Nasze członkinie od lat nie mają chwili odpoczynku. Potrzebny jest punkt krótkiego pobytu dla dzieci i dorosłych z niepełnosprawnością, żeby rodzic mógł iść do lekarza albo po prostu się wyspać."
+    },
+    {
+      "key": "n038",
+      "topic": "respite",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Mam dwoje dzieci, jedno z autyzmem. Zdrowa córka czuje się odsunięta, bo całe życie kręci się wokół brata, a ja nie mam siły dla nikogo."
+    },
+    {
+      "key": "n039",
+      "topic": "respite",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Rodzic dziecka z niepełnosprawnością, jestem wypalona, nikt mnie nie może zastąpić nawet na jeden dzień"
+    },
+    {
+      "key": "n040",
+      "topic": "respite",
+      "powiat": "powiat-wadowicki",
+      "origin": "match",
+      "text": "Szukam opieki dla córki z porażeniem mózgowym na kilka godzin w tygodniu, żebym mogła wrócić chociaż na pół etatu."
+    },
+    {
+      "key": "n041",
+      "topic": "respite",
+      "powiat": "powiat-krakowski",
+      "origin": "match",
+      "text": "Rodziny dzieci z niepełnosprawnościami na wsi są zostawione same sobie, do terapii trzeba wozić 40 km, opieki zastępczej brak."
+    },
+    {
+      "key": "n042",
+      "topic": "transport",
+      "powiat": "powiat-limanowski",
+      "origin": "match",
+      "text": "Z naszej wsi nie ma żadnego autobusu do miasta oprócz jednego kursu rano i jednego po południu. Kto nie ma samochodu, ten nigdzie nie dojedzie.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 40,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Wykluczenie komunikacyjne to jedno z wyzwań, które widzimy w wielu gminach powiatu limanowskiego. Zebraliśmy już kilka podobnych zgłoszeń i przekazujemy je do zespołu, który przygotowuje wsparcie dla samorządów. Proszę też zapytać w gminie o usługę transportu door to door."
+        }
+      ]
+    },
+    {
+      "key": "n043",
+      "topic": "transport",
+      "powiat": "powiat-limanowski",
+      "origin": "match",
+      "text": "busy z naszej wioski zlikwidowali, nie ma czym dojechać do miasta, taxi kosztuje 80 zł w jedną stronę",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Przekazaliśmy je do zestawienia potrzeb transportowych w regionie. Proszę zapytać w gminie o usługę transportu door to door dla osób z ograniczoną mobilnością, w części gmin jest bezpłatna."
+        }
+      ]
+    },
+    {
+      "key": "n044",
+      "topic": "transport",
+      "powiat": "powiat-limanowski",
+      "origin": "form",
+      "email": "gops.sekretariat.lim@example.org",
+      "text": "Gmina wiejska w górach, rozproszona zabudowa. Komunikacji publicznej prawie nie ma, mieszkańcy bez samochodu nie dojadą do przychodni, urzędu ani na rehabilitację. Szukamy rozwiązania transportowego, na które gminę będzie stać.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 30,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Dla gmin wiejskich polecamy model „Mobilne centrum pomocy dla osób starszych”, w którym to pomoc dojeżdża do mieszkańców. Middleman innowacji na naszej stronie przygotuje szkic usługi dla Państwa gminy na podstawie jej opisu. Chętnie porozmawiamy też o transporcie door to door."
+        },
+        {
+          "from": "author",
+          "after_hours": 70,
+          "body": "Dziękujemy. Przygotowaliśmy plan w Middlemanie, prosimy o konsultację, czy to ma sens przy naszym budżecie."
+        },
+        {
+          "from": "rops",
+          "after_hours": 24,
+          "body": "Plan wygląda realnie. Proponujemy krótkie spotkanie online z naszym zespołem, prosimy o dwa terminy."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n045",
+      "topic": "transport",
+      "powiat": "powiat-limanowski",
+      "origin": "match",
+      "text": "Osoby na wózkach z naszej gminy nie mają jak dojechać do miasta, autobusy nie są przystosowane, a gmina nie ma busa z windą.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy. Gminy mogą uruchomić usługę transportu door to door, także z busem przystosowanym do wózków. Chętnie pokażemy gminie przykłady z innych powiatów."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n046",
+      "topic": "transport",
+      "powiat": "powiat-suski",
+      "origin": "match",
+      "text": "Mama ma rehabilitację w Suchej, a z naszej wsi nie jeździ żaden autobus. My pracujemy, więc musiała zrezygnować z zabiegów."
+    },
+    {
+      "key": "n047",
+      "topic": "transport",
+      "powiat": "powiat-dabrowski",
+      "origin": "match",
+      "text": "wykluczenie komunikacyjne, brak autobusów na wsi, nie ma jak dojechać do miasta"
+    },
+    {
+      "key": "n048",
+      "topic": "transport",
+      "powiat": "powiat-proszowicki",
+      "origin": "match",
+      "text": "Mieszkam na wsi, nie mam prawa jazdy, a autobus do Proszowic jeździ tylko w dni szkolne. W wakacje i ferie nie mam jak dojechać do miasta."
+    },
+    {
+      "key": "n049",
+      "topic": "homeless",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Przy dworcu śpi coraz więcej ludzi bezdomnych, a noce są już zimne. Gdzie ich kierować, jak ktoś nie chce iść do noclegowni?",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 3,
+          "body": "Dzień dobry, dziękujemy za czujność. W Krakowie osobę w kryzysie bezdomności można zgłosić do straży miejskiej (986) lub do streetworkerów, którzy podejdą i porozmawiają. W sezonie zimowym działają ogrzewalnie, gdzie nie obowiązuje trzeźwość. W bibliotece jest też innowacja „Szlakiem ludzi bezdomnych”: mobilny punkt higieniczny, który dojeżdża do takich miejsc."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n050",
+      "topic": "homeless",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "bezdomny pan śpi w naszej klatce schodowej od tygodnia, mieszkańcy chcą go wyrzucić a ja chcę mu jakoś pomóc",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy za Pani troskę. Proszę zgłosić sytuację do straży miejskiej (986) lub do ośrodka pomocy społecznej, przyjadą streetworkerzy, którzy porozmawiają z tym panem i zaproponują noclegownię lub ogrzewalnię."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n051",
+      "topic": "homeless",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Osoby w kryzysie bezdomności nie mają gdzie się umyć ani wyprać ubrań, przez to nie mogą iść do pracy ani do urzędu."
+    },
+    {
+      "key": "n052",
+      "topic": "homeless",
+      "powiat": "tarnow",
+      "origin": "match",
+      "text": "Zbliża się zima, a w Tarnowie brakuje miejsc w schronisku dla bezdomnych. Ludzie śpią na działkach i w pustostanach.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy. Przekazaliśmy zgłoszenie do Miejskiego Ośrodka Pomocy Społecznej w Tarnowie, który odpowiada za zimowe schronienie. Osoby w potrzebie można też zgłaszać pod numer 112, gdy grozi im wychłodzenie."
+        }
+      ]
+    },
+    {
+      "key": "n053",
+      "topic": "homeless",
+      "powiat": "krakow",
+      "origin": "form",
+      "email": "streetwork.wolontariat@example.org",
+      "text": "Jesteśmy grupą wolontariuszy, która w czwartki rozdaje jedzenie osobom bezdomnym. Coraz więcej z nich to starsi ludzie po eksmisji i osoby po kryzysie psychicznym. Potrzebujemy wiedzy, gdzie ich kierować i jak z nimi rozmawiać.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 25,
+          "body": "Dzień dobry, dziękujemy za Państwa pracę. Prześlemy listę miejsc pomocy w Krakowie i kontakt do zespołu streetworkerów, z którym warto skoordynować trasy. Polecamy też „Wiejski program pomocy osobom w kryzysie bezdomności - Ścieżka Feniksa”: mimo nazwy opisuje sposób rozmowy i budowania planu wyjścia z bezdomności."
+        }
+      ]
+    },
+    {
+      "key": "n054",
+      "topic": "homeless",
+      "powiat": "tarnow",
+      "origin": "match",
+      "text": "bezdomni zimą, brak ogrzewalni, ktoś zamarznie w tym roku jak nic się nie zmieni"
+    },
+    {
+      "key": "n055",
+      "topic": "homeless",
+      "powiat": "nowy-sacz",
+      "origin": "match",
+      "text": "Mój brat stracił mieszkanie po rozwodzie i pije, śpi u znajomych albo na dworcu. Nie wiem gdzie on może dostać pomoc."
+    },
+    {
+      "key": "n056",
+      "topic": "homeless",
+      "powiat": null,
+      "origin": "match",
+      "text": "Ludzie bezdomni nie mają dostępu do lekarza, nie mają ubezpieczenia ani dowodu. Co można zrobić?"
+    },
+    {
+      "key": "n057",
+      "topic": "foreigners",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "W klasie mojego syna jest 6 dzieci z Ukrainy, które słabo mówią po polsku. Nauczyciele sobie nie radzą, dzieci się izolują, są konflikty.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 30,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Szkoła może wnioskować o asystenta międzykulturowego i dodatkowe lekcje polskiego. Inspiracją dla klasy może być gra integracyjna „{top}”. Jeśli szkoła chce, pomożemy nawiązać kontakt z organizacją, która prowadzi w Krakowie warsztaty integracyjne."
+        }
+      ]
+    },
+    {
+      "key": "n058",
+      "topic": "foreigners",
+      "powiat": "powiat-wielicki",
+      "origin": "match",
+      "text": "Jestem z Ukrainy, mieszkam w Wieliczce. Bariera językowa: nie rozumiem pism z urzędu i ZUS. Gdzie cudzoziemiec może dostać pomoc po ukraińsku albo prostym polskim?",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy za wiadomość. W bibliotece jest „{top}”. Pomoc w języku ukraińskim w sprawach urzędowych oferują punkty informacyjne dla cudzoziemców i organizacje pozarządowe, a w ZUS można poprosić o wizytę z tłumaczem."
+        }
+      ]
+    },
+    {
+      "key": "n059",
+      "topic": "foreigners",
+      "powiat": "powiat-wielicki",
+      "origin": "match",
+      "text": "Cudzoziemcy pracujący w naszej gminie nie znają języka polskiego ani swoich praw, nie wiedzą jak załatwić sprawy w urzędzie czy u lekarza."
+    },
+    {
+      "key": "n060",
+      "topic": "foreigners",
+      "powiat": "powiat-wielicki",
+      "origin": "form",
+      "email": "ops.integracja.wlk@example.org",
+      "text": "W ośrodku pomocy społecznej mamy coraz więcej cudzoziemców z Ukrainy, Gruzji i Kolumbii. Bariera językowa jest ogromna, tłumacz jest tylko na umówione wizyty. Potrzebujemy narzędzi do komunikacji i materiałów w kilku językach."
+    },
+    {
+      "key": "n061",
+      "topic": "foreigners",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "ukraińskie dzieci w polskiej szkole nie rozumieją lekcji, potrzebne zajęcia z polskiego i integracja"
+    },
+    {
+      "key": "n062",
+      "topic": "foreigners",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Pracuję w przychodni. Pacjenci cudzoziemcy nie znają polskiego, nie potrafią opisać objawów i nie wiedzą, jak działa NFZ. Brakuje materiałów w ich językach."
+    },
+    {
+      "key": "n063",
+      "topic": "foreigners",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "rodzina z Białorusi mieszka w naszym bloku w Nowej Hucie, dzieci nie chodzą do szkoły bo nie znają polskiego, matka nie wie gdzie się zgłosić"
+    },
+    {
+      "key": "n064",
+      "topic": "foster",
+      "powiat": "powiat-tarnowski",
+      "origin": "match",
+      "text": "Jesteśmy rodziną zastępczą od 8 lat. Mamy pod opieką troje dzieci po traumach i czujemy się zostawieni sami sobie. Koordynator ma 30 rodzin, terapeuta jest raz w miesiącu.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 36,
+          "body": "Dzień dobry, bardzo dziękujemy za zgłoszenie i za Państwa pracę. Przekazaliśmy je do zespołu, który w ROPS zajmuje się pieczą zastępczą: przygotowujemy właśnie wsparcie superwizyjne dla rodzin z powiatów, gdzie koordynatorzy mają najwięcej rodzin. Polecamy też grę terapeutyczną „koMIX życiowy”, przydatną w rozmowach z nastolatkami."
+        },
+        {
+          "from": "author",
+          "after_hours": 40,
+          "body": "Dziękujemy, chętnie skorzystamy z superwizji. Czy jest już termin?"
+        }
+      ]
+    },
+    {
+      "key": "n065",
+      "topic": "foster",
+      "powiat": "powiat-tarnowski",
+      "origin": "match",
+      "text": "brakuje rodzin zastępczych, dzieci czekają w placówkach i w szpitalach, w naszym powiecie nikt nie chce zostać rodziną zastępczą",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy. Brak rodzin zastępczych to jeden z najważniejszych problemów pieczy w regionie. Przygotowujemy materiały do kampanii rekrutacyjnej dla PCPR i przekażemy je także do powiatu tarnowskiego."
+        }
+      ]
+    },
+    {
+      "key": "n066",
+      "topic": "foster",
+      "powiat": "powiat-tarnowski",
+      "origin": "form",
+      "email": "pcpr.piecza.tarn@example.org",
+      "text": "PCPR. Mamy za mało kandydatów na rodziny zastępcze, a obecne rodziny zastępcze są wypalone. Potrzebujemy pomysłu na rekrutację i wsparcie rodzin zastępczych: grupy wsparcia, superwizję, wytchnienie."
+    },
+    {
+      "key": "n067",
+      "topic": "foster",
+      "powiat": "powiat-oswiecimski",
+      "origin": "match",
+      "text": "Rodziny zastępcze nie dostają wsparcia, kiedy wychowanek kończy 18 lat i ma się usamodzielnić. Dziecko z pieczy zastępczej zostaje bez mieszkania i bez pomocy."
+    },
+    {
+      "key": "n068",
+      "topic": "foster",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Jestem babcią i rodziną zastępczą dla dwóch wnuków. Jako rodzina zastępcza spokrewniona nie dostajemy żadnego wsparcia psychologa ani pedagoga."
+    },
+    {
+      "key": "n069",
+      "topic": "foster",
+      "powiat": "powiat-limanowski",
+      "origin": "match",
+      "text": "Rodzina zastępcza z nastolatkiem po przejściach: zaczęły się ucieczki z domu i pytania o biologicznych rodziców. Nie wiemy, jak sobie z tym radzić, a na psychologa czekamy miesiącami."
+    },
+    {
+      "key": "n070",
+      "topic": "energy_poverty",
+      "powiat": "powiat-gorlicki",
+      "origin": "match",
+      "text": "Emerytura 1900 zł, za węgiel i prąd płacę coraz więcej. Muszę wybierać, czy kupić leki czy opał na zimę.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 28,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Proszę zgłosić się do Gminnego Ośrodka Pomocy Społecznej: przysługuje zasiłek celowy na opał i leki, a także pomoc w złożeniu wniosku o dodatki. Jeśli wygodniej, pracownik GOPS może przyjść do domu. Przekazaliśmy Pani zgłoszenie w formie anonimowej do zestawienia potrzeb powiatu."
+        }
+      ]
+    },
+    {
+      "key": "n071",
+      "topic": "energy_poverty",
+      "powiat": "powiat-gorlicki",
+      "origin": "match",
+      "text": "ludzie marzną w domach bo nie stać ich na opał, palą czym się da, w tamtym roku sąsiad zaczadział"
+    },
+    {
+      "key": "n072",
+      "topic": "energy_poverty",
+      "powiat": "powiat-gorlicki",
+      "origin": "match",
+      "text": "Ubóstwo energetyczne u nas, stare domy, nieszczelne okna, piece kopciuchy, ludzi nie stać ani na wymianę pieca, ani na opał.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy. Na wymianę pieca i ocieplenie domu można uzyskać dofinansowanie, a osoby o niskich dochodach dostają je w najwyższej wysokości. Doradcy w gminie pomagają złożyć wniosek, prosimy pytać w urzędzie gminy."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n073",
+      "topic": "misc",
+      "powiat": "powiat-dabrowski",
+      "origin": "match",
+      "text": "Jestem samotną matką trojga dzieci, pracuję za najniższą krajową, nie starcza do końca miesiąca na jedzenie i ubrania dla dzieci."
+    },
+    {
+      "key": "n074",
+      "topic": "energy_poverty",
+      "powiat": "powiat-gorlicki",
+      "origin": "match",
+      "text": "rodzin nie stać na opał i rachunki za prąd, coraz więcej ludzi przychodzi do parafii po pomoc na ogrzewanie"
+    },
+    {
+      "key": "n075",
+      "topic": "misc",
+      "powiat": "powiat-brzeski",
+      "origin": "match",
+      "text": "Starsza pani z mojego bloku nie ma łazienki ani ciepłej wody, myje się w misce. Mieszkanie komunalne w fatalnym stanie."
+    },
+    {
+      "key": "n076",
+      "topic": "energy_poverty",
+      "powiat": null,
+      "origin": "match",
+      "text": "Nie stać mnie na ogrzewanie mieszkania, rachunki za prąd i gaz zjadają pół emerytury, zimą siedzę w kurtce w domu."
+    },
+    {
+      "key": "n077",
+      "topic": "depopulation",
+      "powiat": "powiat-miechowski",
+      "origin": "match",
+      "text": "Młodzi wyjeżdżają z naszej gminy do Krakowa i za granicę. Zamknęli szkołę, pocztę i sklep, co roku ubywa mieszkańców. Gmina się wyludnia.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 48,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Wyludnianie się małych miejscowości to jedno z głównych wyzwań regionu, o którym piszemy w raportach ROPS. Zbieramy takie zgłoszenia z powiatu miechowskiego i przekażemy je jako sygnał do samorządów. Jeśli w gminie jest grupa osób, która chce coś zmienić, zachęcamy do opisania pomysłu w Kreatorze pomysłów."
+        }
+      ]
+    },
+    {
+      "key": "n078",
+      "topic": "depopulation",
+      "powiat": "powiat-miechowski",
+      "origin": "match",
+      "text": "wyludnianie się wsi, młodzi wyjeżdżają bo nie ma pracy, zostają puste domy",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy za zgłoszenie. Dołączyliśmy je do zestawienia sygnałów o wyludnianiu się gmin powiatu miechowskiego. Zachęcamy też do opisania pomysłu na zatrzymanie młodych w Kreatorze pomysłów."
+        }
+      ]
+    },
+    {
+      "key": "n079",
+      "topic": "depopulation",
+      "powiat": "powiat-miechowski",
+      "origin": "form",
+      "email": "soltys.wies.miech@example.org",
+      "text": "Jestem sołtysem. W ciągu 10 lat ubyło nam prawie jednej trzeciej mieszkańców, młodzi się wyprowadzają, połowa domów stoi pusta. Szukamy pomysłów, jak zatrzymać ludzi we wsi i jak sąsiedzi mogą sobie pomagać."
+    },
+    {
+      "key": "n080",
+      "topic": "depopulation",
+      "powiat": "powiat-proszowicki",
+      "origin": "match",
+      "text": "Z naszej wsi wyprowadzają się młode rodziny, bo nie ma przedszkola ani pracy. Szkołę już zamknęli, wieś się wyludnia."
+    },
+    {
+      "key": "n081",
+      "topic": "depopulation",
+      "powiat": "powiat-miechowski",
+      "origin": "match",
+      "text": "Gmina się wyludnia, młodzi wyjeżdżają, zamyka się szkoła i sklep, a usług na miejscu jest coraz mniej."
+    },
+    {
+      "key": "n082",
+      "topic": "depopulation",
+      "powiat": "powiat-gorlicki",
+      "origin": "match",
+      "text": "Wsie w Beskidzie Niskim pustoszeją, młodzi wyjeżdżają za pracą, z przysiółków zostały pojedyncze zamieszkane domy."
+    },
+    {
+      "key": "n083",
+      "topic": "caregivers",
+      "powiat": "powiat-krakowski",
+      "origin": "match",
+      "text": "Od 3 lat opiekuję się leżącą mamą po udarze. Zrezygnowałam z pracy, nie śpię, mam depresję. Nikt nie pyta jak ja się czuję."
+    },
+    {
+      "key": "n084",
+      "topic": "caregivers",
+      "powiat": "powiat-krakowski",
+      "origin": "match",
+      "text": "opiekunowie rodzinni osób leżących są wypaleni i samotni, brak grup wsparcia i zastępstwa"
+    },
+    {
+      "key": "n085",
+      "topic": "caregivers",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Mąż po wylewie, leży, trzeba go przewracać, myć, karmić. Mam 70 lat i sama już mam problemy z kręgosłupem. Pielęgniarka przychodzi na 20 minut.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy za wiadomość. W takiej sytuacji przysługują specjalistyczne usługi opiekuńcze i pomoc w pielęgnacji, wniosek przyjmuje Miejski Ośrodek Pomocy Społecznej. Warto też zapytać lekarza rodzinnego o skierowanie do opieki długoterminowej domowej. W bibliotece jest model „{top}”, który pokazuje, jak taka pomoc może wyglądać."
+        }
+      ]
+    },
+    {
+      "key": "n086",
+      "topic": "caregivers",
+      "powiat": "powiat-bochenski",
+      "origin": "match",
+      "text": "Opiekuję się tatą z parkinsonem i mamą po złamaniu biodra jednocześnie. Brat się nie interesuje. Potrzebuję kogoś kto mnie choć na kilka godzin odciąży."
+    },
+    {
+      "key": "n087",
+      "topic": "caregivers",
+      "powiat": null,
+      "origin": "match",
+      "text": "Brakuje pomocy dla osób, które w domu opiekują się starszymi rodzicami. Ciągle słyszę, że to mój obowiązek."
+    },
+    {
+      "key": "n088",
+      "topic": "rural_health",
+      "powiat": "powiat-tatrzanski",
+      "origin": "match",
+      "text": "Do psychiatry i neurologa z Zakopanego jeździmy do Krakowa, a terminy do specjalistów są na pół roku."
+    },
+    {
+      "key": "n089",
+      "topic": "rural_health",
+      "powiat": "powiat-tatrzanski",
+      "origin": "match",
+      "text": "brak lekarzy specjalistów w naszym powiecie, do kardiologa trzeba jechać 100 km, terminy na rok",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy. Część konsultacji specjalistycznych można odbyć zdalnie, warto zapytać o teleporadę w przychodni. Zgłoszenie przekazaliśmy do zestawienia potrzeb zdrowotnych powiatu."
+        }
+      ]
+    },
+    {
+      "key": "n090",
+      "topic": "rural_health",
+      "powiat": "powiat-tatrzanski",
+      "origin": "match",
+      "text": "W powiecie tatrzańskim brakuje specjalistów i rehabilitacji. Mama po operacji czeka na rehabilitację na NFZ ponad pół roku."
+    },
+    {
+      "key": "n091",
+      "topic": "rural_health",
+      "powiat": "powiat-nowotarski",
+      "origin": "match",
+      "text": "W naszej gminie nie ma już lekarza, przychodnia otwarta dwa dni w tygodniu, a do specjalisty czeka się miesiącami."
+    },
+    {
+      "key": "n092",
+      "topic": "rural_health",
+      "powiat": "powiat-nowotarski",
+      "origin": "match",
+      "text": "Chorzy na POChP w naszym powiecie nie mają dostępu do rehabilitacji oddechowej ani pulmonologa, najbliżej jest w Krakowie."
+    },
+    {
+      "key": "n093",
+      "topic": "rural_health",
+      "powiat": "powiat-nowotarski",
+      "origin": "match",
+      "text": "Brakuje lekarzy specjalistów poza dużymi miastami. Pacjent onkologiczny ze wsi jeździ na każdą wizytę do Krakowa."
+    },
+    {
+      "key": "n094",
+      "topic": "id_adults",
+      "powiat": "powiat-krakowski",
+      "origin": "match",
+      "text": "Mamy 70 lat, nasz syn ma 40 lat i niepełnosprawność intelektualną. Co się z nim stanie, jak nas zabraknie? Nie chcemy, żeby trafił do DPS-u daleko od domu.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 30,
+          "body": "Dzień dobry, dziękujemy za to ważne pytanie. Coraz więcej gmin tworzy mieszkania treningowe i wspomagane, w których dorosłe osoby z niepełnosprawnością intelektualną uczą się samodzielności z pomocą asystenta. Warto już teraz zapytać PCPR o takie mieszkania w powiecie krakowskim. Polecamy też model „{top}”."
+        },
+        {
+          "from": "author",
+          "after_hours": 60,
+          "body": "Dziękujemy. W PCPR powiedzieli, że mieszkań na razie nie ma, ale wpisali nas na listę zainteresowanych."
+        }
+      ]
+    },
+    {
+      "key": "n095",
+      "topic": "id_adults",
+      "powiat": "powiat-krakowski",
+      "origin": "match",
+      "text": "dorosłe osoby z niepełnosprawnością intelektualną po skończeniu szkoły siedzą w domu, nie ma dla nich zajęć ani pracy",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy. Dla dorosłych osób z niepełnosprawnością intelektualną działają warsztaty terapii zajęciowej i środowiskowe domy samopomocy, informacji udziela PCPR. Polecamy też „{top}” z naszej biblioteki."
+        }
+      ]
+    },
+    {
+      "key": "n096",
+      "topic": "id_adults",
+      "powiat": "powiat-krakowski",
+      "origin": "form",
+      "email": "rodzice.wtz.skawina@example.org",
+      "text": "Grupa rodziców dorosłych dzieci z niepełnosprawnością intelektualną. W warsztatach terapii zajęciowej nie ma miejsc, kolejka na kilka lat. Nasze dzieci tracą umiejętności, których uczyły się latami. Potrzebujemy miejsc dziennego pobytu i mieszkań wspomaganych."
+    },
+    {
+      "key": "n097",
+      "topic": "id_adults",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Mój brat z zespołem Downa ma 35 lat, chciałby pracować i mieszkać trochę samodzielnie, ale nie ma żadnego wsparcia."
+    },
+    {
+      "key": "n098",
+      "topic": "id_adults",
+      "powiat": "powiat-krakowski",
+      "origin": "match",
+      "text": "Osoby z niepełnosprawnością intelektualną nie potrafią same załatwić sprawy w urzędzie czy w banku, a urzędnicy mówią do nich jak do dzieci."
+    },
+    {
+      "key": "n099",
+      "topic": "adult_mental",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Mam 34 lata, od roku depresja, straciłam pracę. Na psychoterapię na NFZ czekam 9 miesięcy, prywatnie mnie nie stać. Czasem myślę, że nie ma sensu.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 2,
+          "body": "Dzień dobry, dziękujemy, że Pani napisała. Jeśli te myśli się nasilają, proszę od razu dzwonić pod 112 albo 800 70 2222 (Centrum Wsparcia, całą dobę, bezpłatnie). W Krakowie działają centra zdrowia psychicznego dla dorosłych, do których można przyjść bez skierowania i bez długiej kolejki, pierwsza rozmowa zwykle odbywa się w ciągu kilku dni. Jeśli poda Pani dzielnicę, wskażemy najbliższe."
+        },
+        {
+          "from": "author",
+          "after_hours": 12,
+          "body": "Nowa Huta. Dziękuję, nie wiedziałam, że można bez skierowania."
+        },
+        {
+          "from": "rops",
+          "after_hours": 2,
+          "body": "Nowa Huta ma swoje centrum zdrowia psychicznego, a jego punkt zgłoszeniowo-koordynacyjny przyjmuje w dni robocze, także telefonicznie. Prosimy dać znać, czy udało się umówić."
+        }
+      ]
+    },
+    {
+      "key": "n100",
+      "topic": "adult_mental",
+      "powiat": "powiat-chrzanowski",
+      "origin": "match",
+      "text": "kryzys psychiczny u dorosłych, depresja, brak psychologa i psychiatry w gminie, na NFZ czeka się miesiącami",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy. Dorośli w kryzysie psychicznym mogą przyjść bez skierowania do centrum zdrowia psychicznego, a całodobowo działa telefon 800 70 2222. Zgłoszenie dołączyliśmy do zestawienia potrzeb powiatu chrzanowskiego."
+        }
+      ]
+    },
+    {
+      "key": "n101",
+      "topic": "adult_mental",
+      "powiat": "powiat-brzeski",
+      "origin": "match",
+      "text": "Mąż po stracie pracy ma depresję, zamknął się w sobie, pije, nie chce iść do psychiatry. Boję się o niego i o dzieci."
+    },
+    {
+      "key": "n102",
+      "topic": "adult_mental",
+      "powiat": "powiat-wadowicki",
+      "origin": "match",
+      "text": "Starsi ludzie mają depresję po śmierci współmałżonka, a nikt tego nie leczy, mówią że to starość."
+    },
+    {
+      "key": "n103",
+      "topic": "adult_mental",
+      "powiat": "krakow",
+      "origin": "match",
+      "text": "Mam schizofrenię, po wyjściu ze szpitala psychiatrycznego nie mam żadnej opieki ani terapii. Szukam grupy wsparcia i psychologa."
+    },
+    {
+      "key": "n104",
+      "topic": "misc",
+      "powiat": "powiat-oswiecimski",
+      "origin": "match",
+      "text": "Przemoc w rodzinie u sąsiadów, słychać krzyki dzieci. Bałam się zadzwonić na policję. Co mogę zrobić anonimowo?",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 3,
+          "body": "Dzień dobry, dziękujemy, że nie przechodzi Pani obojętnie. Jeśli dzieje się coś teraz, proszę dzwonić pod 112, można nie podawać nazwiska. Anonimowo można też zgłosić sytuację do ośrodka pomocy społecznej lub zadzwonić na Niebieską Linię 800 120 002. Zespół interdyscyplinarny w gminie sprawdzi sytuację rodziny."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n105",
+      "topic": "misc",
+      "powiat": "powiat-oswiecimski",
+      "origin": "match",
+      "text": "Syn ma ADHD i zespół Aspergera, w szkole nikt nie umie z nim pracować, ciągłe uwagi i telefony do mnie."
+    },
+    {
+      "key": "n106",
+      "topic": "misc",
+      "powiat": "powiat-bochenski",
+      "origin": "match",
+      "text": "Jestem niewidomy, chcę sam jeździć autobusem do pracy, ale przystanki i rozkłady nie są dla mnie dostępne."
+    },
+    {
+      "key": "n107",
+      "topic": "misc",
+      "powiat": "powiat-olkuski",
+      "origin": "match",
+      "text": "Głusi w naszym mieście nie mogą załatwić niczego w urzędzie bez tłumacza PJM, a tłumacza trzeba zamawiać 3 dni wcześniej.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy. Urzędy mają obowiązek zapewnić dostęp do tłumacza PJM, także zdalnie przez wideo. Polecamy rozwiązanie „Dostępny wniosek dla g/Głuchych”, a sygnał przekażemy do urzędu."
+        }
+      ],
+      "close": true
+    },
+    {
+      "key": "n108",
+      "topic": "misc",
+      "powiat": "powiat-tarnowski",
+      "origin": "match",
+      "text": "Kobiety na wsi po 50-tce nie mogą znaleźć pracy, nie mają prawa jazdy, a w okolicy nie ma zakładów."
+    },
+    {
+      "key": "n109",
+      "topic": "misc",
+      "powiat": "powiat-tarnowski",
+      "origin": "match",
+      "text": "pomoc dla osób po amputacji nogi, mój tata wrócił ze szpitala i nikt nie powiedział co dalej z protezą i rehabilitacją",
+      "nothing_fits": false
+    },
+    {
+      "key": "n110",
+      "topic": "misc",
+      "powiat": "nowy-sacz",
+      "origin": "match",
+      "text": "Mama ma cukrzycę i coraz gorzej widzi, myli leki i godziny. Boję się, że coś sobie zrobi."
+    },
+    {
+      "key": "n111",
+      "topic": "misc",
+      "powiat": "nowy-sacz",
+      "origin": "match",
+      "text": "brak mieszkań dla młodych rodzin, czynsze w mieście za wysokie a mieszkań komunalnych nie ma",
+      "nothing_fits": true
+    },
+    {
+      "key": "n112",
+      "topic": "misc",
+      "powiat": "powiat-limanowski",
+      "origin": "match",
+      "text": "Matki z małymi dziećmi na wsi nie mogą wrócić do pracy, bo nie ma żłobka ani przedszkola na miejscu."
+    },
+    {
+      "key": "n113",
+      "topic": "misc",
+      "powiat": "powiat-wadowicki",
+      "origin": "match",
+      "text": "Starsza mama dwa razy w tym roku przewróciła się w domu, raz złamała rękę. Jak zabezpieczyć mieszkanie seniora przed upadkami?"
+    },
+    {
+      "key": "n114",
+      "topic": "misc",
+      "powiat": "powiat-brzeski",
+      "origin": "match",
+      "text": "Pracuje w DPS, personelu jest za mało, ludzie przy łóżkach są wypaleni, a mieszkańcy nie mają żadnych zajęć poza telewizorem.",
+      "nothing_fits": true
+    },
+    {
+      "key": "n115",
+      "topic": "misc",
+      "powiat": null,
+      "origin": "match",
+      "text": "Uzależnienie od hazardu w internecie u młodych chłopaków, mój syn przegrał pieniądze na studia",
+      "nothing_fits": true
+    },
+    {
+      "key": "n116",
+      "topic": "misc",
+      "powiat": null,
+      "origin": "match",
+      "text": "brak informacji gdzie szukać pomocy, wszystko porozrzucane po stronach, nic nie wiadomo",
+      "nothing_fits": true
+    },
+    {
+      "key": "n117",
+      "topic": "misc",
+      "powiat": "powiat-chrzanowski",
+      "origin": "match",
+      "text": "Dziecko z autyzmem nie ma gdzie iść na wakacje, wszystkie półkolonie odmawiają."
+    },
+    {
+      "key": "n118",
+      "topic": "misc",
+      "powiat": "tarnow",
+      "origin": "match",
+      "text": "Senior mieszka sam na 4 piętrze bez windy, nie wychodzi z domu od roku bo nie da rady zejść po schodach.",
+      "nothing_fits": false
+    },
+    {
+      "key": "n119",
+      "topic": "misc",
+      "powiat": "powiat-wielicki",
+      "origin": "match",
+      "text": "Oszustwa na wnuczka i na policjanta, moja ciocia oddała oszustom oszczędności życia. Seniorzy potrzebują porady prawnej i ochrony.",
+      "nothing_fits": false
+    },
+    {
+      "key": "n120",
+      "topic": "misc",
+      "powiat": null,
+      "origin": "form",
+      "email": "mieszkanka.pomoc@example.org",
+      "text": "Chcę pomagać jako wolontariuszka starszym osobom albo dzieciom, ale nigdzie nie mogę znaleźć informacji, gdzie się zgłosić. Brakuje jednego miejsca z ofertami wolontariatu.",
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 24,
+          "body": "Dzień dobry, bardzo dziękujemy! Najprościej zgłosić się do Regionalnego Centrum Wolontariatu albo bezpośrednio do klubu seniora lub świetlicy w okolicy. Jeśli poda Pani miejscowość, wskażemy organizacje, które teraz szukają wolontariuszy."
+        },
+        {
+          "from": "author",
+          "after_hours": 5,
+          "body": "Mieszkam w Krakowie na Podgórzu, najchętniej pomogę starszym osobom."
+        },
+        {
+          "from": "rops",
+          "after_hours": 18,
+          "body": "Dziękujemy. Przekazaliśmy Pani zgłoszenie do organizacji prowadzącej program odwiedzin u samotnych seniorów na Podgórzu, skontaktują się mailowo."
+        }
+      ],
+      "close": true
+    }
+  ]
+}

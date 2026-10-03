@@ -1,0 +1,688 @@
+{
+  "match_votes": [
+    {
+      "key": "v01",
+      "need": "n001",
+      "rank": 1,
+      "kind": "fits",
+      "comment": "Dokładnie tego szukałam, dziękuję."
+    },
+    {
+      "key": "v02",
+      "need": "n004",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v03",
+      "need": "n004",
+      "rank": 2,
+      "kind": "does_not_fit",
+      "comment": "Babcia nie będzie z tego korzystać, za trudne."
+    },
+    {
+      "key": "v04",
+      "need": "n007",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v05",
+      "need": "n010",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v06",
+      "need": "n017",
+      "rank": 1,
+      "kind": "fits",
+      "comment": "Przydałoby się coś takiego w naszym klubie seniora."
+    },
+    {
+      "key": "v07",
+      "need": "n020",
+      "rank": 2,
+      "kind": "does_not_fit"
+    },
+    {
+      "key": "v08",
+      "need": "n025",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v09",
+      "need": "n029",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v10",
+      "need": "n032",
+      "rank": 1,
+      "kind": "does_not_fit",
+      "comment": "Potrzebujemy terapii, a nie materiałów do czytania."
+    },
+    {
+      "key": "v11",
+      "need": "n039",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v12",
+      "need": "n043",
+      "rank": 1,
+      "kind": "does_not_fit",
+      "comment": "To nie rozwiązuje problemu braku autobusu."
+    },
+    {
+      "key": "v13",
+      "need": "n049",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v14",
+      "need": "n051",
+      "rank": 1,
+      "kind": "fits",
+      "comment": "Taki punkt higieniczny przydałby się przy dworcu."
+    },
+    {
+      "key": "v15",
+      "need": "n057",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v16",
+      "need": "n061",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v17",
+      "need": "n071",
+      "rank": 1,
+      "kind": "does_not_fit"
+    },
+    {
+      "key": "v18",
+      "need": "n085",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v19",
+      "need": "n094",
+      "rank": 1,
+      "kind": "fits"
+    },
+    {
+      "key": "v20",
+      "need": "n106",
+      "rank": 1,
+      "kind": "fits",
+      "comment": "Super, sprawdzę czy działa w Bochni."
+    }
+  ],
+  "innovation_votes": [
+    {
+      "slug": "bawita",
+      "fits": 7,
+      "does_not_fit": 1,
+      "comments": [
+        {
+          "kind": "fits",
+          "text": "Używamy w dziennym domu pobytu, seniorzy chętnie z niej korzystają."
+        },
+        {
+          "kind": "fits",
+          "text": "Tata się uspokaja, jak ma zajęte ręce."
+        }
+      ]
+    },
+    {
+      "slug": "kody-qr-na-pomoc-seniorom",
+      "fits": 9,
+      "does_not_fit": 1,
+      "comments": [
+        {
+          "kind": "fits",
+          "text": "Proste i tanie, każda gmina może to wprowadzić."
+        }
+      ]
+    },
+    {
+      "slug": "wirtualne-izby-pamieci",
+      "fits": 4,
+      "does_not_fit": 0,
+      "comments": []
+    },
+    {
+      "slug": "merkury",
+      "fits": 5,
+      "does_not_fit": 2,
+      "comments": [
+        {
+          "kind": "does_not_fit",
+          "text": "Dobry pomysł, ale potrzebny ktoś, kto pokaże seniorom jak zacząć."
+        }
+      ]
+    },
+    {
+      "slug": "mobilne-centrum-pomocy-dla-osob-starszych",
+      "fits": 8,
+      "does_not_fit": 0,
+      "comments": [
+        {
+          "kind": "fits",
+          "text": "Na wsi to jedyne, co ma sens."
+        }
+      ]
+    },
+    {
+      "slug": "bez-presji-z-depresji",
+      "fits": 11,
+      "does_not_fit": 2,
+      "comments": [
+        {
+          "kind": "fits",
+          "text": "Pracuję na tych materiałach z klasą siódmą, polecam."
+        },
+        {
+          "kind": "does_not_fit",
+          "text": "Za mało o tym, co robić, gdy dziecko się okalecza."
+        }
+      ]
+    },
+    {
+      "slug": "szlakiem-ludzi-bezdomnych",
+      "fits": 6,
+      "does_not_fit": 0,
+      "comments": []
+    },
+    {
+      "slug": "zrozum-moja-kulture-zrozum-mnie",
+      "fits": 4,
+      "does_not_fit": 1,
+      "comments": [
+        {
+          "kind": "fits",
+          "text": "Graliśmy na integracji w szkole, dzieci były zaangażowane."
+        }
+      ]
+    },
+    {
+      "slug": "komix-zyciowy",
+      "fits": 3,
+      "does_not_fit": 0,
+      "comments": []
+    },
+    {
+      "slug": "uwaznione-rodzienstwo",
+      "fits": 5,
+      "does_not_fit": 0,
+      "comments": [
+        {
+          "kind": "fits",
+          "text": "Pierwszy raz ktoś pomyślał o rodzeństwie."
+        }
+      ]
+    },
+    {
+      "slug": "organizator-kompleksowej-opieki-w-miejscu-zamieszkania",
+      "fits": 6,
+      "does_not_fit": 1,
+      "comments": []
+    },
+    {
+      "slug": "centrum-antydepresyjne",
+      "fits": 4,
+      "does_not_fit": 1,
+      "comments": []
+    },
+    {
+      "slug": "telerehabilitacja-oddechowa",
+      "fits": 3,
+      "does_not_fit": 1,
+      "comments": [
+        {
+          "kind": "fits",
+          "text": "Dla chorych z naszych wsi to byłaby ogromna pomoc."
+        }
+      ]
+    },
+    {
+      "slug": "health-guide-pl",
+      "fits": 3,
+      "does_not_fit": 0,
+      "comments": []
+    },
+    {
+      "slug": "obu-obuwie-po-domu",
+      "fits": 2,
+      "does_not_fit": 3,
+      "comments": [
+        {
+          "kind": "does_not_fit",
+          "text": "Ładne, ale za drogie dla emeryta."
+        },
+        {
+          "kind": "does_not_fit",
+          "text": "Nie widzę, gdzie można je kupić."
+        }
+      ]
+    },
+    {
+      "slug": "inteligentny-organizer-do-lekow",
+      "fits": 5,
+      "does_not_fit": 2,
+      "comments": [
+        {
+          "kind": "does_not_fit",
+          "text": "Mama nie umie obsłużyć aplikacji, więc nie u nas."
+        }
+      ]
+    },
+    {
+      "slug": "e-rzecznik-konsumenta-seniora",
+      "fits": 3,
+      "does_not_fit": 0,
+      "comments": []
+    },
+    {
+      "slug": "zalatw-to-sam",
+      "fits": 4,
+      "does_not_fit": 0,
+      "comments": [
+        {
+          "kind": "fits",
+          "text": "Gramy w to na warsztatach terapii zajęciowej."
+        }
+      ]
+    },
+    {
+      "slug": "dostepny-transport-publiczny",
+      "fits": 2,
+      "does_not_fit": 2,
+      "comments": [
+        {
+          "kind": "does_not_fit",
+          "text": "U nas na wsi nie ma autobusów, więc aplikacja nic nie da."
+        }
+      ]
+    },
+    {
+      "slug": "terapeuta-przestrzeni",
+      "fits": 3,
+      "does_not_fit": 0,
+      "comments": []
+    }
+  ],
+  "improvements": [
+    {
+      "key": "u01",
+      "slug": "kody-qr-na-pomoc-seniorom",
+      "days_ago": 12,
+      "text": "Warto dodać wersję naszywki do prania w wysokiej temperaturze, bo opaski seniorzy zdejmują, a ubrania się często pierze."
+    },
+    {
+      "key": "u02",
+      "slug": "bez-presji-z-depresji",
+      "days_ago": 6,
+      "text": "Przydałaby się wersja materiałów dla rodziców po ukraińsku, mamy w klasie kilkoro dzieci z Ukrainy."
+    },
+    {
+      "key": "u03",
+      "slug": "merkury",
+      "days_ago": 9,
+      "text": "Dobrze byłoby dodać symulację biletomatu MPK i kasy samoobsługowej w aptece, to sprawia seniorom najwięcej kłopotu."
+    },
+    {
+      "key": "u04",
+      "slug": "mobilne-centrum-pomocy-dla-osob-starszych",
+      "days_ago": 17,
+      "text": "Proponuję połączyć wyjazdy centrum z dniem targowym w gminie, wtedy ludzie i tak przyjeżdżają do centrum wsi."
+    }
+  ],
+  "test_signups": [
+    {
+      "key": "s01",
+      "slug": "kody-qr-na-pomoc-seniorom",
+      "who": "local_government",
+      "organization": "Gminny Ośrodek Pomocy Społecznej",
+      "powiat": "powiat-myslenicki",
+      "email": "gops.testy.mys@example.org",
+      "note": "Chcemy przetestować na 15 podopiecznych z otępieniem.",
+      "status": "contacted",
+      "days_ago": 20
+    },
+    {
+      "key": "s02",
+      "slug": "bez-presji-z-depresji",
+      "who": "ngo",
+      "organization": "Stowarzyszenie wspierające młodzież",
+      "powiat": "nowy-sacz",
+      "email": "mlodziez.ns@example.org",
+      "note": "Prowadzimy świetlicę dla młodzieży, chętnie sprawdzimy materiały w grupie.",
+      "status": "new",
+      "days_ago": 4
+    },
+    {
+      "key": "s03",
+      "slug": "bez-presji-z-depresji",
+      "who": "expert",
+      "organization": null,
+      "powiat": "krakow",
+      "email": "psycholog.szkolny@example.org",
+      "note": "Psycholożka szkolna, dwie szkoły podstawowe.",
+      "status": "contacted",
+      "days_ago": 11
+    },
+    {
+      "key": "s04",
+      "slug": "mobilne-centrum-pomocy-dla-osob-starszych",
+      "who": "local_government",
+      "organization": "Urząd Gminy",
+      "powiat": "powiat-limanowski",
+      "email": "urzad.gminy.lim@example.org",
+      "note": "Gmina górska, rozproszona zabudowa.",
+      "status": "contacted",
+      "days_ago": 15
+    },
+    {
+      "key": "s05",
+      "slug": "wirtualne-izby-pamieci",
+      "who": "ngo",
+      "organization": "Klub seniora",
+      "powiat": "tarnow",
+      "email": "klub.seniora.tarnow@example.org",
+      "note": null,
+      "status": "new",
+      "days_ago": 8
+    },
+    {
+      "key": "s06",
+      "slug": "szlakiem-ludzi-bezdomnych",
+      "who": "ngo",
+      "organization": "Fundacja pomocy osobom w kryzysie bezdomności",
+      "powiat": "krakow",
+      "email": "fundacja.pomoc@example.org",
+      "note": "Mamy busa, brakuje nam wyposażenia punktu higienicznego.",
+      "status": "new",
+      "days_ago": 3
+    },
+    {
+      "key": "s07",
+      "slug": "uwaznione-rodzienstwo",
+      "who": "resident",
+      "organization": null,
+      "powiat": "powiat-nowotarski",
+      "email": "mama.troje@example.org",
+      "note": "Mam troje dzieci, najmłodszy z niepełnosprawnością.",
+      "status": "new",
+      "days_ago": 6
+    },
+    {
+      "key": "s08",
+      "slug": "zrozum-moja-kulture-zrozum-mnie",
+      "who": "local_government",
+      "organization": "Szkoła podstawowa",
+      "powiat": "powiat-wielicki",
+      "email": "sp.integracja@example.org",
+      "note": "W szkole mamy 40 uczniów z Ukrainy.",
+      "status": "closed",
+      "days_ago": 26
+    },
+    {
+      "key": "s09",
+      "slug": "bawita",
+      "who": "local_government",
+      "organization": "Dzienny Dom Senior+",
+      "powiat": "powiat-wadowicki",
+      "email": "senior.plus@example.org",
+      "note": null,
+      "status": "new",
+      "days_ago": 2
+    },
+    {
+      "key": "s10",
+      "slug": "telerehabilitacja-oddechowa",
+      "who": "expert",
+      "organization": "Praktyka fizjoterapeutyczna",
+      "powiat": "powiat-nowotarski",
+      "email": "fizjo.podhale@example.org",
+      "note": "Mogę poprowadzić pilotaż z pacjentami z POChP.",
+      "status": "new",
+      "days_ago": 9
+    },
+    {
+      "key": "s11",
+      "slug": "komix-zyciowy",
+      "who": "local_government",
+      "organization": "Powiatowe Centrum Pomocy Rodzinie",
+      "powiat": "powiat-tarnowski",
+      "email": "pcpr.piecza.tarn@example.org",
+      "note": "Dla rodzin zastępczych z nastolatkami.",
+      "status": "contacted",
+      "days_ago": 13
+    }
+  ],
+  "ideas": [
+    {
+      "key": "i01",
+      "title": "Obiady sąsiedzkie w remizie",
+      "essence": "Raz w tygodniu Koło Gospodyń Wiejskich gotuje wspólny obiad w remizie dla samotnych seniorów z gminy. Strażacy ochotnicy dowożą osoby, które nie mają jak dojechać. Przy obiedzie jest czas na rozmowę, mierzenie ciśnienia i pomoc w sprawach urzędowych.",
+      "for_whom": "Samotni seniorzy z małych wsi bez transportu",
+      "stage": "testing",
+      "powiat": "powiat-nowosadecki",
+      "email": "kgw.przyslop@example.org",
+      "status": "accepted",
+      "days_ago": 21,
+      "canvas": {
+        "problem": "Starsi mieszkańcy wsi są samotni, szczególnie zimą, i nie mają gdzie się spotkać.",
+        "users": "Osoby 70+ mieszkające same lub z niesamodzielnym współmałżonkiem.",
+        "solution": "Cotygodniowy obiad w remizie z dowozem przez OSP, rozmową i drobną pomocą.",
+        "novelty": "Łączymy zasoby, które już są we wsi: KGW, OSP i remizę.",
+        "resources": "Kuchnia w remizie, 4 gospodynie, 2 kierowców z OSP, produkty od rolników.",
+        "partners": "OSP, sołtys, GOPS, parafia.",
+        "micro_test": "Cztery obiady w listopadzie dla 12 osób.",
+        "measures": "Liczba uczestników, liczba osób, które przyszły ponownie, rozmowy z GOPS o potrzebach."
+      },
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 30,
+          "body": "Dzień dobry, dziękujemy za pomysł, bardzo nam się podoba. Przyjęliśmy go do katalogu pomysłów, będzie widoczny dla innych gmin. Prosimy dać znać po pierwszym miesiącu testu, chętnie opiszemy efekty."
+        },
+        {
+          "from": "author",
+          "after_hours": 200,
+          "body": "Po czterech obiadach przychodzi 15 osób, dwie panie same zapytały, czy mogą pomagać w kuchni."
+        }
+      ],
+      "problem_need": "n010"
+    },
+    {
+      "key": "i02",
+      "title": "Szkolni ambasadorzy zdrowia psychicznego",
+      "essence": "Uczniowie starszych klas przechodzą krótkie szkolenie z pierwszej pomocy psychologicznej i są w szkole osobami, do których młodsi mogą przyjść, zanim problem urośnie. Ambasadorzy wiedzą, kiedy i do kogo przekazać sprawę dorosłym.",
+      "for_whom": "Uczniowie szkół podstawowych i średnich",
+      "stage": "preparing",
+      "powiat": "nowy-sacz",
+      "email": "pedagog.sp.ns@example.org",
+      "status": "accepted",
+      "days_ago": 14,
+      "canvas": {
+        "problem": "Dzieci w kryzysie psychicznym długo nikomu nie mówią, a do specjalistów czeka się miesiącami.",
+        "users": "Uczniowie klas 6 do 8 i liceum.",
+        "solution": "Rówieśniczy ambasadorzy po szkoleniu i stały dyżur pedagoga.",
+        "partners": "Poradnia psychologiczno-pedagogiczna, środowiskowe centrum zdrowia psychicznego."
+      },
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 26,
+          "body": "Dzień dobry, dziękujemy. Pomysł przyjęliśmy. Proponujemy połączyć go z materiałami „Bez presji z depresji” z naszej biblioteki. Czy szkoła potrzebuje kontaktu do trenerów pierwszej pomocy psychologicznej?"
+        }
+      ],
+      "problem_need": "n027"
+    },
+    {
+      "key": "i03",
+      "title": "Wypożyczalnia sprzętu rehabilitacyjnego w gminie",
+      "essence": "Gminna wypożyczalnia łóżek, wózków, balkoników i koncentratorów tlenu dla osób po szpitalu i ich opiekunów. Sprzęt pochodzi z darowizn i od rodzin, które już go nie potrzebują, wolontariusze sprawdzają go i dowożą.",
+      "for_whom": "Osoby po szpitalu, seniorzy, opiekunowie rodzinni",
+      "stage": "idea",
+      "powiat": "powiat-bochenski",
+      "email": null,
+      "status": "in_review",
+      "days_ago": 9,
+      "canvas": {}
+    },
+    {
+      "key": "i04",
+      "title": "Kawiarenka cyfrowa dla seniorów w bibliotece",
+      "essence": "Co tydzień w bibliotece licealiści pomagają seniorom w telefonach: e-recepta, IKP, mObywatel, rozpoznawanie oszustw. Za pomoc dostają godziny wolontariatu do świadectwa.",
+      "for_whom": "Seniorzy wykluczeni cyfrowo",
+      "stage": "running",
+      "powiat": "tarnow",
+      "email": "klub.seniora.tarnow@example.org",
+      "status": "in_review",
+      "days_ago": 5,
+      "canvas": {
+        "problem": "Seniorzy nie radzą sobie z usługami w internecie i padają ofiarą oszustów.",
+        "solution": "Cotygodniowy dyżur licealistów w bibliotece.",
+        "resources": "Sala w bibliotece, 6 wolontariuszy, 3 telefony do nauki.",
+        "measures": "Liczba spraw załatwionych przez seniorów samodzielnie po 3 spotkaniach."
+      },
+      "problem_need": "n017"
+    },
+    {
+      "key": "i05",
+      "title": "Wspólny bus gmin dla osób z niepełnosprawnością",
+      "essence": "Trzy sąsiednie gminy kupują razem bus z windą i dzielą się kosztami kierowcy. Zapisy na przejazdy do lekarza, na rehabilitację i do urzędu przez telefon w GOPS.",
+      "for_whom": "Osoby z niepełnosprawnością i seniorzy bez transportu",
+      "stage": "idea",
+      "powiat": "powiat-limanowski",
+      "email": "gops.sekretariat.lim@example.org",
+      "status": "new",
+      "days_ago": 3,
+      "canvas": {},
+      "problem_need": "n042"
+    },
+    {
+      "key": "i06",
+      "title": "Grupa wsparcia dla rodzin zastępczych online",
+      "essence": "Comiesięczne spotkania online dla rodzin zastępczych z całego powiatu z psychologiem i doświadczoną rodziną zastępczą jako współprowadzącą. Między spotkaniami zamknięta grupa do wymiany porad.",
+      "for_whom": "Rodziny zastępcze, zwłaszcza spokrewnione",
+      "stage": "preparing",
+      "powiat": "powiat-tarnowski",
+      "email": "pcpr.piecza.tarn@example.org",
+      "status": "new",
+      "days_ago": 2,
+      "canvas": {},
+      "problem_need": "n064"
+    },
+    {
+      "key": "i07",
+      "title": "Sąsiedzka lista dyżurów zimowych",
+      "essence": "Mieszkańcy wsi zapisują się na dyżury: kto w danym tygodniu zagląda do samotnych starszych sąsiadów, odśnieża ścieżkę, robi zakupy. Lista jest u sołtysa i na tablicy w sklepie.",
+      "for_whom": "Samotni starsi mieszkańcy wsi",
+      "stage": "idea",
+      "powiat": "powiat-miechowski",
+      "email": "soltys.wies.miech@example.org",
+      "status": "new",
+      "days_ago": 7,
+      "canvas": {},
+      "thread": [
+        {
+          "from": "rops",
+          "after_hours": 20,
+          "body": "Dzień dobry, dziękujemy za pomysł. Czy mogą Państwo napisać, ile osób jest gotowych dyżurować i ilu sąsiadów potrzebuje takiej pomocy? To pomoże nam dobrać wsparcie."
+        },
+        {
+          "from": "author",
+          "after_hours": 40,
+          "body": "Na zebraniu zgłosiło się 9 osób, potrzebujących jest około 14."
+        }
+      ],
+      "problem_need": "n079"
+    },
+    {
+      "key": "i08",
+      "title": "Aplikacja do zgłaszania dziur w chodnikach",
+      "essence": "Aplikacja, w której mieszkańcy zgłaszają dziury w chodnikach i drogach, a gmina dostaje mapę zgłoszeń.",
+      "for_whom": "Mieszkańcy miasta",
+      "stage": "idea",
+      "powiat": "krakow",
+      "email": null,
+      "status": "rejected",
+      "days_ago": 19,
+      "canvas": {}
+    },
+    {
+      "key": "i09",
+      "title": "Teatr międzypokoleniowy",
+      "essence": "Seniorzy z klubu i dzieci z Ukrainy przygotowują razem przedstawienie o swoich miejscowościach. Próby raz w tygodniu, premiera w domu kultury. Dzieci uczą się polskiego, seniorzy wychodzą z domu.",
+      "for_whom": "Seniorzy i dzieci cudzoziemców",
+      "stage": "idea",
+      "powiat": "powiat-wielicki",
+      "email": "ops.integracja.wlk@example.org",
+      "status": "new",
+      "days_ago": 1,
+      "canvas": {},
+      "problem_need": "n057"
+    }
+  ],
+  "adaptations": [
+    {
+      "key": "a01",
+      "slug": "mobilne-centrum-pomocy-dla-osob-starszych",
+      "institution_type": "gmina",
+      "place": "Gmina wiejska w powiecie limanowskim",
+      "powiat": "powiat-limanowski",
+      "days_ago": 4,
+      "context": "Gmina wiejska w górach, 9 sołectw, rozproszona zabudowa. Około 1800 osób powyżej 65 lat, wielu mieszka samotnie. Komunikacja publiczna prawie nie istnieje. GOPS zatrudnia 6 pracowników socjalnych i 3 opiekunki. Mamy samochód gminny, ale bez kierowcy na stałe."
+    },
+    {
+      "key": "a02",
+      "slug": "kody-qr-na-pomoc-seniorom",
+      "institution_type": "ops",
+      "place": "Dobczyce",
+      "powiat": "powiat-myslenicki",
+      "days_ago": 18,
+      "context": "Miejsko-gminny ośrodek pomocy społecznej. Mamy około 40 podopiecznych z otępieniem, część mieszka sama. Kilka razy w roku policja szuka zaginionych seniorów. Budżet na nowe działania jest mały, możemy wykorzystać pracowników i wolontariuszy z klubu seniora."
+    },
+    {
+      "key": "a03",
+      "slug": "bez-presji-z-depresji",
+      "institution_type": "school",
+      "place": "Nowy Sącz",
+      "powiat": "nowy-sacz",
+      "days_ago": 10,
+      "context": "Szkoła podstawowa, 520 uczniów, jeden pedagog i psycholog na pół etatu. W ostatnim roku kilkanaście przypadków samookaleczeń i dwie próby samobójcze. Chcemy pracować z klasami 6 do 8 i z rodzicami na zebraniach."
+    },
+    {
+      "key": "a04",
+      "slug": "zrozum-moja-kulture-zrozum-mnie",
+      "institution_type": "cus",
+      "place": "Wieliczka",
+      "powiat": "powiat-wielicki",
+      "days_ago": 7,
+      "context": "Centrum usług społecznych w szybko rosnącej gminie. W gminie mieszka kilkaset osób z Ukrainy, Białorusi i Gruzji, dzieci są w każdej szkole. Mamy asystenta międzykulturowego na pół etatu i salę na zajęcia grupowe."
+    },
+    {
+      "key": "a05",
+      "slug": "uwaznione-rodzienstwo",
+      "institution_type": "pcpr",
+      "place": "Nowy Targ",
+      "powiat": "powiat-nowotarski",
+      "days_ago": 2,
+      "context": "Powiatowe centrum pomocy rodzinie. Współpracujemy z około 60 rodzinami wychowującymi dziecko z niepełnosprawnością. Rodzice mówią, że zdrowe rodzeństwo jest pomijane. Mamy psychologa i dwóch terapeutów, możemy prowadzić zajęcia w soboty."
+    }
+  ]
+}
