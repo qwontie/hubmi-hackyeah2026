@@ -67,7 +67,7 @@ export interface MatchResult {
 export interface MatchResponse {
   cluster: ClusterRef | null;
   degraded: boolean;
-  need: { id: string; edit_token: string; number?: number | null };
+  need: { id: string; edit_token: string; number?: number | null } | null;
   results: MatchResult[];
   similar_count: number;
 }
@@ -75,6 +75,20 @@ export interface MatchResponse {
 export interface MatchRequest {
   powiat?: string;
   text: string;
+}
+
+export interface NeedCreate extends MatchRequest {
+  contact_consent?: boolean;
+  contact_email?: string;
+  shown_innovation_slugs?: string[];
+}
+
+export interface NeedCreated {
+  cluster: ClusterRef | null;
+  edit_token: string;
+  id: string;
+  number: number;
+  similar_count: number;
 }
 
 export interface NeedPatch {

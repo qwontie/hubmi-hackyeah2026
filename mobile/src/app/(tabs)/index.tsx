@@ -117,24 +117,12 @@ const useDawn = (loading: boolean, done: boolean) => {
 
 const Fit = Platform.OS === "ios" ? View : ScrollView;
 
-interface RegistrationApi {
-  register: (input: { consent: boolean }) => Promise<void>;
-  registeredNeed: { at: Date; number: number | null } | null;
-  registering: boolean;
-  registrationError: string | null;
-}
-
-const registrationOf = (match: ReturnType<typeof useMatch>): Registration => {
-  const api = match as ReturnType<typeof useMatch> & Partial<RegistrationApi>;
-  return {
-    busy: api.registering === true,
-    error: api.registrationError ?? null,
-    need: api.registeredNeed ?? null,
-    onRegister: () => {
-      api.register?.({ consent: false }).catch(() => undefined);
-    },
-  };
-};
+const registrationOf = (match: ReturnType<typeof useMatch>): Registration => ({
+  busy: match.registering,
+  error: match.registrationError,
+  need: match.registeredNeed,
+  onRegister: () => match.registrationFields.setOpen(true),
+});
 
 const chromeTone = (
   asking: boolean,

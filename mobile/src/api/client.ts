@@ -26,6 +26,8 @@ import type {
   MaterialDetail,
   MaterialFilters,
   MaterialSummary,
+  NeedCreate,
+  NeedCreated,
   NeedPatch,
   NeedPatchResponse,
   NeedThread,
@@ -236,6 +238,8 @@ export const api = {
     }),
   createIdea: (body: IdeaCreate) =>
     request<IdeaCreated>("/api/ideas", { body, method: "POST" }),
+  createNeed: (body: NeedCreate) =>
+    request<NeedCreated>("/api/needs", { body, method: "POST" }),
   feedbackSummary: (slug: string, signal?: AbortSignal) =>
     request<FeedbackSummary>(
       `/api/innovations/${encodeURIComponent(slug)}/feedback`,
