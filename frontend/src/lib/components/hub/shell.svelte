@@ -20,6 +20,8 @@
   const libraryPath = resolve("/library");
   const onNeeds = $derived(page.url.pathname.startsWith(needsPath));
   const onLibrary = $derived(page.url.pathname.startsWith(libraryPath));
+  const statsPath = resolve("/stats");
+  const onStats = $derived(page.url.pathname.startsWith(statsPath));
 
   const liveWords: Record<string, string> = {
     connecting: "Łączenie…",
@@ -70,6 +72,9 @@
       </a>
       <a aria-current={onLibrary ? "page" : undefined} href={libraryPath}
         >Biblioteka</a
+      >
+      <a aria-current={onStats ? "page" : undefined} href={statsPath}
+        >Statystyki</a
       >
     </nav>
     <div class="ml-auto flex items-center gap-4 text-[13px] text-hm-ink-soft">
