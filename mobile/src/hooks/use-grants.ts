@@ -151,9 +151,18 @@ export const useGrantApplication = (id?: string, ideaId?: string) => {
     }
   };
 
+  const changedSections = Object.fromEntries(
+    (application?.sections ?? [])
+      .filter((section) => drafts[section.key] !== section.text)
+      .map((section) => [section.key, drafts[section.key] ?? ""])
+  );
+  const dirty = Object.keys(changedSections).length > 0;
+
   const save = () => {
-    if (id && token) {
-      return run("save", () => api.updateGrantApplication(id, token, drafts));
+    if (id && token && dirty) {
+      return run("save", () =>
+        api.updateGrantApplication(id, token, changedSections)
+      );
     }
   };
   const redraft = () => {
@@ -170,6 +179,7 @@ export const useGrantApplication = (id?: string, ideaId?: string) => {
   return {
     application,
     busy,
+    dirty,
     drafts,
     error,
     loading,
