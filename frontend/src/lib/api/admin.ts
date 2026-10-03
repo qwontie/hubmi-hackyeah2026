@@ -538,3 +538,33 @@ export const sendOpinion = (id: string, body: string, privateNote: string) =>
     body: body || undefined,
     private_note: privateNote || undefined,
   });
+
+export interface ReplyFragment {
+  id: string;
+  innovation: { slug: string; title: string; url: string } | null;
+  kind: "opening" | "innovation" | "next_step" | "closing";
+  label: string;
+  text: string;
+}
+
+export interface EarlierAnswer {
+  body: string;
+  demo: boolean;
+  need_excerpt: string;
+  need_number: number | null;
+  sent_at: string;
+  similarity: number;
+}
+
+export interface ReplySuggestions {
+  earlier_answers: EarlierAnswer[];
+  fragments: ReplyFragment[];
+  generated_at: string;
+}
+
+export const replySuggestions = (id: string, signal?: AbortSignal) =>
+  api.post<ReplySuggestions>(
+    `/admin/needs/${id}/reply-suggestions`,
+    undefined,
+    signal
+  );

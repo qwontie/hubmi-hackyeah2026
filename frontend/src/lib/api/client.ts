@@ -125,8 +125,8 @@ export const api = {
     request<T>("GET", path, { params, signal }),
   patch: <T>(path: string, body?: unknown) =>
     request<T>("PATCH", path, { body: body ?? {} }),
-  post: <T>(path: string, body?: unknown) =>
-    request<T>("POST", path, { body: body ?? {} }),
+  post: <T>(path: string, body?: unknown, signal?: AbortSignal) =>
+    request<T>("POST", path, { body: body ?? {}, signal }),
   put: <T>(path: string, body?: unknown) =>
     request<T>("PUT", path, { body: body ?? {} }),
   upload: <T>(path: string, form: FormData) =>

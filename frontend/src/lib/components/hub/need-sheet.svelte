@@ -13,6 +13,7 @@
   import { ApiError } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
   import ExpertPanel from "$lib/components/hub/expert-panel.svelte";
+  import ReplyBuilder from "$lib/components/hub/reply-builder.svelte";
   import Stamp from "$lib/components/hub/stamp.svelte";
   import {
     nbsp,
@@ -355,10 +356,16 @@
           </section>
         {/if}
 
-        <form class="grid gap-1.5" onsubmit={send}>
+        <form class="grid gap-2" onsubmit={send}>
           <h3 class="font-semibold text-[13px]">
             <label for="reply">Odpowiedź do autora</label>
           </h3>
+          <ReplyBuilder
+            auto={detail.status === "new" &&
+              !detail.messages.some((m) => m.direction === "to_author")}
+            needId={detail.id}
+            bind:body
+          />
           <div class="reply">
             <textarea
               id="reply"
