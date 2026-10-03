@@ -110,7 +110,9 @@ def section_views(
 
 
 def incomplete(view_: ApplicationSection) -> bool:
-    return not view_.text.strip()
+    if not view_.text.strip():
+        return True
+    return view_.source == "ai" and bool(view_.missing)
 
 
 def missing_required(views: Sequence[ApplicationSection]) -> list[str]:

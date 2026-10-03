@@ -163,3 +163,35 @@ async def test_model_down_leaves_the_application_as_it_was(
             await applications.suggest(session, application, call, idea, None)
         await session.refresh(application)
         assert application.sections == before
+
+
+async def test_unedited_ai_placeholder_blocks_submit(
+    monkeypatch: pytest.MonkeyPatch, call: GrantCall, idea: Idea
+) -> None:
+    async def drafted(*_: Any, **__: Any) -> Draft:
+        return Draft(
+            sections=[
+                DraftSection(
+                    key=s["key"],
+                    text="Pomysł nie opisuje jeszcze tej części.",
+                    missing=["koszty"],
+                )
+                for s in call.sections
+            ]
+        )
+
+    monkeypatch.setattr(drafting, "run_agent", drafted)
+    async with session_scope() as session:
+        application, _, _ = await applications.start(session, call, idea)
+        application = await applications.suggest(
+            session, application, call, idea, ["team"]
+        )
+        out = applications.view(application, call, idea)
+        errors = applications.submit_errors(application, call)
+    by_key = {s.key: s for s in out.sections}
+    assert by_key["team"].source == "ai"
+    assert by_key["title"].source == "idea"
+    required_team = next(s for s in call.sections if s["key"] == "team")["required"]
+    assert ("team" in out.missing_required) == required_team
+    assert ("sections.team" in {e["field"] for e in errors}) == required_team
+    assert "title" not in out.missing_required
