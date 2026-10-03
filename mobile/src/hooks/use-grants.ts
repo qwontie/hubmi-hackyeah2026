@@ -55,16 +55,24 @@ export const useGrantCalls = () => {
   };
 };
 
-export const useApplicationStart = (callId: string) => {
+export const useApplicationStart = (
+  callId: string,
+  preferredIdeaId?: string
+) => {
   const [ideas, setIdeas] = useState<StoredIdea[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     listIdeas()
-      .then(setIdeas)
+      .then((stored) => {
+        const preferred = preferredIdeaId
+          ? stored.find((idea) => idea.id === preferredIdeaId)
+          : null;
+        setIdeas(preferred ? [preferred] : stored);
+      })
       .catch(() => setIdeas([]));
-  }, []);
+  }, [preferredIdeaId]);
 
   const start = async (idea: StoredIdea) => {
     setBusyId(idea.id);

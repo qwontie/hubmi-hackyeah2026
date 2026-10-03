@@ -23,9 +23,12 @@ const phaseLabel = {
 } as const;
 
 export default function GrantCallScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, pomysl } = useLocalSearchParams<{
+    id: string;
+    pomysl?: string;
+  }>();
   const { state, retry } = useGrantCall(id);
-  const start = useApplicationStart(id ?? "");
+  const start = useApplicationStart(id ?? "", pomysl);
   if (state.kind === "loading") {
     return (
       <Screen back="Nabory">
