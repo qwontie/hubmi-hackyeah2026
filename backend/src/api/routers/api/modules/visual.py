@@ -18,6 +18,7 @@ from services.visual.service import (
     generate,
     stored_image,
 )
+from utils.db.models import AdminRole
 from utils.env import env
 
 from .common import ReadLimited, ai_guard
@@ -72,9 +73,8 @@ async def may_view(
         return False
     if idea.status in repository.PUBLIC_STATUSES or token_opens(idea, token):
         return True
-    return (
-        await admin_from_secret(request.cookies.get(env.auth.cookie_name)) is not None
-    )
+    viewer = await admin_from_secret(request.cookies.get(env.auth.cookie_name))
+    return viewer is not None and viewer.role == AdminRole.ADMIN
 
 
 @router.get("/ideas/{idea_id}/visualisation.png", response_class=Response)

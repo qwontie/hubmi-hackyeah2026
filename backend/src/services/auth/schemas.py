@@ -3,7 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import AfterValidator, BaseModel, Field
 
-from utils.db.models import AdminUser
+from utils.db.models import AdminRole, AdminUser
 
 LOGIN_RE = re.compile(r"^[a-z0-9][a-z0-9._@-]{0,63}$")
 
@@ -27,7 +27,15 @@ class LoginBody(BaseModel):
 
 class Me(BaseModel):
     login: str
+    role: AdminRole
+    display_name: str | None
+    expertise: str | None
 
     @classmethod
     def of(cls, admin: AdminUser) -> Self:
-        return cls(login=admin.login)
+        return cls(
+            login=admin.login,
+            role=admin.role,
+            display_name=admin.display_name,
+            expertise=admin.expertise,
+        )

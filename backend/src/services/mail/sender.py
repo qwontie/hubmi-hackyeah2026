@@ -11,6 +11,7 @@ from utils.logging import logger
 RESEND_URL = "https://api.resend.com/emails"
 TOKEN_IN_LINK = re.compile(r"#token=\S+")
 RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+RESERVED_DOMAINS = frozenset({"example.org", "example.com", "example.net"})
 ATTEMPTS = 3
 
 
@@ -53,6 +54,14 @@ class Mailer:
         return bool(self._settings.resend_api_key.get_secret_value())
 
     async def send(self, email: Email) -> Delivery:
+        domain = email.to.rpartition("@")[2].lower()
+        if domain in RESERVED_DOMAINS or domain.endswith(".example"):
+            logger.info(
+                "mail skipped, reserved domain: to=%s subject=%r",
+                mask_address(email.to),
+                email.subject,
+            )
+            return Delivery(DeliveryStatus.SKIPPED, error="reserved domain")
         if not self.enabled:
             logger.info(
                 "mail skipped, no RESEND key: to=%s subject=%r\n%s",

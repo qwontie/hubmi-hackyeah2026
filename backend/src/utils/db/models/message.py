@@ -81,6 +81,10 @@ class Message(SQLModel, table=True):
         default=None, sa_column=Column(Text, nullable=True)
     )
     provider_id: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    expert_name: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    expert_field: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
     read_at: datetime | None = nullable_ts_col()
     sent_at: datetime = Field(
         default=None,

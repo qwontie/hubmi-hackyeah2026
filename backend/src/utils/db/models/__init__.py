@@ -1,7 +1,8 @@
 from .adaptation import Adaptation
 from .admin_action import AdminAction
-from .admin_user import AdminUser
+from .admin_user import AdminRole, AdminUser
 from .ai_call import AiCall
+from .assignment import Assignment, AssignmentStatus, ExpertNote
 from .category import Category
 from .challenge import Challenge
 from .demo_record import DemoRecord
@@ -23,11 +24,15 @@ __all__ = [
     "EMBEDDING_DIMENSIONS",
     "Adaptation",
     "AdminAction",
+    "AdminRole",
     "AdminUser",
     "AiCall",
+    "Assignment",
+    "AssignmentStatus",
     "Category",
     "Challenge",
     "DemoRecord",
+    "ExpertNote",
     "Feedback",
     "FeedbackKind",
     "Idea",

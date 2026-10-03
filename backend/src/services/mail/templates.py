@@ -198,3 +198,85 @@ def staff_digest(*, to: str, items: list[StaffItem], inbox_url: str) -> Email:
         f"{html_button(inbox_url, 'Otwórz skrzynkę zgłoszeń')}",
     )
     return Email(to=to, subject=subject, text=text, html=html)
+
+
+def expert_message(  # noqa: PLR0913
+    *,
+    to: str,
+    about: str,
+    is_idea: bool,
+    expert_name: str,
+    expertise: str | None,
+    body: str,
+    thread_url: str,
+    idempotency_key: str,
+) -> Email:
+    label = "Pomysł" if is_idea else "Zgłoszenie"
+    subject = (
+        "Opinia eksperta o Twoim pomyśle w HubMi"
+        if is_idea
+        else "Opinia eksperta o Twoim zgłoszeniu w HubMi"
+    )
+    who = f"{expert_name}, {expertise}" if expertise else expert_name
+    quote = excerpt(about)
+    text = (
+        "Dzień dobry,\n\n"
+        f"Ekspert współpracujący z ROPS w Krakowie ({who}) napisał opinię "
+        f"o Twoim {'pomyśle' if is_idea else 'zgłoszeniu'} w HubMi.\n\n"
+        f"{label}:\n„{quote}”\n\n"
+        f"Opinia:\n{body}\n\n"
+        f"Całą rozmowę zobaczysz i odpowiesz na nią tutaj:\n{thread_url}\n\n"
+        f"{SIGNATURE}\n\n"
+        f"{CONSENT_NOTE}"
+    )
+    html = html_document(
+        subject,
+        f"{H1}Opinia eksperta</h1>"
+        '<p style="margin:0 0 16px">Ekspert współpracujący z ROPS w Krakowie '
+        f"(<strong>{escape(who)}</strong>) napisał opinię.</p>"
+        f'<h2 style="font-size:16px;margin:0 0 8px">{label}</h2>'
+        f"{html_quote(quote)}"
+        '<h2 style="font-size:16px;margin:0 0 8px">Opinia</h2>'
+        f"{html_paragraphs(body)}"
+        f"{html_button(thread_url, 'Zobacz rozmowę i odpowiedz')}"
+        f"{html_paragraphs(SIGNATURE)}"
+        '<p style="margin:24px 0 0;font-size:13px;color:#57534e">'
+        f"{CONSENT_NOTE}</p>",
+    )
+    return Email(
+        to=to, subject=subject, text=text, html=html, idempotency_key=idempotency_key
+    )
+
+
+def expert_assigned(  # noqa: PLR0913
+    *, to: str, expert_name: str, title: str, note: str | None, url: str, key: str
+) -> Email:
+    subject = "HubMi: prośba ROPS o Twoją opinię"
+    title = excerpt(title, 200)
+    note_text = f"Uwagi od ROPS:\n{note}\n\n" if note else ""
+    text = (
+        f"Dzień dobry, {expert_name},\n\n"
+        "zespół ROPS w Krakowie prosi o Twoją opinię w HubMi.\n\n"
+        f"Sprawa:\n„{title}”\n\n"
+        f"{note_text}"
+        f"Otwórz sprawę w panelu:\n{url}\n\n"
+        f"{SIGNATURE}"
+    )
+    note_html = (
+        '<h2 style="font-size:16px;margin:0 0 8px">Uwagi od ROPS</h2>'
+        f"{html_paragraphs(note)}"
+        if note
+        else ""
+    )
+    html = html_document(
+        subject,
+        f"{H1}Prośba o opinię</h1>"
+        f'<p style="margin:0 0 16px">Dzień dobry, {escape(expert_name)}, '
+        "zespół ROPS w Krakowie prosi o Twoją opinię w HubMi.</p>"
+        '<h2 style="font-size:16px;margin:0 0 8px">Sprawa</h2>'
+        f"{html_quote(title)}"
+        f"{note_html}"
+        f"{html_button(url, 'Otwórz sprawę w panelu')}"
+        f"{html_paragraphs(SIGNATURE)}",
+    )
+    return Email(to=to, subject=subject, text=text, html=html, idempotency_key=key)

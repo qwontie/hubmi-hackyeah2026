@@ -29,6 +29,7 @@ from .schemas import (
     AdminRef,
     CategoryRef,
     ClusterRef,
+    ExpertRef,
     MatchDetail,
     MatchInnovation,
     MatchRef,
@@ -302,7 +303,14 @@ def admin_message(message: Message, login: str | None) -> AdminMessage:
         if message.admin_id and login
         else None,
         read_at=message.read_at,
+        expert=expert_ref(message),
     )
+
+
+def expert_ref(message: Message) -> ExpertRef | None:
+    if not message.expert_name:
+        return None
+    return ExpertRef(display_name=message.expert_name, expertise=message.expert_field)
 
 
 async def need_detail(session: AsyncSession, need: Need) -> AdminNeedDetail:

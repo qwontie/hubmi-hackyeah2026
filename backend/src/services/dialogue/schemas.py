@@ -31,6 +31,11 @@ class AdminRef(BaseModel):
     login: str
 
 
+class ExpertRef(BaseModel):
+    display_name: str
+    expertise: str | None
+
+
 class AdminMessage(BaseModel):
     id: uuid.UUID
     need_id: uuid.UUID | None
@@ -41,6 +46,7 @@ class AdminMessage(BaseModel):
     delivery_status: MessageDelivery | None
     admin: AdminRef | None
     read_at: datetime | None
+    expert: ExpertRef | None = None
 
 
 class PublicMessage(BaseModel):
@@ -48,6 +54,8 @@ class PublicMessage(BaseModel):
     direction: MessageDirection
     body: str
     sent_at: datetime
+    author: Literal["rops", "expert", "author"] = "rops"
+    expert: ExpertRef | None = None
 
 
 class ClusterRef(BaseModel):

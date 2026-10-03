@@ -2,7 +2,7 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.security import AdminPerson
+from api.security import StaffPerson
 from services.auth.admins import AdminRepository
 from services.auth.crypto import create_session
 from services.auth.schemas import LoginBody, Me
@@ -48,5 +48,5 @@ async def logout(response: Response) -> None:
 
 
 @router.get("/me")
-async def me(admin: AdminPerson) -> Me:
+async def me(admin: StaffPerson) -> Me:
     return Me.of(admin)

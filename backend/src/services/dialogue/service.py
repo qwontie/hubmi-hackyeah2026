@@ -18,6 +18,7 @@ from services.mail import (
     Email,
     Mailer,
     author_reply,
+    expert_message,
     idea_reply,
 )
 from services.needs import hash_token
@@ -34,7 +35,7 @@ from utils.db.models import (
 from utils.logging import logger
 
 from .audit import record
-from .inbox import admin_message, admin_messages, build
+from .inbox import admin_message, admin_messages, build, expert_ref
 from .links import IDEA_CONTEXT, NEED_CONTEXT, idea_thread_url, link_token_matches
 from .links import thread_url as need_thread_url
 from .schemas import AdminMessage, PublicMessage
@@ -100,11 +101,18 @@ def publish_message(topic: str, message: AdminMessage) -> None:
 
 
 def public_message(message: Message) -> PublicMessage:
+    expert = expert_ref(message)
+    if message.direction == MessageDirection.FROM_AUTHOR:
+        author = "author"
+    else:
+        author = "expert" if expert else "rops"
     return PublicMessage(
         id=message.id,
         direction=message.direction,
         body=message.body,
         sent_at=message.sent_at,
+        author=author,
+        expert=expert,
     )
 
 
@@ -203,6 +211,20 @@ async def reply(
 
 def reply_email(owner: Owner, message: Message) -> Email:
     key = f"message-{message.id}"
+    if message.expert_name:
+        is_idea = isinstance(owner, Idea)
+        return expert_message(
+            to=str(owner.contact_email),
+            about=owner.title if isinstance(owner, Idea) else owner.text,
+            is_idea=is_idea,
+            expert_name=message.expert_name,
+            expertise=message.expert_field,
+            body=message.body,
+            thread_url=idea_thread_url(owner.id)
+            if is_idea
+            else need_thread_url(owner.id),
+            idempotency_key=key,
+        )
     if isinstance(owner, Idea):
         return idea_reply(
             to=str(owner.contact_email),

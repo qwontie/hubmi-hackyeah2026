@@ -1,10 +1,19 @@
 import uuid
+from dataclasses import dataclass
 
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from services.auth.crypto import hash_password, verify_password
-from utils.db.models import AdminUser
+from utils.db.models import AdminRole, AdminUser
+
+
+@dataclass(frozen=True, slots=True)
+class Profile:
+    role: AdminRole
+    display_name: str | None = None
+    expertise: str | None = None
+    email: str | None = None
 
 
 class AdminRepository:
@@ -32,12 +41,19 @@ class AdminRepository:
         await self.session.refresh(admin)
         return admin
 
-    async def upsert(self, login: str, password: str) -> tuple[AdminUser, bool]:
+    async def upsert(
+        self, login: str, password: str, profile: Profile | None = None
+    ) -> tuple[AdminUser, bool]:
         admin = await self.by_login(login)
         created = admin is None
         if admin is None:
             admin = AdminUser(login=login, password_hash="")
         admin.password_hash = hash_password(password)
+        if profile is not None:
+            admin.role = profile.role
+            admin.display_name = profile.display_name
+            admin.expertise = profile.expertise
+            admin.email = profile.email
         return await self.save(admin), created
 
     async def delete(self, login: str) -> bool:
