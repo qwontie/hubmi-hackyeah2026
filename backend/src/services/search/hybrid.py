@@ -10,11 +10,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from services.ai import embed_query
 from utils.db.models.innovation import Innovation, InnovationStatus
 
-from .text import keyword_query
+from .text import keyword_terms
 from .vector import cosine_distance
 
-VECTOR_WEIGHT = 0.85
-KEYWORD_WEIGHT = 0.15
+SHORT_QUERY_TERMS = 3
+SHORT_KEYWORD_BONUS = 0.12
+LONG_KEYWORD_BONUS = 0.04
 CANDIDATES = 20
 QUERY_CACHE_SIZE = 512
 
@@ -67,9 +68,9 @@ async def hybrid_search(
         ).all()
     )
     keyword_ranks: dict[uuid.UUID, float] = {}
-    query = keyword_query(text)
-    if query:
-        tsquery = func.to_tsquery("simple", query)
+    terms = keyword_terms(text)
+    if terms:
+        tsquery = func.to_tsquery("simple", " | ".join(terms))
         rank = func.ts_rank_cd(col(Innovation.search), tsquery, 32)
         rows = (
             await session.exec(
@@ -90,12 +91,14 @@ async def hybrid_search(
             select(Innovation, similarity).where(col(Innovation.id).in_(ids))
         )
     ).all()
-    top_keyword = max(keyword_ranks.values(), default=0.0) or 1.0
+    bonus = (
+        SHORT_KEYWORD_BONUS if len(terms) <= SHORT_QUERY_TERMS else LONG_KEYWORD_BONUS
+    )
     hits = []
     for innovation, sim in rows:
-        keyword = keyword_ranks.get(innovation.id, 0.0) / top_keyword
+        keyword = keyword_ranks.get(innovation.id, 0.0)
         sim_value = float(sim or 0.0)
-        score = VECTOR_WEIGHT * sim_value + KEYWORD_WEIGHT * keyword
+        score = sim_value + bonus * keyword
         hits.append(
             Hit(
                 innovation=innovation,

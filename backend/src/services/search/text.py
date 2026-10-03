@@ -127,17 +127,20 @@ def stem(word: str) -> str:
     return word[: max(STEM_FROM - 1, len(word) - 3)]
 
 
-def keyword_query(text: str) -> str | None:
+def keyword_terms(text: str) -> list[str]:
     terms: list[str] = []
     for word in WORD.findall(fold(text)):
         if len(word) < MIN_WORD or word in STOPWORDS:
             continue
-        term = f"{stem(word)}:*"
+        term = f"{stem(word)}:*" if len(word) > MIN_WORD else word
         if term not in terms:
             terms.append(term)
-    if not terms:
-        return None
-    return " | ".join(terms[:MAX_TERMS])
+    return terms[:MAX_TERMS]
+
+
+def keyword_query(text: str) -> str | None:
+    terms = keyword_terms(text)
+    return " | ".join(terms) if terms else None
 
 
 def letters_ratio(text: str) -> float:
