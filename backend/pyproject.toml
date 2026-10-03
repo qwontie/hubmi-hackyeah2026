@@ -15,6 +15,7 @@ dependencies = [
     "greenlet>=3.5.3",
     "httpx>=0.28.1",
     "pgvector>=0.5.0",
+    "pillow>=12.3.0",
     "pydantic-ai-slim[google]>=2.15.0",
     "pydantic-settings>=2.14.2",
     "pyjwt>=2.15.1",

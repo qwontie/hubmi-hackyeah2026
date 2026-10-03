@@ -16,6 +16,7 @@ from services.sql import unaccent_like
 from utils.db.models import AdminUser, Category, Innovation, InnovationStatus
 from utils.logging import logger
 
+from .images import image_fields
 from .schemas import (
     AdminInnovation,
     AdminInnovationDetail,
@@ -60,6 +61,7 @@ def summary(innovation: Innovation, category: Category) -> AdminInnovation:
         status=innovation.status,
         has_video=bool(innovation.video_url),
         has_materials=bool(innovation.materials_url),
+        **image_fields(innovation),
         source_url=innovation.source_url,
         edited_fields=list(innovation.edited_fields),
         edited_at=innovation.edited_at,
@@ -95,6 +97,7 @@ def public_summary(innovation: Innovation, category: Category) -> dict[str, Any]
         "has_video": bool(innovation.video_url),
         "has_materials": bool(innovation.materials_url),
         "status": innovation.status.value,
+        **image_fields(innovation),
     }
 
 

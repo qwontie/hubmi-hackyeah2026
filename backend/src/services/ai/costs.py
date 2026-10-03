@@ -13,6 +13,7 @@ PRICES_PER_MILLION: dict[str, tuple[float, float]] = {
     "gemini-2.5-flash": (0.30, 2.50),
     "gemini-2.5-flash-lite": (0.10, 0.40),
     "gemini-3.1-flash-image": (0.50, 60.0),
+    "gemini-3.1-flash-lite-image": (0.25, 30.0),
 }
 DEFAULT_PRICE = (0.30, 2.50)
 DAILY_BUDGET_USD = 5.0

@@ -7,6 +7,7 @@ from services.ai import AiUnavailableError, ensure_budget, log_ai_call
 from services.ai.models import google_provider
 
 IMAGE_MODEL = "gemini-3.1-flash-image"
+LITE_IMAGE_MODEL = "gemini-3.1-flash-lite-image"
 ASPECT_RATIO = "4:3"
 IMAGE_SIZE = "1K"
 ALLOWED_TYPES = frozenset({"image/png", "image/jpeg", "image/webp"})
@@ -19,17 +20,21 @@ class Picture:
     model: str
 
 
-def first_picture(response: types.GenerateContentResponse) -> Picture | None:
+def first_picture(
+    response: types.GenerateContentResponse, model: str = IMAGE_MODEL
+) -> Picture | None:
     for candidate in response.candidates or []:
         parts = candidate.content.parts if candidate.content else None
         for part in parts or []:
             blob = part.inline_data
             if blob and blob.data and blob.mime_type in ALLOWED_TYPES:
-                return Picture(blob.data, blob.mime_type, IMAGE_MODEL)
+                return Picture(blob.data, blob.mime_type, model)
     return None
 
 
-async def draw(prompt: str) -> Picture:
+async def draw(
+    prompt: str, *, model: str = IMAGE_MODEL, kind: str = "idea_visual_image"
+) -> Picture:
     await ensure_budget()
     started = time.perf_counter()
     error: str | None = None
@@ -37,7 +42,7 @@ async def draw(prompt: str) -> Picture:
     usage: types.GenerateContentResponseUsageMetadata | None = None
     try:
         response = await google_provider().client.aio.models.generate_content(
-            model=IMAGE_MODEL,
+            model=model,
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_modalities=["IMAGE"],
@@ -47,14 +52,14 @@ async def draw(prompt: str) -> Picture:
             ),
         )
         usage = response.usage_metadata
-        picture = first_picture(response)
+        picture = first_picture(response, model)
         if picture is None:
             error = "no image in response"
     except Exception as e:
         error = repr(e)
     await log_ai_call(
-        kind="idea_visual_image",
-        model=IMAGE_MODEL,
+        kind=kind,
+        model=model,
         input_tokens=(usage.prompt_token_count or 0) if usage else 0,
         output_tokens=(usage.candidates_token_count or 0) if usage else 0,
         latency_ms=int((time.perf_counter() - started) * 1000),

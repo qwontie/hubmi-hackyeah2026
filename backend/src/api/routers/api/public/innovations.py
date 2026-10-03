@@ -1,13 +1,14 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
 from sqlmodel import col, func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import not_found
 from api.limits import rate_limit
 from services.ai import AiBudgetExceededError, AiUnavailableError
+from services.library.images.service import stored_image
 from services.needs import POWIATS
 from services.search import search_query
 from services.tester.repository import vote_counts
@@ -25,8 +26,12 @@ from .schemas import (
 
 router = APIRouter(route_class=DishkaRoute)
 limiter = rate_limit("library", per_minute=120)
+image_limiter = rate_limit("innovation_image", per_minute=600)
 SEARCH_LIMIT = 30
 MISSING = "Nie znaleziono takiej innowacji."
+IMAGE_MISSING = "Ta innowacja nie ma jeszcze obrazka."
+IMMUTABLE_CACHE = "public, max-age=31536000, immutable"
+SHORT_CACHE = "public, max-age=300"
 
 
 @router.get("/innovations", dependencies=[Depends(limiter)])
@@ -109,6 +114,33 @@ async def get_innovation(
         await categories_by_slug(session),
         await vote_counts(session, [innovation.id]),
     )
+
+
+@router.get(
+    "/innovations/{slug}/image",
+    response_class=Response,
+    dependencies=[Depends(image_limiter)],
+)
+async def innovation_image(
+    slug: Annotated[str, Path(max_length=200)],
+    request: Request,
+    session: FromDishka[AsyncSession],
+    v: Annotated[int | None, Query(ge=1, le=100000)] = None,
+    size: Annotated[Literal["full", "card"], Query()] = "full",
+) -> Response:
+    found = await stored_image(session, slug)
+    if found is None or found[0].status != InnovationStatus.PUBLISHED:
+        raise not_found(IMAGE_MISSING)
+    image = found[1]
+    etag = f'"{slug}-{image.version}-{size}"'
+    headers = {
+        "Cache-Control": IMMUTABLE_CACHE if v == image.version else SHORT_CACHE,
+        "ETag": etag,
+    }
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
+    content = image.card if size == "card" else image.image
+    return Response(content=content, media_type=image.mime_type, headers=headers)
 
 
 @router.get("/categories", dependencies=[Depends(limiter)])

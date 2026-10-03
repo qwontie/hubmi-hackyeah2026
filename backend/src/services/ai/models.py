@@ -1,7 +1,9 @@
 import time
+from collections.abc import Sequence
 from functools import cache
 
 from pydantic_ai import Agent
+from pydantic_ai.messages import UserContent
 from pydantic_ai.models.google import GoogleModel, GoogleModelSettings
 from pydantic_ai.providers.google import GoogleProvider
 
@@ -34,7 +36,9 @@ def chat_model() -> GoogleModel:
     )
 
 
-async def run_agent[T](agent: Agent[None, T], prompt: str, *, kind: str) -> T:
+async def run_agent[T](
+    agent: Agent[None, T], prompt: str | Sequence[UserContent], *, kind: str
+) -> T:
     await ensure_budget()
     started = time.perf_counter()
     try:

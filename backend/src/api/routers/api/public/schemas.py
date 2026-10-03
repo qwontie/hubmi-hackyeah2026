@@ -7,6 +7,7 @@ from typing import Annotated
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from services.kreator import PublicIdea
+from services.library.images import SourceName, image_fields
 from services.needs import POWIATS
 from services.problems import ProblemRow
 from services.tester import Votes
@@ -71,6 +72,11 @@ class InnovationSummary(BaseModel):
     has_video: bool
     has_materials: bool
     votes: Votes
+    image_url: str | None = None
+    image_card_url: str | None = None
+    image_alt: str | None = None
+    image_source: SourceName | None = None
+    image_label: str | None = None
 
     @classmethod
     def build(
@@ -91,6 +97,7 @@ class InnovationSummary(BaseModel):
             has_video=bool(innovation.video_url),
             has_materials=bool(innovation.materials_url),
             votes=votes.get(innovation.id) or Votes(),
+            **image_fields(innovation),
         )
 
 

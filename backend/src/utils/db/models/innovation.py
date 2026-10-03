@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Column, Computed, Enum, ForeignKey, Index, Text, text
+from sqlalchemy import Column, Computed, Enum, ForeignKey, Index, Integer, Text, text
 from sqlalchemy.dialects import postgresql
 from sqlmodel import Field, SQLModel
 
@@ -81,6 +81,13 @@ class Innovation(SQLModel, table=True):
         default=None, sa_column=Column(Text, nullable=True)
     )
     license: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    image_version: int | None = Field(
+        default=None, sa_column=Column(Integer, nullable=True)
+    )
+    image_source: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
+    image_alt: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     status: InnovationStatus = Field(
         default=InnovationStatus.PUBLISHED,
         sa_column=Column(

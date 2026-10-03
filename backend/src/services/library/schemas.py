@@ -37,6 +37,11 @@ class AdminInnovation(BaseModel):
     status: InnovationStatus
     has_video: bool
     has_materials: bool
+    image_url: str | None = None
+    image_card_url: str | None = None
+    image_alt: str | None = None
+    image_source: str | None = None
+    image_label: str | None = None
     source_url: str | None
     edited_fields: list[str]
     edited_at: datetime | None

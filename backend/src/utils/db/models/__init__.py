@@ -18,6 +18,7 @@ from .idea import Idea, IdeaStage, IdeaStatus
 from .idea_visualisation import IdeaVisualisation
 from .import_run import ImportRun, ImportStatus, ImportTrigger
 from .innovation import EMBEDDING_DIMENSIONS, Innovation, InnovationStatus
+from .innovation_image import ImageSource, InnovationImage
 from .knowledge_run import KnowledgeRun
 from .match_result import MatchResult
 from .material import KnowledgeStatus, Material, MaterialKind, SummaryState
@@ -51,10 +52,12 @@ __all__ = [
     "IdeaStage",
     "IdeaStatus",
     "IdeaVisualisation",
+    "ImageSource",
     "ImportRun",
     "ImportStatus",
     "ImportTrigger",
     "Innovation",
+    "InnovationImage",
     "InnovationStatus",
     "KnowledgeRun",
     "KnowledgeStatus",
