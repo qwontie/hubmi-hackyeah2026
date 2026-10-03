@@ -6,6 +6,7 @@
   import { page } from "$app/state";
   import { session } from "$lib/auth/session.svelte";
   import ErrorState from "$lib/components/error-state.svelte";
+  import Shell from "$lib/components/hub/shell.svelte";
 
   let { children } = $props();
 
@@ -28,10 +29,12 @@
   });
 </script>
 
-<ModeWatcher />
+<ModeWatcher defaultMode="light" track={false} />
 
-{#if bare || session.me}
+{#if bare}
   {@render children()}
+{:else if session.me}
+  <Shell>{@render children()}</Shell>
 {:else if session.error}
   <main class="flex min-h-dvh items-center justify-center">
     <ErrorState error={session.error} retry={() => session.load()} />
