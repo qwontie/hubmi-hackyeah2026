@@ -267,6 +267,7 @@ const styles = StyleSheet.create({
   },
   panelNarrow: {
     flexBasis: "auto",
+    flexShrink: 0,
   },
   root: {
     flex: 1,

@@ -13,6 +13,7 @@ import {
 import { TEXT_MAX } from "@/config";
 import { PowiatPicker } from "@/features/powiat-picker";
 import { Stamp } from "@/features/stamp";
+import { Trap } from "@/features/trap";
 import type { RegistrationForm } from "@/hooks/use-match";
 import { usePowiats } from "@/hooks/use-powiats";
 import { focusElement } from "@/lib/a11y";
@@ -32,23 +33,6 @@ export interface Registration {
 const EMAIL_ID = "unsolved-email";
 const TEXT_ID = "unsolved-text";
 const HINT = "rgba(218, 219, 252, 0.72)";
-
-function Trap({ fields }: { fields: RegistrationForm }) {
-  if (Platform.OS !== "web") {
-    return null;
-  }
-  return (
-    <View aria-hidden pointerEvents="none" style={styles.trap}>
-      <TextInput
-        autoComplete="off"
-        onChangeText={fields.setWebsite}
-        tabIndex={-1}
-        value={fields.website}
-        {...({ name: "website" } as object)}
-      />
-    </View>
-  );
-}
 
 function Problem({ text }: { text: string | null }) {
   const { colors } = useTheme();
@@ -200,7 +184,7 @@ function Step({ registration }: { registration: Registration }) {
           <Problem text={fields.errors.consent} />
         </View>
       </View>
-      <Trap fields={fields} />
+      <Trap onChange={fields.setWebsite} value={fields.website} />
       <Problem text={error} />
       <View style={styles.actions}>
         <Button
@@ -408,13 +392,5 @@ const styles = StyleSheet.create({
   },
   textWide: {
     flex: 1,
-  },
-  trap: {
-    height: 1,
-    left: -9999,
-    opacity: 0,
-    overflow: "hidden",
-    position: "absolute",
-    width: 1,
   },
 });

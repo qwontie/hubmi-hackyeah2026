@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  Platform,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -116,8 +115,6 @@ const useDawn = (loading: boolean, done: boolean) => {
   return { dawn, dawning: done && !dawned && !reduceMotion, rise };
 };
 
-const Fit = Platform.OS === "ios" ? View : ScrollView;
-
 const registrationOf = (match: ReturnType<typeof useMatch>): Registration => ({
   busy: match.registering,
   error: match.registrationError,
@@ -193,7 +190,12 @@ export default function MatchScreen() {
         role="main"
         style={[styles.root, { backgroundColor: colors.night }]}
       >
-        <Fit contentContainerStyle={styles.fill} style={styles.root}>
+        <ScrollView
+          bounces={false}
+          contentContainerStyle={styles.fill}
+          contentInsetAdjustmentBehavior="never"
+          style={styles.root}
+        >
           <EntryChoice
             onProblem={() => setChosen(true)}
             top={
@@ -204,7 +206,7 @@ export default function MatchScreen() {
               )
             }
           />
-        </Fit>
+        </ScrollView>
       </View>
     );
   }

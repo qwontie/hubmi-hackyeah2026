@@ -129,7 +129,7 @@ export function ProblemMap({
           />
         ))}
         {badges.map((badge) => (
-          <G key={badge.slug} pointerEvents="none">
+          <G key={badge.slug} onPress={() => onSelect(badge.slug)}>
             <Circle
               cx={badge.x}
               cy={badge.y}
