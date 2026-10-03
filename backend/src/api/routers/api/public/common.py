@@ -26,7 +26,7 @@ def translate(error: Exception) -> ApiError:
             422,
             error.code,
             error.message,
-            fields=[{"field": "text", "message": error.message}],
+            fields=[{"field": error.field, "message": error.message}],
         )
     if isinstance(error, (AiUnavailableError, AiBudgetExceededError)):
         return AI_UNAVAILABLE

@@ -6,7 +6,7 @@ SERVICES := api
 changed = ! git diff --quiet $(1) -- $(2) 2>/dev/null
 stamp = { git update-ref $(1) HEAD 2>/dev/null || true; }
 
-.PHONY: fmt check build pre-deploy post-deploy migrate revision script
+.PHONY: fmt check test build pre-deploy post-deploy migrate revision script
 
 fmt:
 	uv run ruff format
@@ -16,6 +16,9 @@ check:
 	uv run ruff format --check
 	uv run ruff check
 	uv run ty check
+
+test:
+	uv run pytest
 
 build:
 	$(COMPOSE) build api

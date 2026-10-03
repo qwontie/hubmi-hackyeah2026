@@ -19,7 +19,26 @@ def card_url(slug: str) -> str:
     return f"{env.mailer.public_url.rstrip('/')}/innowacje/{slug}"
 
 
-async def suggest(session: AsyncSession, need: Need) -> ReplySuggestions:
+def cached(need: Need) -> ReplySuggestions | None:
+    if need.reply_suggestions is None:
+        return None
+    return ReplySuggestions.model_validate(need.reply_suggestions)
+
+
+async def suggest(
+    session: AsyncSession, need: Need, *, refresh: bool = False
+) -> ReplySuggestions:
+    stored = None if refresh else cached(need)
+    if stored is not None:
+        return stored
+    suggestions = await _generate(session, need)
+    need.reply_suggestions = suggestions.model_dump(mode="json")
+    session.add(need)
+    await session.commit()
+    return suggestions
+
+
+async def _generate(session: AsyncSession, need: Need) -> ReplySuggestions:
     items = await matched(session, need.id)
     earlier = await earlier_answers(session, need)
     powiat = POWIATS.get(need.powiat) if need.powiat else None

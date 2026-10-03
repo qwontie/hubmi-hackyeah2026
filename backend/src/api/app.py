@@ -8,6 +8,7 @@ from api import errors, routers
 from api.middleware import SameOriginMiddleware
 from dependencies.container import container
 from services.mail import StaffNotifier
+from services.needs import start_enrichment, stop_enrichment
 from services.schedule import start_schedule, stop_schedule
 from utils.db import init_db
 from utils.env import env, validate_prod_settings
@@ -21,7 +22,9 @@ async def lifespan(app_: FastAPI) -> AsyncGenerator[None]:
     await init_db()
     await app_.state.dishka_container.get(StaffNotifier)
     schedule = start_schedule()
+    enrichment = start_enrichment()
     yield
+    await stop_enrichment(enrichment)
     await stop_schedule(schedule)
     await app_.state.dishka_container.close()
 

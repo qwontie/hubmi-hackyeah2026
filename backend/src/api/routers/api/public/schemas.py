@@ -2,7 +2,7 @@ import re
 import uuid
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
@@ -189,6 +189,7 @@ class MatchOut(BaseModel):
     similar_count: int
     cluster: ClusterRef | None
     degraded: bool
+    reason: Literal["unclear", "no_match"] | None = None
 
 
 class NeedIn(StrictModel):
@@ -197,6 +198,7 @@ class NeedIn(StrictModel):
     contact_email: Email = None
     contact_consent: bool = False
     shown_innovation_slugs: ShownSlugs = Field(default_factory=list)
+    website: Annotated[str | None, Field(max_length=500)] = None
 
 
 class NeedOut(BaseModel):
@@ -205,6 +207,7 @@ class NeedOut(BaseModel):
     edit_token: str
     similar_count: int
     cluster: ClusterRef | None
+    duplicate: bool = False
 
 
 class NeedPatch(StrictModel):

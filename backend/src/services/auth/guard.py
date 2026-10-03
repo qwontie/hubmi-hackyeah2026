@@ -1,5 +1,3 @@
-import hashlib
-import hmac
 import math
 from datetime import UTC, datetime
 
@@ -7,8 +5,7 @@ from fastapi import Request
 from sqlalchemy import text
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.limits import client_ip
-from utils.env import env
+from api.limits import client_ip, hashed_key
 
 RESET_SECONDS = 900
 BACKOFF_SECONDS = 30
@@ -25,8 +22,7 @@ class LoginBlockedError(RuntimeError):
 
 
 def _key(scope: str, value: str) -> str:
-    secret = env.auth.secret.get_secret_value().encode()
-    return hmac.new(secret, f"{scope}:{value}".encode(), hashlib.sha256).hexdigest()
+    return hashed_key(scope, value)
 
 
 class LoginGuard:

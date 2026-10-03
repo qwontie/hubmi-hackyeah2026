@@ -45,6 +45,7 @@ unfixable = ["F401"]
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/*" = ["INP", "T201", "ANN401"]
+"tests/*" = ["INP", "S101", "PLR2004", "ANN401"]
 "*.lock" = ["ALL"]
 "migrations/**" = ["ALL"]
 
@@ -60,6 +61,15 @@ split-on-trailing-comma = false
 
 [dependency-groups]
 dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
     "ruff>=0.15.20",
     "ty>=0.0.55",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"

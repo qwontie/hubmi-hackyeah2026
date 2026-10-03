@@ -120,12 +120,14 @@ def apply_decision(decision: MatchDecision, hits: list[Hit]) -> list[Reasoned]:
     return chosen
 
 
+def fallback_reason(innovation: Innovation) -> str:
+    return "Pasuje do opisanego problemu: " + _clip(
+        innovation.lead or innovation.title, 160
+    )
+
+
 def fallback(hits: list[Hit], limit: int = 3) -> list[Reasoned]:
     return [
-        Reasoned(
-            hit=hit,
-            reason="Pasuje do opisanego problemu: "
-            + _clip(hit.innovation.lead or hit.innovation.title, 160),
-        )
+        Reasoned(hit=hit, reason=fallback_reason(hit.innovation))
         for hit in hits[:limit]
     ]

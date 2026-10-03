@@ -3,7 +3,7 @@ from collections import OrderedDict
 from collections.abc import Collection
 from dataclasses import dataclass
 
-from sqlalchemy import func
+from sqlalchemy import func, literal
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -31,8 +31,16 @@ class Hit:
 _query_cache: OrderedDict[str, list[float]] = OrderedDict()
 
 
+def _cache_key(text: str) -> str:
+    return " ".join(text.lower().split())
+
+
+def peek_query_embedding(text: str) -> list[float] | None:
+    return _query_cache.get(_cache_key(text))
+
+
 async def cached_query_embedding(text: str, *, kind: str) -> list[float]:
-    key = " ".join(text.lower().split())
+    key = _cache_key(text)
     if key in _query_cache:
         _query_cache.move_to_end(key)
         return _query_cache[key]
@@ -46,7 +54,7 @@ async def cached_query_embedding(text: str, *, kind: str) -> list[float]:
 async def hybrid_search(
     session: AsyncSession,
     text: str,
-    vector: list[float],
+    vector: list[float] | None,
     *,
     limit: int = 10,
     category: str | None = None,
@@ -55,18 +63,19 @@ async def hybrid_search(
     filters = [published]
     if category:
         filters.append(col(Innovation.category_slug) == category)
-    distance = cosine_distance(Innovation.embedding, vector)
-
-    ids = set(
-        (
-            await session.exec(
-                select(Innovation.id)
-                .where(*filters, col(Innovation.embedding).is_not(None))
-                .order_by(distance)
-                .limit(CANDIDATES)
-            )
-        ).all()
-    )
+    ids: set[uuid.UUID] = set()
+    if vector is not None:
+        distance = cosine_distance(Innovation.embedding, vector)
+        ids.update(
+            (
+                await session.exec(
+                    select(Innovation.id)
+                    .where(*filters, col(Innovation.embedding).is_not(None))
+                    .order_by(distance)
+                    .limit(CANDIDATES)
+                )
+            ).all()
+        )
     keyword_ranks: dict[uuid.UUID, float] = {}
     terms = keyword_terms(text)
     if terms:
@@ -85,7 +94,11 @@ async def hybrid_search(
     if not ids:
         return []
 
-    similarity = (1 - distance).label("similarity")
+    similarity = (
+        (1 - cosine_distance(Innovation.embedding, vector)).label("similarity")
+        if vector is not None
+        else literal(0.0).label("similarity")
+    )
     rows = (
         await session.exec(
             select(Innovation, similarity).where(col(Innovation.id).in_(ids))

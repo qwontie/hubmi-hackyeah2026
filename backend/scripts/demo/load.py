@@ -40,7 +40,7 @@ from services.needs import (
     refresh_cluster_summary,
     update_need,
 )
-from services.needs.service import clean_text
+from services.needs.intake import collapse
 from services.needs.tokens import new_token
 from services.search import nearest_innovations
 from services.tester import repository as tester
@@ -330,7 +330,7 @@ async def load_needs(run: Run, data: dict[str, Any], limit: int | None) -> None:
         for moment, item in planned
         if await registry.lookup(run.session, registry.NEED, item["key"]) is None
     ]
-    texts = [clean_text(item["text"]) for _, item in missing]
+    texts = [collapse(item["text"]) for _, item in missing]
     vectors = await embed_queries(texts, kind="embed_need") if texts else []
     by_key = {
         item["key"]: vector for (_, item), vector in zip(missing, vectors, strict=True)

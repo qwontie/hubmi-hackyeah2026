@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Identity, Index, Integer, Text
@@ -73,6 +74,7 @@ class Need(SQLModel, table=True):
             postgresql_ops={"embedding": "vector_cosine_ops"},
         ),
         Index("ix_need_created_at", "created_at"),
+        Index("ix_need_dedupe_key", "dedupe_key", "created_at"),
     )
 
     id: uuid.UUID = uuid_pk()
@@ -129,6 +131,10 @@ class Need(SQLModel, table=True):
     edit_token_hash: str = Field(sa_column=Column(Text, nullable=False))
     embedding: list[float] | None = Field(
         default=None, sa_column=Column(Vector(EMBEDDING_DIMENSIONS), nullable=True)
+    )
+    dedupe_key: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    reply_suggestions: dict[str, Any] | None = Field(
+        default=None, sa_column=Column(postgresql.JSONB, nullable=True)
     )
     created_at: datetime = created_at_col()
     updated_at: datetime = updated_at_col()

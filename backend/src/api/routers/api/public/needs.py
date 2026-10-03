@@ -2,12 +2,11 @@ import uuid
 from typing import Annotated
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Depends, Header, status
+from fastapi import APIRouter, Depends, Header, Request, Response, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import not_found
-from api.limits import rate_limit
-from services.ai import AiBudgetExceededError, AiUnavailableError
+from api.limits import client_ip, persistent_rate_limit, rate_limit
 from services.needs import (
     NeedNotFoundError,
     TextRejectedError,
@@ -19,14 +18,19 @@ from .common import CONSENT_MISSING, translate
 from .schemas import ClusterRef, NeedIn, NeedOut, NeedPatch, NeedPatched
 
 router = APIRouter(route_class=DishkaRoute)
-create_limiter = rate_limit("needs", per_minute=5, per_day=30)
+create_limiter = persistent_rate_limit("needs", per_minute=5, per_day=30)
 patch_limiter = rate_limit("needs_patch", per_minute=10)
 
 
 @router.post(
     "", status_code=status.HTTP_201_CREATED, dependencies=[Depends(create_limiter)]
 )
-async def create(body: NeedIn, session: FromDishka[AsyncSession]) -> NeedOut:
+async def create(
+    body: NeedIn,
+    request: Request,
+    response: Response,
+    session: FromDishka[AsyncSession],
+) -> NeedOut:
     if body.contact_email and not body.contact_consent:
         raise CONSENT_MISSING
     try:
@@ -36,9 +40,13 @@ async def create(body: NeedIn, session: FromDishka[AsyncSession]) -> NeedOut:
             powiat=body.powiat,
             contact_email=body.contact_email,
             shown_innovation_slugs=body.shown_innovation_slugs,
+            client=client_ip(request),
+            honeypot=body.website,
         )
-    except (TextRejectedError, AiUnavailableError, AiBudgetExceededError) as e:
+    except TextRejectedError as e:
         raise translate(e) from e
+    if outcome.duplicate:
+        response.status_code = status.HTTP_200_OK
     cluster = outcome.cluster
     return NeedOut(
         id=outcome.need.id,
@@ -48,6 +56,7 @@ async def create(body: NeedIn, session: FromDishka[AsyncSession]) -> NeedOut:
         cluster=ClusterRef(id=cluster.id, title=cluster.title, size=cluster.size)
         if cluster
         else None,
+        duplicate=outcome.duplicate,
     )
 
 
