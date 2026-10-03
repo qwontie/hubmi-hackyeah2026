@@ -22,11 +22,9 @@ from services.tester import (
     FeedbackSummary,
     ImprovementIn,
     InnovationFeedback,
-    TestSignupIn,
     VoteRemoved,
     repository,
 )
-from services.tester.volunteers import admin_volunteer
 from utils.db.models.feedback import FeedbackKind
 from utils.db.models.test_signup import SignupStatus, TesterRole
 from utils.env import env
@@ -39,10 +37,8 @@ from .common import (
     ReadLimited,
     SearchFilter,
     SlugFilter,
-    consented_email,
     innovation_or_404,
     optional_text,
-    powiat_name,
     required_text,
 )
 
@@ -53,7 +49,6 @@ admin.include_router(volunteers.admin)
 
 vote_limit = rate_limit("feedback", per_minute=20, per_day=200)
 improvement_limit = rate_limit("improvement", per_minute=5, per_day=30)
-signup_limit = rate_limit("test_signup", per_minute=5, per_day=20)
 card_limit = RateLimiter("vote_card", Rule(10, PER_DAY))
 
 IMPROVEMENT_MIN = 10
@@ -154,30 +149,6 @@ async def post_improvement(
     )
     bus.publish("feedback.created", repository.admin_feedback(feedback, innovation))
     return Created(id=feedback.id)
-
-
-@public.post(
-    "/innovations/{slug}/test-signup",
-    status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(signup_limit)],
-)
-async def post_test_signup(
-    slug: str, body: TestSignupIn, session: FromDishka[AsyncSession]
-) -> Created:
-    innovation = await innovation_or_404(session, slug)
-    email = consented_email(body.contact_email, body.contact_consent)
-    powiat_name("powiat", body.powiat)
-    signup = await repository.add_signup(
-        session,
-        innovation_id=innovation.id,
-        who=body.who,
-        organization=optional_text("organization", body.organization, line=True),
-        powiat=body.powiat,
-        contact_email=email,
-        note=optional_text("note", body.note) or "",
-    )
-    bus.publish("volunteer.created", admin_volunteer(signup, innovation, None))
-    return Created(id=signup.id)
 
 
 @admin.get("/feedback")

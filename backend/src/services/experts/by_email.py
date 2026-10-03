@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy import func
 from sqlalchemy import select as sa_select
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -102,15 +103,19 @@ async def forward(  # noqa: PLR0913
         delivery_status="pending",
     )
     session.add(assignment)
-    await session.flush()
-    record(
-        session,
-        admin,
-        "assignment.forward",
-        target=("idea" if is_idea else "need", item.id),
-        details={"assignment_id": str(assignment.id)},
-    )
-    await session.commit()
+    try:
+        await session.flush()
+        record(
+            session,
+            admin,
+            "assignment.forward",
+            target=("idea" if is_idea else "need", item.id),
+            details={"assignment_id": str(assignment.id)},
+        )
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise AlreadyAssignedError from None
     await session.refresh(assignment)
     await deliver(session, assignment, item, mailer)
     result = await out(session, assignment)

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Text
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Text, text
 from sqlalchemy.dialects import postgresql
 from sqlmodel import Field, SQLModel
 
@@ -30,7 +30,16 @@ def _enum[T: StrEnum](enum: type[T], name: str) -> Enum:
 
 class TestSignup(SQLModel, table=True):
     __tablename__ = "test_signup"
-    __table_args__ = (Index("ix_test_signup_created_at", "created_at"),)
+    __table_args__ = (
+        Index("ix_test_signup_created_at", "created_at"),
+        Index(
+            "ux_test_signup_open_email",
+            "innovation_id",
+            text("lower(contact_email)"),
+            unique=True,
+            postgresql_where=text("status IN ('new', 'accepted', 'reported')"),
+        ),
+    )
 
     id: uuid.UUID = uuid_pk()
     innovation_id: uuid.UUID = Field(

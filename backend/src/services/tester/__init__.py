@@ -8,7 +8,6 @@ from .schemas import (
     FeedbackSummary,
     ImprovementIn,
     InnovationFeedback,
-    TestSignupIn,
     VoteRemoved,
     Votes,
 )
@@ -22,7 +21,6 @@ __all__ = [
     "FeedbackSummary",
     "ImprovementIn",
     "InnovationFeedback",
-    "TestSignupIn",
     "VoteRemoved",
     "Votes",
     "demand",

@@ -6,7 +6,13 @@ from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import ApiError, not_found
-from api.limits import client_ip, persistent_rate_limit
+from api.limits import (
+    PER_DAY,
+    PersistentRateLimiter,
+    Rule,
+    client_ip,
+    persistent_rate_limit,
+)
 from api.routers.api.public.common import translate
 from api.security import AdminPerson
 from services.bus import bus
@@ -67,6 +73,8 @@ admin = APIRouter(route_class=DishkaRoute, tags=["volunteers"])
 apply_limit = persistent_rate_limit("volunteer_apply", per_minute=5, per_day=20)
 report_limit = persistent_rate_limit("volunteer_report", per_minute=10, per_day=60)
 demand_limit = persistent_rate_limit("demand", per_minute=10, per_day=50)
+confirmation_cap = PersistentRateLimiter("volunteer_mail", Rule(2, PER_DAY))
+demand_cap = PersistentRateLimiter("demand_innovation", Rule(3, PER_DAY))
 
 ACTIVITY_MIN = 10
 ANSWER_MIN = 2
@@ -104,11 +112,15 @@ def invalid_transition(action: Action) -> ApiError:
 
 async def send_confirmation(mailer: Mailer, signup: TestSignup, title: str) -> None:
     try:
+        await confirmation_cap.check(signup.contact_email.lower())
+    except ApiError:
+        logger.info("volunteer confirmation capped for %s", signup.id)
+        return
+    try:
         await mailer.send(
             emails.confirmation(
                 to=signup.contact_email,
                 title=title,
-                proposal=signup.note,
                 key=f"volunteer-confirmation-{signup.id}",
             )
         )
@@ -239,13 +251,16 @@ async def post_demand(
     innovation = await innovation_or_404(session, slug)
     powiat_name("powiat", body.powiat)
     email = optional_email(body.email, body.contact_consent)
-    created = await demand.add(
-        session,
-        innovation_id=innovation.id,
-        powiat=body.powiat,
-        email=email,
-        ip=client_ip(request),
-    )
+    ip = client_ip(request)
+    created = None
+    try:
+        await demand_cap.check(f"{ip}:{innovation.id}")
+    except ApiError:
+        logger.info("demand capped for %s", innovation.slug)
+    else:
+        created = await demand.add(
+            session, innovation_id=innovation.id, powiat=body.powiat, email=email, ip=ip
+        )
     if created is None:
         response.status_code = status.HTTP_200_OK
     else:

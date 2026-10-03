@@ -3,11 +3,9 @@ from services.mail.templates import (
     CONSENT_NOTE,
     H1,
     SIGNATURE,
-    excerpt,
     html_button,
     html_document,
     html_paragraphs,
-    html_quote,
 )
 
 REASON_SLOT = "{reason}"
@@ -58,27 +56,16 @@ def _email(
     )
 
 
-def confirmation(*, to: str, title: str, proposal: str, key: str) -> Email:
+def confirmation(*, to: str, title: str, key: str) -> Email:
     subject = "Dziękujemy za zgłoszenie do testu"
-    quote = excerpt(proposal)
     body = (
         "Dzień dobry,\n\n"
         f"dziękujemy za zgłoszenie chęci przetestowania rozwiązania „{title}”. "
         "Pracownik ROPS przeczyta je osobiście i odpisze na ten adres: "
-        "zaprosi do testu albo wyjaśni, dlaczego tym razem się nie uda."
+        "zaprosi do testu albo wyjaśni, dlaczego tym razem się nie uda.\n\n"
+        "Jeśli to nie Ty wysłałeś to zgłoszenie, zignoruj tę wiadomość."
     )
-    text = f"{body}\n\nTwoja propozycja:\n„{quote}”\n\n{SIGNATURE}\n\n{CONSENT_NOTE}"
-    html = html_document(
-        subject,
-        f"{H1}{subject}</h1>"
-        f"{html_paragraphs(body)}"
-        '<h2 style="font-size:16px;margin:0 0 8px">Twoja propozycja</h2>'
-        f"{html_quote(quote)}"
-        f"{html_paragraphs(SIGNATURE)}"
-        '<p style="margin:24px 0 0;font-size:13px;color:#57534e">'
-        f"{CONSENT_NOTE}</p>",
-    )
-    return Email(to=to, subject=subject, text=text, html=html, idempotency_key=key)
+    return _email(to=to, subject=subject, body=body, link=None, idempotency_key=key)
 
 
 def accepted(*, to: str, body: str, link: str, key: str) -> Email:

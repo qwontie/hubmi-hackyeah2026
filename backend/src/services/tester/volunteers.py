@@ -5,6 +5,7 @@ from enum import StrEnum
 from typing import Any
 
 from sqlalchemy import func, or_
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel.sql.expression import Select
@@ -197,7 +198,16 @@ async def apply(  # noqa: PLR0913
         note=proposal,
     )
     session.add(signup)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raced = await open_application(
+            session, innovation_id=innovation_id, email=email
+        )
+        if raced is None:
+            raise
+        return raced, True
     await session.refresh(signup)
     return signup, False
 

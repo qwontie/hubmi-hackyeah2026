@@ -13,7 +13,6 @@ from utils.db.models.volunteer import Recommendation, VolunteerMessageKind
 COMMENT_MAX = 1000
 IMPROVEMENT_MIN = 10
 IMPROVEMENT_MAX = 2000
-NOTE_MAX = 1000
 ORGANIZATION_MAX = 200
 POWIAT_PATTERN = r"^[a-z0-9-]{2,60}$"
 
@@ -30,15 +29,6 @@ class FeedbackIn(Strict):
 
 class ImprovementIn(Strict):
     text: str = Field(max_length=IMPROVEMENT_MAX)
-
-
-class TestSignupIn(Strict):
-    who: TesterRole
-    organization: str | None = Field(default=None, max_length=ORGANIZATION_MAX)
-    powiat: str | None = Field(default=None, pattern=POWIAT_PATTERN)
-    contact_email: str = Field(max_length=254)
-    contact_consent: bool
-    note: str | None = Field(default=None, max_length=NOTE_MAX)
 
 
 class FeedbackSummary(BaseModel):

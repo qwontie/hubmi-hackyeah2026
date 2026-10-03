@@ -206,31 +206,6 @@ async def add_improvement(
     return feedback
 
 
-async def add_signup(  # noqa: PLR0913
-    session: AsyncSession,
-    *,
-    innovation_id: uuid.UUID,
-    who: TesterRole,
-    organization: str | None,
-    powiat: str | None,
-    contact_email: str,
-    note: str,
-) -> TestSignup:
-    signup = TestSignup(
-        innovation_id=innovation_id,
-        who=who,
-        organization=organization,
-        powiat=powiat,
-        contact_email=contact_email,
-        consent_at=datetime.now(UTC),
-        note=note,
-    )
-    session.add(signup)
-    await session.commit()
-    await session.refresh(signup)
-    return signup
-
-
 def admin_feedback(feedback: Feedback, innovation: Innovation) -> AdminFeedback:
     return AdminFeedback(
         id=feedback.id,

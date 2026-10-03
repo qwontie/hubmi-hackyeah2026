@@ -2,9 +2,13 @@ import uuid
 from collections.abc import AsyncGenerator
 
 import pytest
+from fastapi import Response
 from sqlmodel import col, delete
+from starlette.requests import Request
 
+from api.routers.api.modules import volunteers as routes
 from services.tester import demand
+from services.tester.schemas import DemandIn
 from utils.db import session_scope
 from utils.db.models import Category, Innovation
 from utils.db.models.innovation import InnovationStatus
@@ -85,3 +89,23 @@ async def test_one_per_person_per_day(innovation: Innovation) -> None:
             per_page=20,
         )
         assert [e.email for e in listed.items] == ["mieszkanka@example.org"]
+
+
+async def test_one_address_cannot_pump_the_count(innovation: Innovation) -> None:
+    ip = f"10.{uuid.uuid4().int % 250}.7.7"
+    request = Request({"type": "http", "client": (ip, 1), "headers": []})
+    async with session_scope() as session:
+        answers = [
+            await routes.post_demand(
+                innovation.slug,
+                DemandIn(
+                    powiat="krakow", email=f"fake{n}@example.org", contact_consent=True
+                ),
+                request,
+                Response(),
+                session,
+            )
+            for n in range(6)
+        ]
+    assert [a.duplicate for a in answers] == [False, False, False, True, True, True]
+    assert answers[-1].count == 3

@@ -1,6 +1,7 @@
 import uuid
 from collections.abc import AsyncGenerator, Awaitable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -12,7 +13,7 @@ from sqlmodel import col, delete
 from api.errors import ApiError
 from api.routers.api.modules import volunteers as routes
 from services.bus import bus
-from services.mail import Mailer
+from services.mail import Delivery, DeliveryStatus, Email, Mailer
 from services.mail.templates import StaffItemKind
 from services.mail.watch import staff_item
 from services.tester import volunteers
@@ -21,7 +22,7 @@ from services.tester.volunteers import Action, InvalidTransitionError, next_stat
 from utils.db import session_scope
 from utils.db.models import AdminAction, AdminRole, AdminUser, Category, Innovation
 from utils.db.models.innovation import InnovationStatus
-from utils.db.models.test_signup import SignupStatus, TestSignup
+from utils.db.models.test_signup import SignupStatus, TesterRole, TestSignup
 from utils.db.models.volunteer import Recommendation, VolunteerMessage
 from utils.env import MailSettings
 
@@ -271,3 +272,92 @@ async def test_honeypot_and_short_proposal_are_rejected(world: World) -> None:
                 world.innovation.slug, short, Response(), session, world.mailer
             )
         ) == (422, "text_too_short")
+
+
+async def test_link_needs_its_own_token(world: World) -> None:
+    async with session_scope() as session:
+        first = await routes.apply(
+            world.innovation.slug,
+            application("pierwsza@example.org"),
+            Response(),
+            session,
+            world.mailer,
+        )
+        second = await routes.apply(
+            world.innovation.slug,
+            application("druga@example.org"),
+            Response(),
+            session,
+            world.mailer,
+        )
+        other = volunteers.report_token(second.id)
+        for token in (None, "", other):
+            assert await code_of(routes.volunteer(first.id, session, None, token)) == (
+                404,
+                "not_found",
+            )
+            assert await code_of(
+                routes.put_report(first.id, report(), session, token)
+            ) == (404, "not_found")
+        assert await code_of(routes.volunteer(uuid.uuid4(), session, None, other)) == (
+            404,
+            "not_found",
+        )
+
+
+async def test_racing_applications_end_as_one(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async with session_scope() as session:
+        created = await routes.apply(
+            world.innovation.slug,
+            application("wyscig@example.org"),
+            Response(),
+            session,
+            world.mailer,
+        )
+        real = volunteers.open_application
+        calls = 0
+
+        async def late(*args: Any, **kwargs: Any) -> TestSignup | None:
+            nonlocal calls
+            calls += 1
+            return None if calls == 1 else await real(*args, **kwargs)
+
+        monkeypatch.setattr(volunteers, "open_application", late)
+        signup, duplicate = await volunteers.apply(
+            session,
+            innovation_id=world.innovation.id,
+            who=TesterRole.NGO,
+            organization=None,
+            powiat="krakow",
+            email="Wyscig@example.org",
+            proposal="Druga zakładka przeglądarki wysłała to samo zgłoszenie.",
+        )
+        assert duplicate
+        assert signup.id == created.id
+
+
+async def test_confirmation_mail_is_capped_per_address(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sent: list[Email] = []
+
+    async def record(email: Email) -> Delivery:
+        sent.append(email)
+        return Delivery(DeliveryStatus.SKIPPED)
+
+    monkeypatch.setattr(world.mailer, "send", record)
+    address = f"ofiara-{uuid.uuid4().hex[:8]}@example.org"
+    signup = TestSignup(
+        innovation_id=world.innovation.id,
+        who=TesterRole.RESIDENT,
+        contact_email=address,
+        consent_at=datetime.now(UTC),
+        note="Zobacz https://phishing.example i kliknij szybko",
+    )
+    for _ in range(4):
+        await routes.send_confirmation(world.mailer, signup, "Rozwiązanie testowe")
+    assert len(sent) == 2
+    assert "phishing" not in sent[0].text
+    assert "phishing" not in sent[0].html

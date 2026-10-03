@@ -88,6 +88,19 @@ async def test_forward_and_answer_by_link(case: tuple[Need, AdminUser, Mailer]) 
         )
 
         token = by_email.answer_token(assignment.id)
+        for wrong in (None, "", by_email.answer_token(uuid.uuid4())):
+            assert await code_of(routes.answer_view(assignment.id, session, wrong)) == (
+                404,
+                "not_found",
+            )
+            assert await code_of(
+                routes.post_answer(
+                    assignment.id,
+                    AnswerIn(body="Odpowiedź bez właściwego klucza."),
+                    session,
+                    wrong,
+                )
+            ) == (404, "not_found")
         view = await routes.answer_view(assignment.id, session, token)
         assert view.status.value == "open"
         assert view.note == "Czy da się to zrobić w małej gminie?"
@@ -126,3 +139,32 @@ async def test_forward_and_answer_by_link(case: tuple[Need, AdminUser, Mailer]) 
             404,
             "not_found",
         )
+
+
+async def test_double_click_on_forward_is_a_conflict(
+    case: tuple[Need, AdminUser, Mailer], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    need, admin, mailer = case
+    body = ForwardBody(email="podwojny@example.org")
+    async with session_scope() as session:
+        first = await admin_routes.forward_need(need.id, body, admin, session, mailer)
+        real = session.exec
+
+        async def blind(statement: Any, *args: Any, **kwargs: Any) -> Any:
+            result = await real(statement, *args, **kwargs)
+            if "expert_email" in str(statement) and "SELECT" in str(statement):
+                return EmptyResult()
+            return result
+
+        monkeypatch.setattr(session, "exec", blind)
+        assert await code_of(
+            admin_routes.forward_need(need.id, body, admin, session, mailer)
+        ) == (409, "conflict")
+        monkeypatch.undo()
+        notes = await admin_routes.need_assignments(need.id, session)
+        assert [a.id for a in notes] == [first.id]
+
+
+class EmptyResult:
+    def first(self) -> None:
+        return None
