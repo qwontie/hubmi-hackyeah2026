@@ -142,7 +142,8 @@ export default function MatchScreen() {
   const { colors, wide, roomy, reduceMotion } = useTheme();
   const insets = useSafeAreaInsets();
   const match = useMatch();
-  const { inputRef, loading, powiat, reset, resultsRef, state, text } = match;
+  const { edit, inputRef, loading, powiat, reset, resultsRef, state, text } =
+    match;
   const [chosen, setChosen] = useState(false);
   const done = state.kind === "done";
   const asking =
@@ -150,11 +151,13 @@ export default function MatchScreen() {
   const { dawn, dawning, rise } = useDawn(loading, done);
   useSetChromeTone(chromeTone(asking, done, dawning, wide));
 
+  const idle = state.kind === "idle";
+
   useEffect(() => {
-    if (chosen) {
+    if (chosen && idle) {
       inputRef.current?.focus();
     }
-  }, [chosen, inputRef]);
+  }, [chosen, idle, inputRef]);
 
   const leave = () => {
     setChosen(false);
@@ -167,12 +170,17 @@ export default function MatchScreen() {
         <MatchResults
           at={state.at}
           key={state.at.getTime()}
+          onEdit={() => {
+            setChosen(true);
+            edit();
+          }}
           onReset={reset}
           registration={registrationOf(match)}
           response={state.response}
           settle={reduceMotion ? 0 : motion.dawn - 200}
           text={text.trim()}
           titleRef={resultsRef}
+          unclear={state.unclear}
         />
         {dawning ? <Dawn dawn={dawn} rise={rise} /> : null}
       </View>
@@ -247,10 +255,10 @@ const styles = StyleSheet.create({
   },
   columnAsk: {
     gap: space.xl,
-    maxWidth: 1360,
+    maxWidth: 980,
   },
   columnAskRoomy: {
-    maxWidth: 1760,
+    maxWidth: 1240,
   },
   content: {
     flexGrow: 1,

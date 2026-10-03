@@ -73,23 +73,26 @@ export interface MatchResponse {
   cluster: ClusterRef | null;
   degraded: boolean;
   need: { id: string; edit_token: string; number?: number | null } | null;
+  reason?: "unclear" | "no_match" | null;
   results: MatchResult[];
   similar_count: number;
 }
 
 export interface MatchRequest {
-  powiat?: string;
   text: string;
 }
 
 export interface NeedCreate extends MatchRequest {
   contact_consent?: boolean;
   contact_email?: string;
+  powiat?: string;
   shown_innovation_slugs?: string[];
+  website?: string;
 }
 
 export interface NeedCreated {
   cluster: ClusterRef | null;
+  duplicate?: boolean;
   edit_token: string;
   id: string;
   number: number;
@@ -118,6 +121,9 @@ export type ErrorCode =
   | "text_too_short"
   | "text_too_long"
   | "unclear_text"
+  | "too_few_words"
+  | "too_many_links"
+  | "spam_rejected"
   | "rate_limited"
   | "ai_unavailable"
   | "internal"

@@ -11,9 +11,7 @@ import {
   View,
 } from "react-native";
 import { TEXT_MAX } from "@/config";
-import { PowiatPicker } from "@/features/powiat-picker";
 import { charactersLeft, type useMatch } from "@/hooks/use-match";
-import { usePowiats } from "@/hooks/use-powiats";
 import type { Recognition } from "@/speech/recognition";
 import { useTheme } from "@/theme/settings";
 import { fonts, minTarget, radius, space } from "@/theme/tokens";
@@ -234,19 +232,9 @@ function Words({ match }: { match: Match }) {
 
 export function ProblemComposer({ match }: { match: Match }) {
   const { wide } = useTheme();
-  const powiats = usePowiats();
-  const { blocked, loading, powiat, recognition, setPowiat, submit } = match;
+  const { blocked, loading, recognition, submit } = match;
 
-  const picker =
-    powiats.options.length > 0 ? (
-      <PowiatPicker
-        onChange={setPowiat}
-        options={powiats.options}
-        value={powiat}
-      />
-    ) : null;
-
-  const main = (
+  return (
     <View style={styles.main}>
       <Words match={match} />
       <View aria-live="polite">
@@ -257,7 +245,6 @@ export function ProblemComposer({ match }: { match: Match }) {
         ) : null}
       </View>
       <Feedback match={match} />
-      {wide ? null : (picker ?? null)}
       <View style={styles.actions}>
         <Button
           busy={loading}
@@ -276,16 +263,6 @@ export function ProblemComposer({ match }: { match: Match }) {
           Enter szuka. Shift i Enter to nowa linia.
         </Txt>
       ) : null}
-    </View>
-  );
-
-  if (!wide) {
-    return main;
-  }
-  return (
-    <View style={styles.split}>
-      {main}
-      <View style={styles.side}>{picker}</View>
     </View>
   );
 }
@@ -320,17 +297,7 @@ const styles = StyleSheet.create({
     ...(web ? ({ outlineStyle: "none" } as object) : {}),
   },
   main: {
-    flex: 1.35,
     gap: space.lg + 2,
-  },
-  side: {
-    flex: 1,
-    maxWidth: 560,
-  },
-  split: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: 72,
   },
   submit: {
     minWidth: 300,

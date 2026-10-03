@@ -2,12 +2,15 @@ import { Link } from "expo-router";
 import { ArrowRight, Check, CircleAlert } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
+  Platform,
   Pressable,
   StyleSheet,
   type Text,
   TextInput,
+  type TextStyle,
   View,
 } from "react-native";
+import { TEXT_MAX } from "@/config";
 import { PowiatPicker } from "@/features/powiat-picker";
 import { Stamp } from "@/features/stamp";
 import type { RegistrationForm } from "@/hooks/use-match";
@@ -23,10 +26,29 @@ export interface Registration {
   busy: boolean;
   error: string | null;
   fields: RegistrationForm;
-  need: { at: Date; number: number | null } | null;
+  need: { at: Date; duplicate?: boolean; number: number | null } | null;
 }
 
 const EMAIL_ID = "unsolved-email";
+const TEXT_ID = "unsolved-text";
+const HINT = "rgba(218, 219, 252, 0.72)";
+
+function Trap({ fields }: { fields: RegistrationForm }) {
+  if (Platform.OS !== "web") {
+    return null;
+  }
+  return (
+    <View aria-hidden pointerEvents="none" style={styles.trap}>
+      <TextInput
+        autoComplete="off"
+        onChangeText={fields.setWebsite}
+        tabIndex={-1}
+        value={fields.website}
+        {...({ name: "website" } as object)}
+      />
+    </View>
+  );
+}
 
 function Problem({ text }: { text: string | null }) {
   const { colors } = useTheme();
@@ -77,6 +99,8 @@ function Step({ registration }: { registration: Registration }) {
   const { colors, lineHeight, type, wide } = useTheme();
   const powiats = usePowiats();
   const [focused, setFocused] = useState(false);
+  const [textFocused, setTextFocused] = useState(false);
+  const [textHeight, setTextHeight] = useState(0);
   const title = useRef<Text>(null);
   const { busy, error, fields } = registration;
   useEffect(() => {
@@ -85,13 +109,46 @@ function Step({ registration }: { registration: Registration }) {
   return (
     <>
       <View style={styles.text}>
-        <Heading level={2} night ref={title}>
-          Przekaż problem do ROPS
+        <Heading level={2} night ref={title} style={styles.anchor}>
+          Zgłoś problem do ROPS
         </Heading>
         <Txt tone="onNightSoft" variant="lead">
-          Wyślemy Twój opis pracownikom ROPS. Wskaż powiat, a jeśli chcesz
-          dostać odpowiedź, zostaw e-mail.
+          Wyślemy Twój opis pracownikom ROPS. Możesz go jeszcze poprawić.
         </Txt>
+      </View>
+      <View style={styles.column}>
+        <Txt nativeID={TEXT_ID} tone="onNight" variant="label" weight="600">
+          Twój opis
+        </Txt>
+        <TextInput
+          aria-invalid={fields.errors.text ? true : undefined}
+          aria-labelledby={TEXT_ID}
+          maxLength={TEXT_MAX + 200}
+          multiline
+          onBlur={() => setTextFocused(false)}
+          onChangeText={fields.setText}
+          onContentSizeChange={(event) => {
+            const next = Math.ceil(event.nativeEvent.contentSize.height);
+            setTextHeight((current) => (next > current ? next : current));
+          }}
+          onFocus={() => setTextFocused(true)}
+          selectionColor={colors.onNightSoft}
+          style={[
+            styles.input,
+            {
+              borderBottomColor: textFocused
+                ? colors.onNight
+                : colors.glassNightEdge,
+              color: colors.onNight,
+              fontFamily: fonts["500"],
+              fontSize: type.lead,
+              height: Math.max(minTarget + 4, textHeight),
+              lineHeight: lineHeight(type.lead),
+            },
+          ]}
+          value={fields.text}
+        />
+        <Problem text={fields.errors.text} />
       </View>
       <View style={[styles.form, wide && styles.formWide]}>
         <View style={[styles.column, wide && styles.columnWide]}>
@@ -106,7 +163,7 @@ function Step({ registration }: { registration: Registration }) {
         </View>
         <View style={[styles.column, wide && styles.columnWide]}>
           <Txt nativeID={EMAIL_ID} tone="onNight" variant="label" weight="600">
-            E-mail
+            E-mail, jeśli chcesz dostać odpowiedź
             <Txt tone="onNightSoft" variant="label">
               {" "}
               (nieobowiązkowo)
@@ -122,7 +179,7 @@ function Step({ registration }: { registration: Registration }) {
             onChangeText={fields.setEmail}
             onFocus={() => setFocused(true)}
             placeholder="np. anna@example.org"
-            placeholderTextColor="rgba(218, 219, 252, 0.72)"
+            placeholderTextColor={HINT}
             selectionColor={colors.onNightSoft}
             style={[
               styles.input,
@@ -143,6 +200,7 @@ function Step({ registration }: { registration: Registration }) {
           <Problem text={fields.errors.consent} />
         </View>
       </View>
+      <Trap fields={fields} />
       <Problem text={error} />
       <View style={styles.actions}>
         <Button
@@ -169,7 +227,15 @@ function Step({ registration }: { registration: Registration }) {
   );
 }
 
-export function Unsolved({ registration }: { registration: Registration }) {
+export function Unsolved({
+  empty = false,
+  onEdit,
+  registration,
+}: {
+  empty?: boolean;
+  onEdit?: () => void;
+  registration: Registration;
+}) {
   const { colors, wide } = useTheme();
   const { fields, need } = registration;
   const opener = useRef<View>(null);
@@ -192,20 +258,33 @@ export function Unsolved({ registration }: { registration: Registration }) {
     <>
       <View style={styles.text}>
         <Heading level={2} night>
-          Żadne z tych rozwiązań nie pomaga?
+          {empty
+            ? "Zgłoś ten problem do ROPS"
+            : "Żadne z tych rozwiązań nie pomaga?"}
         </Heading>
         <Txt tone="onNightSoft" variant="lead">
-          Przekaż swój problem do ROPS. Pracownik ROPS przeczyta go i odpowie.
+          {empty
+            ? "Pracownik ROPS przeczyta Twój opis i odpowie."
+            : "Zgłoś swój problem do ROPS. Pracownik ROPS przeczyta go i odpowie."}
         </Txt>
       </View>
-      <Button
-        fill={!wide}
-        label="Mój problem nie został rozwiązany"
-        onPress={() => fields.setOpen(true)}
-        ref={opener}
-        size="large"
-        variant="light"
-      />
+      <View style={styles.actions}>
+        <Button
+          fill={!wide}
+          label="Zgłoś problem"
+          onPress={() => fields.setOpen(true)}
+          ref={opener}
+          size="large"
+          variant="light"
+        />
+        {empty && onEdit ? (
+          <Pressable onPress={onEdit} role="button" style={styles.cancel}>
+            <Txt tone="onNight" variant="label" weight="600">
+              Popraw opis
+            </Txt>
+          </Pressable>
+        ) : null}
+      </View>
     </>
   );
   if (fields.open) {
@@ -216,8 +295,10 @@ export function Unsolved({ registration }: { registration: Registration }) {
       <View style={[styles.done, wide && styles.doneWide]}>
         <Stamp at={need.at} number={need.number} word="PRZYJĘTO" />
         <View style={[styles.text, wide && styles.textWide]}>
-          <Heading level={2} night ref={doneTitle}>
-            ROPS przyjął Twoje zgłoszenie
+          <Heading level={2} night ref={doneTitle} style={styles.anchor}>
+            {need.duplicate
+              ? "ROPS ma już to zgłoszenie"
+              : "ROPS przyjął Twoje zgłoszenie"}
           </Heading>
           <Txt tone="onNightSoft" variant="lead">
             Pracownik ROPS przeczyta opis. Odpowiedź znajdziesz w zakładce
@@ -254,6 +335,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: space.lg,
   },
+  anchor: (Platform.OS === "web" ? { scrollMarginTop: 150 } : {}) as TextStyle,
   block: {
     borderRadius: radius.sheet,
     gap: space.xl,
@@ -326,5 +408,13 @@ const styles = StyleSheet.create({
   },
   textWide: {
     flex: 1,
+  },
+  trap: {
+    height: 1,
+    left: -9999,
+    opacity: 0,
+    overflow: "hidden",
+    position: "absolute",
+    width: 1,
   },
 });

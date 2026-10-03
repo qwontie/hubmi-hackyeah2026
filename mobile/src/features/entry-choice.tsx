@@ -1,5 +1,5 @@
-import { Link, router } from "expo-router";
-import { ArrowRight, FlaskConical } from "lucide-react-native";
+import { router } from "expo-router";
+import { ArrowRight } from "lucide-react-native";
 import { type ReactNode, useState } from "react";
 import {
   Platform,
@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { A11yControls } from "@/features/a11y-controls";
 import { useTheme } from "@/theme/settings";
-import { minTarget, radius, space, tabBarSpace } from "@/theme/tokens";
+import { radius, space, tabBarSpace } from "@/theme/tokens";
 import { nightAttr } from "@/ui/night";
 import { WIDE_TOP } from "@/ui/screen";
 import { Heading, Txt } from "@/ui/text";
@@ -219,24 +219,6 @@ export function EntryChoice({
         text="Zobacz, z czym mierzą się mieszkańcy, i zaproponuj rozwiązanie."
         title="Mam pomysł"
       />
-      <View
-        pointerEvents="box-none"
-        style={[
-          styles.tester,
-          wide
-            ? styles.testerWide
-            : { bottom: tabBarSpace + insets.bottom + space.lg },
-        ]}
-      >
-        <Link asChild href="/testy">
-          <Pressable role="link" style={styles.testerLink}>
-            <FlaskConical aria-hidden color={colors.stamp} size={22} />
-            <Txt tone="stamp" variant="label" weight="600">
-              Chcę testować rozwiązania
-            </Txt>
-          </Pressable>
-        </Link>
-      </View>
     </View>
   );
 }
@@ -296,20 +278,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.band,
     borderTopRightRadius: radius.band,
     marginTop: -radius.band,
-  },
-  tester: {
-    position: "absolute",
-    right: space.xl - 2,
-  },
-  testerLink: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: space.sm,
-    minHeight: minTarget,
-  },
-  testerWide: {
-    bottom: 96,
-    right: 40,
   },
   text: {
     maxWidth: 520,

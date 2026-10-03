@@ -10,3 +10,5 @@ export const API_BASE =
 
 export const TEXT_MIN = 5;
 export const TEXT_MAX = 2000;
+export const NEED_TEXT_MIN = 10;
+export const NEED_WORDS_MIN = 2;

@@ -57,13 +57,16 @@ const FALLBACK_MESSAGES: Record<ErrorCode, string> = {
     "Nie możemy połączyć się z serwerem. Sprawdź internet i spróbuj ponownie.",
   not_found: "Nie znaleźliśmy tej strony.",
   rate_limited: "Za dużo zapytań w krótkim czasie. Spróbuj za chwilę.",
+  spam_rejected:
+    "Nie udało się wysłać zgłoszenia. Odśwież stronę i spróbuj jeszcze raz.",
   text_too_long: "Opis jest za długi. Skróć go do 2000 znaków.",
   text_too_short: "Opis musi mieć co najmniej 5 znaków.",
+  too_few_words: "Opis jest za krótki. Napisz co najmniej dwa słowa.",
+  too_many_links: "W opisie mogą być najwyżej dwa linki. Usuń pozostałe.",
   too_many_messages:
     "Wysłano już kilka wiadomości bez odpowiedzi. Poczekaj, aż ROPS odpisze.",
   unauthorized: "Brak dostępu.",
-  unclear_text:
-    "Nie rozumiemy tego opisu. Napisz zwykłymi słowami, z jakim problemem przychodzisz.",
+  unclear_text: "Opis jest niejasny. Napisz zwykłymi słowami, o co chodzi.",
   validation_error: "Popraw zaznaczone pola.",
   visualisation_limit: "Ten pomysł ma już 3 wizualizacje.",
 };

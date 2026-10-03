@@ -73,12 +73,14 @@ function NothingFits({ need, empty }: { need: SearchNeed; empty: boolean }) {
 
 interface MatchResultsProps {
   at: Date;
+  onEdit: () => void;
   onReset: () => void;
   registration: Registration;
   response: MatchResponse;
   settle: number;
   text: string;
   titleRef: Ref<Text>;
+  unclear: boolean;
 }
 
 export function MatchResults({
@@ -86,9 +88,11 @@ export function MatchResults({
   at,
   titleRef,
   text,
+  onEdit,
   onReset,
   settle,
   registration,
+  unclear,
 }: MatchResultsProps) {
   const searchNeed = response.need as SearchNeed | null | undefined;
   const { colors, type, wide, roomy } = useTheme();
@@ -132,9 +136,11 @@ export function MatchResults({
       >
         {text}
       </Txt>
-      <Txt tone="onNightSoft" variant="label">
-        {similar}
-      </Txt>
+      {unclear ? null : (
+        <Txt tone="onNightSoft" variant="label">
+          {similar}
+        </Txt>
+      )}
       {searchNeed ? (
         <View style={wide ? styles.stampWide : styles.stamp}>
           <Stamp
@@ -164,6 +170,12 @@ export function MatchResults({
       >
         {resultsTitle(count)}
       </Heading>
+
+      {empty ? (
+        <Txt tone="soft" variant="lead">
+          Problem jest opisany niejasno albo jeszcze go nie rozwiązaliśmy.
+        </Txt>
+      ) : null}
 
       {response.degraded ? (
         <Txt tone="soft" variant="detail">
@@ -203,7 +215,7 @@ export function MatchResults({
       {searchNeed ? (
         <NothingFits empty={empty} need={searchNeed} />
       ) : (
-        <Unsolved registration={registration} />
+        <Unsolved empty={empty} onEdit={onEdit} registration={registration} />
       )}
       <RopsFooter />
     </View>
