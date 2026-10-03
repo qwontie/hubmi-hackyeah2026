@@ -109,7 +109,7 @@ export const useLibrary = () => {
   const activeCategory = categories.find((item) => item.slug === category);
   const summary = (() => {
     if (list.loading && list.items.length === 0) {
-      return "Wczytuję…";
+      return "Wczytuję";
     }
     const count = `${list.total} ${pluralPl(
       list.total,
