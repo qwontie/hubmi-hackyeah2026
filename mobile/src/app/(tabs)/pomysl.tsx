@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     gap: space.md,
   },
   searchWide: {
-    alignItems: "center",
+    alignItems: "stretch",
     flexDirection: "row",
   },
   strip: {
@@ -190,6 +190,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg + space.xs + 2,
   },
   tall: {
+    alignSelf: "stretch",
     minHeight: 62,
   },
 });

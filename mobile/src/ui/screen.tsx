@@ -128,7 +128,8 @@ function TopBar({
   trailing?: ReactNode;
   width: number;
 }) {
-  const { wide } = useTheme();
+  const { type, wide } = useTheme();
+  const roomForLabel = !(trailing || (back && type.body > 19));
   return (
     <View
       pointerEvents="box-none"
@@ -148,7 +149,7 @@ function TopBar({
         )}
         <View style={styles.trail}>
           {trailing ?? null}
-          <A11yButton labelled={!trailing} night={night} />
+          <A11yButton labelled={roomForLabel} night={night} />
         </View>
       </View>
     </View>

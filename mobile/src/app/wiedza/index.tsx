@@ -148,10 +148,11 @@ const styles = StyleSheet.create({
     gap: space.md,
   },
   searchWide: {
-    alignItems: "center",
+    alignItems: "stretch",
     flexDirection: "row",
   },
   tall: {
+    alignSelf: "stretch",
     minHeight: 62,
   },
 });

@@ -39,12 +39,25 @@ interface Badge {
   y: number;
 }
 
+const separate = (a: Badge, b: Badge, gap: number) => {
+  const distance = Math.hypot(b.x - a.x, b.y - a.y);
+  if (distance >= gap) {
+    return false;
+  }
+  const angle = distance > 0 ? Math.atan2(b.y - a.y, b.x - a.x) : 1;
+  const push = (gap - distance) / 2 + 0.5;
+  a.x -= Math.cos(angle) * push;
+  a.y -= Math.sin(angle) * push;
+  b.x += Math.cos(angle) * push;
+  b.y += Math.sin(angle) * push;
+  return true;
+};
+
 const placeBadges = (
   shapes: PowiatShape[],
   counts: Record<string, MapCount>,
   radius: number
 ) => {
-  const placed: Badge[] = [];
   const wanted = shapes
     .map((shape) => {
       const count = counts[shape.slug];
@@ -57,21 +70,18 @@ const placeBadges = (
     })
     .filter((badge) => badge.total > 0)
     .sort((a, b) => b.total - a.total);
-  for (const badge of wanted) {
-    const spot = { ...badge };
-    for (let attempt = 0; attempt < 6; attempt += 1) {
-      const clash = placed.find(
-        (other) =>
-          Math.hypot(other.x - spot.x, other.y - spot.y) < radius * 2 + 6
-      );
-      if (!clash) {
-        break;
+  const placed: Badge[] = wanted.map((badge) => ({ ...badge }));
+  const gap = radius * 2 + 14;
+  for (let pass = 0; pass < 80; pass += 1) {
+    let moved = false;
+    for (const [index, badge] of placed.entries()) {
+      for (const other of placed.slice(index + 1)) {
+        moved = separate(badge, other, gap) || moved;
       }
-      const angle = Math.atan2(spot.y - clash.y, spot.x - clash.x) || -1;
-      spot.x = clash.x + Math.cos(angle) * (radius * 2 + 8);
-      spot.y = clash.y + Math.sin(angle) * (radius * 2 + 8);
     }
-    placed.push(spot);
+    if (!moved) {
+      break;
+    }
   }
   return placed;
 };
@@ -85,7 +95,7 @@ export function ProblemMap({
   width,
 }: ProblemMapProps) {
   const { colors, highContrast, type } = useTheme();
-  const scale = type.body / 19;
+  const scale = Math.min(type.body / 19, 1.25);
   const most = Math.max(
     1,
     ...Object.values(counts).map((count) => count.open + count.answered)

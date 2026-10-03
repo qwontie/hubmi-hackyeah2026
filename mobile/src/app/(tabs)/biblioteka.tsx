@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchWide: {
-    alignItems: "center",
+    alignItems: "stretch",
     flexDirection: "row",
   },
   strip: {
@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.xl - 2,
   },
   tall: {
+    alignSelf: "stretch",
     minHeight: 62,
   },
 });
