@@ -118,7 +118,7 @@ export function CategoryFilter({
   );
 }
 
-const GUTTER = space.lg + space.xs + 2;
+const GUTTER = space.lg;
 
 const styles = StyleSheet.create({
   bleed: {
@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
   cellWide: {
     flexBasis: "31.5%",
     flexGrow: 1,
+    minHeight: 92,
   },
   grid: {
     flexDirection: "row",

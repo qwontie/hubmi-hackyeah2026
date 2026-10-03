@@ -8,7 +8,7 @@ import { ChallengeRow } from "@/features/knowledge";
 import { useChallenges } from "@/hooks/use-knowledge";
 import { pluralPl } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
-import { minTarget, space } from "@/theme/tokens";
+import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
@@ -146,10 +146,10 @@ const styles = StyleSheet.create({
     gap: space.md,
   },
   searchWide: {
-    alignItems: "flex-end",
+    alignItems: "center",
     flexDirection: "row",
   },
   tall: {
-    minHeight: minTarget + 8,
+    minHeight: 62,
   },
 });

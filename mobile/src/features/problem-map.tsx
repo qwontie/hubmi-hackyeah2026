@@ -32,6 +32,50 @@ const mix = (from: string, to: string, amount: number) => {
   return `#${parts.join("")}`;
 };
 
+interface Badge {
+  slug: string;
+  total: number;
+  x: number;
+  y: number;
+}
+
+const placeBadges = (
+  shapes: PowiatShape[],
+  counts: Record<string, MapCount>,
+  radius: number
+) => {
+  const placed: Badge[] = [];
+  const wanted = shapes
+    .map((shape) => {
+      const count = counts[shape.slug];
+      return {
+        slug: shape.slug,
+        total: count ? count.open + count.answered : 0,
+        x: shape.center.x,
+        y: shape.center.y,
+      };
+    })
+    .filter((badge) => badge.total > 0)
+    .sort((a, b) => b.total - a.total);
+  for (const badge of wanted) {
+    const spot = { ...badge };
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const clash = placed.find(
+        (other) =>
+          Math.hypot(other.x - spot.x, other.y - spot.y) < radius * 2 + 6
+      );
+      if (!clash) {
+        break;
+      }
+      const angle = Math.atan2(spot.y - clash.y, spot.x - clash.x) || -1;
+      spot.x = clash.x + Math.cos(angle) * (radius * 2 + 8);
+      spot.y = clash.y + Math.sin(angle) * (radius * 2 + 8);
+    }
+    placed.push(spot);
+  }
+  return placed;
+};
+
 export function ProblemMap({
   counts,
   height,
@@ -58,6 +102,8 @@ export function ProblemMap({
     const level = total > 0 ? 0.25 + (0.75 * total) / most : 0;
     return mix(colors.paper, colors.sun, Math.min(1, level));
   };
+  const radius = 36 * scale;
+  const badges = placeBadges(shapes, counts, radius);
   return (
     <View aria-hidden style={[styles.frame, { aspectRatio: width / height }]}>
       <Svg height="100%" viewBox={`0 0 ${width} ${height}`} width="100%">
@@ -72,37 +118,33 @@ export function ProblemMap({
             strokeWidth={3}
           />
         ))}
-        {shapes.map((shape) => {
-          const count = counts[shape.slug];
-          const total = count ? count.open + count.answered : 0;
-          if (total === 0) {
-            return null;
-          }
-          const active = shape.slug === selected;
-          return (
-            <G key={shape.slug} pointerEvents="none">
-              <Circle
-                cx={shape.center.x}
-                cy={shape.center.y}
-                fill={colors.paper}
-                r={36 * scale}
-                stroke={active || highContrast ? colors.ink : colors.stamp}
-                strokeWidth={3}
-              />
-              <SvgText
-                fill={colors.ink}
-                fontFamily={fonts.mono}
-                fontSize={42 * scale}
-                fontWeight="600"
-                textAnchor="middle"
-                x={shape.center.x}
-                y={shape.center.y + 15 * scale}
-              >
-                {total}
-              </SvgText>
-            </G>
-          );
-        })}
+        {badges.map((badge) => (
+          <G key={badge.slug} pointerEvents="none">
+            <Circle
+              cx={badge.x}
+              cy={badge.y}
+              fill={colors.paper}
+              r={radius}
+              stroke={
+                badge.slug === selected || highContrast
+                  ? colors.ink
+                  : colors.stamp
+              }
+              strokeWidth={3}
+            />
+            <SvgText
+              fill={colors.ink}
+              fontFamily={fonts.mono}
+              fontSize={42 * scale}
+              fontWeight="600"
+              textAnchor="middle"
+              x={badge.x}
+              y={badge.y + 15 * scale}
+            >
+              {badge.total}
+            </SvgText>
+          </G>
+        ))}
       </Svg>
     </View>
   );

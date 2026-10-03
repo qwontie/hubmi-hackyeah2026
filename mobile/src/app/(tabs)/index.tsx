@@ -20,7 +20,6 @@ import { nightAttr } from "@/ui/night";
 import { nativeDriver } from "@/ui/rise";
 import { BackPill, WIDE_TOP } from "@/ui/screen";
 import { AccessButton, Brand } from "@/ui/shell";
-import { Heading } from "@/ui/text";
 
 function Dawn({ dawn, rise }: { dawn: Animated.Value; rise: Animated.Value }) {
   const { colors, wide } = useTheme();
@@ -115,17 +114,22 @@ const useDawn = (loading: boolean, done: boolean) => {
   return { dawn, dawning: done && !dawned && !reduceMotion, rise };
 };
 
-const chromeTone = (done: boolean, dawning: boolean, wide: boolean) => {
-  if (!done || dawning) {
-    return "night" as const;
+const chromeTone = (
+  asking: boolean,
+  done: boolean,
+  dawning: boolean,
+  wide: boolean
+) => {
+  const lit = wide ? ("split" as const) : ("day" as const);
+  if (!asking) {
+    return lit;
   }
-  return wide ? ("split" as const) : ("day" as const);
+  return done && !dawning ? lit : ("night" as const);
 };
 
 export default function MatchScreen() {
-  const { colors, wide, roomy, type, reduceMotion } = useTheme();
+  const { colors, wide, roomy, reduceMotion } = useTheme();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const match = useMatch();
   const { inputRef, loading, powiat, reset, resultsRef, state, text } = match;
   const [chosen, setChosen] = useState(false);
@@ -133,7 +137,7 @@ export default function MatchScreen() {
   const asking =
     chosen || powiat !== "" || text.length > 0 || state.kind !== "idle";
   const { dawn, dawning, rise } = useDawn(loading, done);
-  useSetChromeTone(chromeTone(done, dawning, wide));
+  useSetChromeTone(chromeTone(asking, done, dawning, wide));
 
   useEffect(() => {
     if (chosen) {
@@ -163,9 +167,27 @@ export default function MatchScreen() {
     );
   }
 
-  const display = wide
-    ? Math.round(type.display * (roomy ? 2 : 1.6))
-    : Math.min(type.display, Math.floor((width - 44) / 6.5));
+  if (!asking) {
+    return (
+      <ScrollView
+        contentContainerStyle={styles.fill}
+        role="main"
+        style={{ backgroundColor: colors.night }}
+      >
+        <EntryChoice
+          onProblem={() => setChosen(true)}
+          top={
+            wide ? null : (
+              <View style={styles.top}>
+                <Brand night />
+                <AccessButton night />
+              </View>
+            )
+          }
+        />
+      </ScrollView>
+    );
+  }
 
   return (
     <View
@@ -188,8 +210,8 @@ export default function MatchScreen() {
         <View
           style={[
             styles.column,
-            wide && (asking ? styles.columnAsk : styles.columnWide),
-            roomy && (asking ? styles.columnAskRoomy : styles.columnRoomy),
+            wide && styles.columnAsk,
+            roomy && styles.columnAskRoomy,
           ]}
         >
           {wide ? null : (
@@ -198,31 +220,8 @@ export default function MatchScreen() {
               <AccessButton night />
             </View>
           )}
-          {asking ? (
-            <>
-              <BackPill label="Wróć" night onPress={leave} />
-              <ProblemComposer match={match} />
-            </>
-          ) : (
-            <>
-              <Heading
-                level={1}
-                night
-                style={[
-                  styles.question,
-                  {
-                    fontSize: display,
-                    letterSpacing: display * -0.035,
-                    lineHeight: Math.round(display * 1.04),
-                  },
-                  wide && styles.center,
-                ]}
-              >
-                Z czym przychodzisz?
-              </Heading>
-              <EntryChoice onProblem={() => setChosen(true)} />
-            </>
-          )}
+          <BackPill label="Wróć" night onPress={leave} />
+          <ProblemComposer match={match} />
         </View>
       </ScrollView>
     </View>
@@ -230,28 +229,16 @@ export default function MatchScreen() {
 }
 
 const styles = StyleSheet.create({
-  center: {
-    textAlign: "center",
-  },
   column: {
     gap: space.lg + 2,
     width: "100%",
   },
   columnAsk: {
-    alignSelf: "center",
     gap: space.xl,
-    maxWidth: 1240,
+    maxWidth: 1360,
   },
   columnAskRoomy: {
-    maxWidth: 1560,
-  },
-  columnRoomy: {
-    maxWidth: 1080,
-  },
-  columnWide: {
-    alignSelf: "center",
-    gap: space.xl + 4,
-    maxWidth: 860,
+    maxWidth: 1760,
   },
   content: {
     flexGrow: 1,
@@ -263,8 +250,8 @@ const styles = StyleSheet.create({
   dawn: {
     overflow: "hidden",
   },
-  question: {
-    marginTop: space.md,
+  fill: {
+    flexGrow: 1,
   },
   root: {
     flex: 1,

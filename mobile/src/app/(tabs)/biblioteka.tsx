@@ -7,7 +7,7 @@ import { CategoryFilter } from "@/features/category-filter";
 import { CardGrid, InnovationCard } from "@/features/innovation-card";
 import { useLibrary } from "@/hooks/use-library";
 import { useTheme } from "@/theme/settings";
-import { minTarget, space } from "@/theme/tokens";
+import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchWide: {
-    alignItems: "flex-end",
+    alignItems: "center",
     flexDirection: "row",
   },
   strip: {
@@ -175,6 +175,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.xl - 2,
   },
   tall: {
-    minHeight: minTarget + 8,
+    minHeight: 62,
   },
 });

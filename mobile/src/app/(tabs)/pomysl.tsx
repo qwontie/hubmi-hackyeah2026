@@ -9,7 +9,7 @@ import { ProblemCard } from "@/features/problem-card";
 import { useProblems } from "@/hooks/use-problems";
 import { pluralPl } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
-import { minTarget, space } from "@/theme/tokens";
+import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     gap: space.md,
   },
   searchWide: {
-    alignItems: "flex-end",
+    alignItems: "center",
     flexDirection: "row",
   },
   strip: {
@@ -182,6 +182,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg + space.xs + 2,
   },
   tall: {
-    minHeight: minTarget + 8,
+    minHeight: 62,
   },
 });

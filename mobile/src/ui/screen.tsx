@@ -182,7 +182,6 @@ const styles = StyleSheet.create({
   head: {
     gap: space.lg,
     paddingBottom: space.sm,
-    paddingHorizontal: space.xs + 2,
   },
   hero: {
     borderBottomLeftRadius: radius.band,

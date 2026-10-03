@@ -1,144 +1,267 @@
 import { router } from "expo-router";
+import { ArrowRight } from "lucide-react-native";
+import { type ReactNode, useState } from "react";
 import {
-  ChevronRight,
-  Lightbulb,
-  type LucideIcon,
-  MessageCircleHeart,
-} from "lucide-react-native";
-import { Pressable, StyleSheet, View } from "react-native";
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type ViewStyle,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/settings";
-import { radius, space } from "@/theme/tokens";
-import { Glass } from "@/ui/glass";
-import { Txt } from "@/ui/text";
+import { radius, space, tabBarSpace } from "@/theme/tokens";
+import { nightAttr } from "@/ui/night";
+import { WIDE_TOP } from "@/ui/screen";
+import { Heading, Txt } from "@/ui/text";
 
-const WASH = "rgba(252, 252, 255, 0.14)";
+const grow = (
+  Platform.OS === "web"
+    ? {
+        transitionDuration: "420ms",
+        transitionProperty: "flex-grow",
+        transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+      }
+    : {}
+) as ViewStyle;
 
-function ChoiceCard({
-  icon: Icon,
-  onPress,
-  text,
-  title,
-}: {
-  icon: LucideIcon;
+const slide = (
+  Platform.OS === "web"
+    ? {
+        transitionDuration: "320ms",
+        transitionProperty: "transform",
+        transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+      }
+    : {}
+) as ViewStyle;
+
+interface PanelProps {
+  night: boolean;
   onPress: () => void;
+  role: "button" | "link";
   text: string;
   title: string;
-}) {
-  const { colors, reduceMotion, roomy, type, wide } = useTheme();
-  const titleSize = roomy ? type.h2 : type.h3;
-  return (
-    <Pressable
-      onPress={onPress}
-      role="button"
-      style={({ pressed }) => [
-        styles.press,
-        wide && styles.pressWide,
-        { transform: [{ scale: pressed && !reduceMotion ? 0.98 : 1 }] },
-      ]}
-    >
-      <Glass
-        interactive
-        night
-        style={[
-          styles.card,
-          wide && styles.cardWide,
-          roomy && styles.cardRoomy,
-        ]}
-      >
-        <View style={[styles.icon, { backgroundColor: WASH }]}>
-          <Icon aria-hidden color={colors.onNight} size={28} strokeWidth={2} />
-        </View>
-        <View style={styles.body}>
-          <Txt
-            style={{
-              fontSize: titleSize,
-              letterSpacing: titleSize * -0.02,
-              lineHeight: Math.round(titleSize * 1.2),
-            }}
-            tone="onNight"
-            weight="600"
-          >
-            {title}
-          </Txt>
-          <Txt tone="onNightSoft" variant={roomy ? "lead" : "label"}>
-            {text}
-          </Txt>
-        </View>
-        {wide ? null : (
-          <ChevronRight aria-hidden color={colors.onNightSoft} size={26} />
-        )}
-      </Glass>
-    </Pressable>
-  );
 }
 
-export function EntryChoice({ onProblem }: { onProblem: () => void }) {
-  const { wide } = useTheme();
+function Discs({ night, span }: { night: boolean; span: number }) {
+  const { colors, wide } = useTheme();
+  const outer = wide ? Math.min(span * 1.7, 1100) : span * 1.5;
+  const inner = outer * 0.62;
+  const tones = night
+    ? [colors.nightRise, colors.dusk]
+    : [colors.tone, colors.paper];
   return (
-    <View style={[styles.choices, wide && styles.choicesWide]}>
-      <ChoiceCard
-        icon={MessageCircleHeart}
-        onPress={onProblem}
-        text="Opisz go, a pokażemy sprawdzone rozwiązania."
-        title="Mam problem"
+    <View aria-hidden pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View
+        style={{
+          backgroundColor: tones[0],
+          borderRadius: outer / 2,
+          bottom: -outer * (wide ? 0.6 : 0.78),
+          height: outer,
+          left: (span - outer) / 2,
+          position: "absolute",
+          width: outer,
+        }}
       />
-      <ChoiceCard
-        icon={Lightbulb}
-        onPress={() => router.navigate("/pomysl")}
-        text="Zobacz, z czym mierzą się mieszkańcy, i zaproponuj rozwiązanie."
-        title="Mam pomysł"
+      <View
+        style={{
+          backgroundColor: tones[1],
+          borderRadius: inner / 2,
+          bottom: -inner * (wide ? 0.66 : 0.86),
+          height: inner,
+          left: (span - inner) / 2,
+          position: "absolute",
+          width: inner,
+        }}
       />
     </View>
   );
 }
 
+const usePanelPadding = (night: boolean): ViewStyle => {
+  const { wide } = useTheme();
+  const insets = useSafeAreaInsets();
+  if (wide) {
+    return { paddingBottom: 88, paddingHorizontal: 40, paddingTop: WIDE_TOP };
+  }
+  return {
+    paddingBottom: night
+      ? space.xl + radius.band
+      : tabBarSpace + insets.bottom + space.sm,
+    paddingHorizontal: space.xl - 2,
+    paddingTop: night ? insets.top + 132 : space.xxl,
+  };
+};
+
+function Panel({ night, onPress, role, text, title }: PanelProps) {
+  const { colors, highContrast, reduceMotion, roomy, type, wide } = useTheme();
+  const { width } = useWindowDimensions();
+  const [hot, setHot] = useState(false);
+  const span = wide ? width / 2 : width;
+  const wideSize = roomy ? 96 : 72;
+  const size = wide
+    ? Math.round(wideSize * (type.body / 19))
+    : Math.min(type.display, Math.floor((width - 44) / 6.2));
+  const ink = night ? colors.onNight : colors.ink;
+  const soft = night ? colors.onNightSoft : colors.inkSoft;
+  const lively = hot && !reduceMotion;
+  const lower = !(night || wide);
+  return (
+    <Pressable
+      onBlur={() => setHot(false)}
+      onFocus={() => setHot(true)}
+      onHoverIn={() => setHot(true)}
+      onHoverOut={() => setHot(false)}
+      onPress={onPress}
+      role={role}
+      style={[
+        styles.panel,
+        grow,
+        {
+          backgroundColor: night ? colors.night : colors.ground,
+          borderColor: colors.ink,
+          borderTopWidth: highContrast && lower ? 2 : 0,
+          flexGrow: lively && wide ? 1.22 : 1,
+        },
+        usePanelPadding(night),
+        lower && styles.sheet,
+      ]}
+      {...nightAttr(night)}
+    >
+      <Discs night={night} span={span} />
+      <View style={styles.body}>
+        <Txt
+          style={{
+            color: ink,
+            fontSize: size,
+            letterSpacing: size * -0.04,
+            lineHeight: Math.round(size * 1.02),
+          }}
+          weight="600"
+        >
+          {title}
+        </Txt>
+        <Txt
+          style={[styles.text, { color: soft }]}
+          variant={wide ? "h3" : "lead"}
+        >
+          {text}
+        </Txt>
+        <View
+          style={[
+            styles.arrow,
+            slide,
+            {
+              backgroundColor: night ? colors.onNight : colors.stamp,
+              transform: [{ translateX: lively ? 10 : 0 }],
+            },
+          ]}
+        >
+          <ArrowRight
+            aria-hidden
+            color={night ? colors.night : colors.onStamp}
+            size={30}
+            strokeWidth={2.2}
+          />
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+export function EntryChoice({
+  onProblem,
+  top,
+}: {
+  onProblem: () => void;
+  top?: ReactNode;
+}) {
+  const { colors, wide } = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <View
+      style={[
+        styles.root,
+        wide && styles.rootWide,
+        { backgroundColor: colors.night },
+      ]}
+    >
+      <Panel
+        night
+        onPress={onProblem}
+        role="button"
+        text="Opisz go swoimi słowami. Pokażemy rozwiązania, które już działają."
+        title="Mam problem"
+      />
+      <Panel
+        night={false}
+        onPress={() => router.navigate("/pomysl")}
+        role="link"
+        text="Zobacz, z czym mierzą się mieszkańcy, i zaproponuj rozwiązanie."
+        title="Mam pomysł"
+      />
+      <View
+        pointerEvents="box-none"
+        style={[
+          styles.over,
+          wide ? styles.overWide : { paddingTop: insets.top + space.sm },
+        ]}
+        {...nightAttr(true)}
+      >
+        {top}
+        <Heading level={1} night size="h3">
+          Z czym przychodzisz?
+        </Heading>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  body: {
-    flex: 1,
-    gap: space.xs + 2,
-  },
-  card: {
-    alignItems: "center",
-    borderRadius: radius.field,
-    flexDirection: "row",
-    gap: space.lg,
-    minHeight: 124,
-    paddingHorizontal: space.lg + 4,
-    paddingVertical: space.lg + 2,
-  },
-  cardRoomy: {
-    minHeight: 280,
-    paddingHorizontal: 44,
-    paddingVertical: 44,
-  },
-  cardWide: {
-    alignItems: "flex-start",
-    flex: 1,
-    flexDirection: "column",
-    gap: space.xl,
-    minHeight: 220,
-    paddingHorizontal: space.xxl,
-    paddingVertical: space.xxl,
-  },
-  choices: {
-    gap: space.md + 2,
-  },
-  choicesWide: {
-    alignItems: "stretch",
-    flexDirection: "row",
-    gap: space.lg + 4,
-  },
-  icon: {
+  arrow: {
     alignItems: "center",
     borderRadius: radius.pill,
-    height: 60,
+    height: 68,
     justifyContent: "center",
-    width: 60,
+    marginTop: space.md,
+    width: 68,
   },
-  press: {
-    borderRadius: radius.field,
+  body: {
+    gap: space.md,
+    marginTop: "auto",
   },
-  pressWide: {
+  over: {
+    gap: space.lg,
+    left: 0,
+    paddingHorizontal: space.xl - 2,
+    position: "absolute",
+    right: 0,
+    top: 0,
+  },
+  overWide: {
+    paddingHorizontal: 40,
+    right: "50%",
+    top: WIDE_TOP + space.xl,
+  },
+  panel: {
+    flexBasis: 0,
+    flexGrow: 1,
+    flexShrink: 1,
+    overflow: "hidden",
+  },
+  root: {
     flex: 1,
+  },
+  rootWide: {
+    flexDirection: "row",
+  },
+  sheet: {
+    borderTopLeftRadius: radius.band,
+    borderTopRightRadius: radius.band,
+    marginTop: -radius.band,
+  },
+  text: {
+    maxWidth: 520,
   },
 });
