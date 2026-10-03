@@ -260,3 +260,74 @@ export interface IdeaThread {
   };
   messages: ThreadMessage[];
 }
+
+export interface Ref {
+  name: string;
+  slug: string;
+}
+
+export interface CountedRef extends Ref {
+  count: number;
+}
+
+export interface Figure {
+  document_title: string;
+  document_url: string;
+  label: string;
+  page: number;
+  quote: string;
+  scope: "Polska" | "Małopolska" | string;
+  source_title: string | null;
+  unit: string | null;
+  value: string;
+  year: number | null;
+}
+
+export interface MaterialSummary {
+  file_size: number | null;
+  file_url: string;
+  id: string;
+  kind: Ref;
+  pages: number | null;
+  source_url: string;
+  summary: string;
+  summary_ai: boolean;
+  title: string;
+  topics: Ref[];
+  year: number | null;
+}
+
+export interface ChallengeSummary {
+  area: Ref;
+  figures: Figure[];
+  id: string;
+  slug: string;
+  source: { title: string; url: string; pages: number[] };
+  summary: string;
+  title: string;
+  verified: boolean;
+}
+
+export interface RelatedInnovation extends InnovationSummary {
+  score: number;
+}
+
+export interface MaterialDetail extends MaterialSummary {
+  related_challenges: (ChallengeSummary & { score: number })[];
+  related_innovations: RelatedInnovation[];
+  source_section: string | null;
+  updated_at: string;
+}
+
+export interface ChallengeDetail extends ChallengeSummary {
+  description: string;
+  related_innovations: RelatedInnovation[];
+  related_materials: (MaterialSummary & { score: number })[];
+  updated_at: string;
+  verified_at: string | null;
+}
+
+export interface MaterialFilters {
+  kinds: CountedRef[];
+  topics: CountedRef[];
+}

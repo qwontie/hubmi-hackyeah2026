@@ -5,6 +5,9 @@ import type {
   AssistAnswer,
   AssistOut,
   Category,
+  ChallengeDetail,
+  ChallengeSummary,
+  CountedRef,
   ErrorCode,
   FeedbackKind,
   FeedbackSummary,
@@ -19,6 +22,9 @@ import type {
   InstitutionType,
   MatchRequest,
   MatchResponse,
+  MaterialDetail,
+  MaterialFilters,
+  MaterialSummary,
   NeedPatch,
   NeedPatchResponse,
   NeedThread,
@@ -210,6 +216,19 @@ export const api = {
     }),
   categories: (signal?: AbortSignal) =>
     request<Category[]>("/api/categories", { signal }),
+  challenge: (key: string, signal?: AbortSignal) =>
+    request<ChallengeDetail>(`/api/challenges/${encodeURIComponent(key)}`, {
+      signal,
+    }),
+  challengeAreas: (signal?: AbortSignal) =>
+    request<CountedRef[]>("/api/challenges/areas", { signal }),
+  challenges: (
+    params: { area?: string; q?: string; page?: number; per_page?: number },
+    signal?: AbortSignal
+  ) =>
+    request<Page<ChallengeSummary>>(`/api/challenges${query(params)}`, {
+      signal,
+    }),
   createIdea: (body: IdeaCreate) =>
     request<IdeaCreated>("/api/ideas", { body, method: "POST" }),
   feedbackSummary: (slug: string, signal?: AbortSignal) =>
@@ -244,6 +263,25 @@ export const api = {
     request<InstitutionType[]>("/api/institution-types", { signal }),
   match: (body: MatchRequest, signal?: AbortSignal) =>
     request<MatchResponse>("/api/match", { body, method: "POST", signal }),
+  material: (id: string, signal?: AbortSignal) =>
+    request<MaterialDetail>(`/api/materials/${encodeURIComponent(id)}`, {
+      signal,
+    }),
+  materialFilters: (signal?: AbortSignal) =>
+    request<MaterialFilters>("/api/materials/topics", { signal }),
+  materials: (
+    params: {
+      kind?: string;
+      topic?: string;
+      q?: string;
+      page?: number;
+      per_page?: number;
+    },
+    signal?: AbortSignal
+  ) =>
+    request<Page<MaterialSummary>>(`/api/materials${query(params)}`, {
+      signal,
+    }),
   patchNeed: (id: string, token: string, body: NeedPatch) =>
     request<NeedPatchResponse>(`/api/needs/${encodeURIComponent(id)}`, {
       body,
