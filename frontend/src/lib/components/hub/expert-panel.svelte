@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { untrack } from "svelte";
+  import { tick, untrack } from "svelte";
   import {
     type Assignment,
     assignExpert,
@@ -115,8 +115,13 @@
       {#if free.length > 0 && !open}
         <button
           class="ghost cladd-clickable"
-          onclick={() => {
+          id="ask-expert-{id}"
+          onclick={async () => {
             open = true;
+            await tick();
+            document
+              .querySelector<HTMLInputElement>(`input[name="expert-${id}"]`)
+              ?.focus();
           }}
           type="button"
         >
@@ -141,7 +146,7 @@
               >
             </span>
             <span class="text-hm-ink-soft text-xs">
-              Prośba od {a.assigned_by},
+              Kto prosił: {a.assigned_by} ·
               {when(a.created_at)}{a.note ? ` · „${a.note}”` : ""}
             </span>
             {#each a.private_notes ?? [] as n (n.id)}
@@ -203,9 +208,11 @@
         <span class="flex items-center justify-end gap-2">
           <button
             class="ghost cladd-clickable"
-            onclick={() => {
-            open = false;
-          }}
+            onclick={async () => {
+              open = false;
+              await tick();
+              document.getElementById(`ask-expert-${id}`)?.focus();
+            }}
             type="button"
           >
             <span>Anuluj</span>

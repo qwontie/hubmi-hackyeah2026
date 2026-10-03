@@ -230,7 +230,7 @@
                     {/if}
                     <span class="text-hm-ink-soft text-xs"
                       >{a.kind === "idea" ? "Pomysł" : "Potrzeba"}
-                      · prośba od {a.assigned_by} · {when(a.created_at)}</span
+                      · prośba ROPS · {when(a.created_at)}</span
                     >
                   </span>
                   <span class="st"

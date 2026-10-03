@@ -170,11 +170,15 @@
           <span>{liveWords[live.state]}</span>
         </span>
       {/if}
-      <button class="signout" onclick={signOut} type="button">
-        <span class="max-[899px]:sr-only"
+      <button
+        aria-label="{session.me?.display_name ?? session.me?.login}, wyloguj się"
+        class="signout"
+        onclick={signOut}
+        type="button"
+      >
+        <span aria-hidden="true" class="max-[899px]:hidden"
           >{session.me?.display_name ?? session.me?.login}</span
         >
-        <span class="sr-only">, wyloguj się</span>
         <span aria-hidden="true" class="text-hm-ink-soft">Wyloguj</span>
       </button>
     </div>

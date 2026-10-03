@@ -41,6 +41,11 @@
   let problem = $state<string | null>(null);
   let poll: ReturnType<typeof setInterval> | undefined;
   let fileInput = $state<HTMLInputElement | null>(null);
+  let modeGroup = $state<HTMLFieldSetElement | null>(null);
+
+  $effect(() => {
+    modeGroup?.querySelector<HTMLButtonElement>("button")?.focus();
+  });
 
   const running = $derived(sending || job?.status === "running");
   const stepIndex = $derived(
@@ -220,7 +225,7 @@
     </div>
   {:else}
     <form class="grid gap-3" novalidate onsubmit={submit}>
-      <fieldset class="seg" disabled={running}>
+      <fieldset class="seg" disabled={running} bind:this={modeGroup}>
         <legend class="sr-only">Co dodajesz</legend>
         {#each modes as m (m.id)}
           <button
