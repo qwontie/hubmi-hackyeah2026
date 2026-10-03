@@ -6,7 +6,7 @@
   import ErrorState from "$lib/components/error-state.svelte";
   import DayChart from "$lib/components/hub/day-chart.svelte";
   import NeedsMap from "$lib/components/hub/needs-map.svelte";
-  import { nbsp, plural } from "$lib/format";
+  import { nbsp, periodWords, plural } from "$lib/format";
   import { live } from "$lib/live/stream.svelte";
 
   interface Ranked {
@@ -41,6 +41,15 @@
       title: string;
     }[];
     per_day: { needs: number; nothing_fits: number; start: string }[];
+    searches: {
+      by_category: Ranked[];
+      degraded: number;
+      no_match: number;
+      no_result_share: number;
+      ok: number;
+      total: number;
+      unclear: number;
+    };
     top_clusters: {
       current: number;
       growth: number;
@@ -59,6 +68,7 @@
     totals: {
       answered: number;
       closed: number;
+      junk: number;
       median_first_reply_hours: number | null;
       needs: number;
       needs_previous: number;
@@ -157,6 +167,10 @@
   });
 
   const days = $derived(stats?.per_day ?? []);
+  const window = $derived(periodWords[period] ?? periodWords["30d"]);
+  const noResult = $derived(
+    stats ? stats.searches.unclear + stats.searches.no_match : 0
+  );
 
   const topOf = (list: Ranked[]) => list.slice(0, 8);
   const maxOf = (list: Ranked[]) => Math.max(1, ...list.map((r) => r.count));
@@ -193,15 +207,15 @@
   {:else}
     <dl class="figures">
       <div>
-        <dt>Potrzeby</dt>
+        <dt>Potrzeby {window}</dt>
         <dd class="tabular">{stats.totals.needs}</dd>
         <dd class="note">{delta}</dd>
       </div>
       <div>
-        <dt>Czekają na odpowiedź</dt>
+        <dt>Czekają na odpowiedź teraz</dt>
         <dd class="tabular">{stats.totals.waiting}</dd>
         <dd class="note">
-          {stats.totals.answered}
+          {window}: {stats.totals.answered}
           z&nbsp;odpowiedzią, {stats.totals.closed}
           {plural(stats.totals.closed, "zamknięta", "zamknięte", "zamkniętych")}
         </dd>
@@ -209,50 +223,59 @@
       <div>
         <dt>Pierwsza odpowiedź</dt>
         <dd class="tabular">{hours(stats.totals.median_first_reply_hours)}</dd>
-        <dd class="note">mediana od zgłoszenia</dd>
+        <dd class="note">mediana od zgłoszenia, {window}</dd>
       </div>
       <div>
-        <dt>Nic nie pasowało</dt>
-        <dd class="tabular">{pct(stats.totals.nothing_fits_share)}</dd>
+        <dt>Wyszukiwania bez wyniku</dt>
+        <dd class="tabular">
+          {stats.searches.total > 0 ? pct(stats.searches.no_result_share) : "brak"}
+        </dd>
         <dd class="note">
-          {stats.totals.nothing_fits}
-          z&nbsp;{stats.totals.needs}
-          potrzeb
+          {window}: {noResult}
+          z&nbsp;{stats.searches.total}
+          {plural(stats.searches.total, "wyszukiwania", "wyszukiwań", "wyszukiwań")}
+          mieszkańców, bez zapisu treści
         </dd>
       </div>
       <div>
-        <dt>Trafność według testerów</dt>
+        <dt>Ocena mieszkańców: pasuje</dt>
         <dd class="tabular">
           {stats.feedback.fits + stats.feedback.does_not_fit > 0 ? pct(stats.feedback.fit_share) : "brak ocen"}
         </dd>
         <dd class="note">
-          Pasuje: {stats.feedback.fits}, nie pasuje:
+          {window}: pasuje {stats.feedback.fits}, nie pasuje
           {stats.feedback.does_not_fit}
         </dd>
       </div>
       <div>
-        <dt>Zapisy do testów</dt>
+        <dt>Zgłoszenia do testów</dt>
         <dd class="tabular">{stats.feedback.test_signups}</dd>
         <dd class="note">
-          {stats.feedback.improvements}
+          {window}, {stats.feedback.improvements}
           {plural(stats.feedback.improvements, "pomysł na ulepszenie", "pomysły na ulepszenie", "pomysłów na ulepszenie")}
         </dd>
       </div>
     </dl>
 
     <section aria-labelledby="chart-h" class="panel">
-      <h2 class="h" id="chart-h">Nowe potrzeby dzień po dniu</h2>
+      <h2 class="h" id="chart-h">
+        Nowe potrzeby dzień po dniu <span class="win">{window}</span>
+      </h2>
       <DayChart {days} names={categoryNames} needs={allNeeds} />
     </section>
 
     <section aria-labelledby="map-h" class="panel">
-      <h2 class="h" id="map-h">Potrzeby w&nbsp;powiatach</h2>
+      <h2 class="h" id="map-h">
+        Potrzeby w&nbsp;powiatach <span class="win">{window}</span>
+      </h2>
       <NeedsMap days={Number.parseInt(period, 10) || 30} />
     </section>
 
     <div class="grid3">
       <section aria-labelledby="grow-h" class="panel">
-        <h2 class="h" id="grow-h">Rosnące teczki</h2>
+        <h2 class="h" id="grow-h">
+          Rosnące teczki <span class="win">{window}</span>
+        </h2>
         {#if stats.growing_clusters.length === 0}
           <p class="empty">
             Żadna teczka nie rośnie szybciej niż w&nbsp;poprzednim okresie.
@@ -274,7 +297,7 @@
       </section>
 
       <section aria-labelledby="pow-h" class="panel">
-        <h2 class="h" id="pow-h">Powiaty</h2>
+        <h2 class="h" id="pow-h">Powiaty <span class="win">{window}</span></h2>
         {#if stats.by_powiat.length === 0}
           <p class="empty">Brak potrzeb w&nbsp;tym okresie.</p>
         {:else}
@@ -292,7 +315,7 @@
       </section>
 
       <section aria-labelledby="cat-h" class="panel">
-        <h2 class="h" id="cat-h">Obszary</h2>
+        <h2 class="h" id="cat-h">Obszary <span class="win">{window}</span></h2>
         {#if stats.by_category.length === 0}
           <p class="empty">Brak potrzeb w&nbsp;tym okresie.</p>
         {:else}
@@ -312,9 +335,15 @@
 
     <div class="grid2">
       <section aria-labelledby="inn-h" class="panel">
-        <h2 class="h" id="inn-h">Najczęściej proponowane innowacje</h2>
+        <h2 class="h" id="inn-h">
+          Najczęściej proponowane w&nbsp;wyszukiwaniach
+          <span class="win">{window}</span>
+        </h2>
         {#if stats.top_innovations.length === 0}
-          <p class="empty">Jeszcze nic nie zaproponowano.</p>
+          <p class="empty">
+            Jeszcze nic nie zaproponowano: liczymy od wyszukiwań mieszkańców na
+            stronie, bez zapisu treści.
+          </p>
         {:else}
           <ol class="list">
             {#each stats.top_innovations.slice(0, 8) as i (i.slug)}
@@ -332,7 +361,10 @@
       </section>
 
       <section aria-labelledby="rej-h" class="panel">
-        <h2 class="h" id="rej-h">Najczęściej oceniane jako niepasujące</h2>
+        <h2 class="h" id="rej-h">
+          Najczęściej oceniane jako niepasujące
+          <span class="win">{window}</span>
+        </h2>
         {#if stats.feedback.most_rejected.length === 0}
           <p class="empty">
             Nikt jeszcze nie ocenił propozycji jako niepasującej.
@@ -450,6 +482,11 @@
     margin-bottom: 12px;
     font-size: 14px;
     font-weight: 650;
+  }
+
+  .win {
+    font-weight: 500;
+    color: var(--hm-ink-soft);
   }
 
   .grid3 {

@@ -5,7 +5,15 @@ const ZONE = "Europe/Warsaw";
 export const statusLabel: Record<NeedStatus, string> = {
   answered: "Odpowiedziana",
   closed: "Zamknięta",
+  junk: "Nie dotyczy",
   new: "Nowa",
+};
+
+export const periodWords: Record<string, string> = {
+  "7d": "w 7 dniach",
+  "30d": "w 30 dniach",
+  "90d": "w 90 dniach",
+  "365d": "w roku",
 };
 
 export function registerNumber(value: number | null | undefined): string {

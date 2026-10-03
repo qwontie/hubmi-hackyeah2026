@@ -1,12 +1,15 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import { goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
   import {
     type AdminNeed,
+    listNeeds,
     mergeCluster,
     type NeedStatus,
     refreshCluster,
+    renameCluster,
     setNeedStatus,
     splitCluster,
   } from "$lib/api/admin";
@@ -27,22 +30,36 @@
   let sheet = $state<NeedSheet | null>(null);
   let wide = $state(true);
 
+  type View = "all" | "new" | "junk";
+
   const id = $derived(page.params.id ?? null);
   const folder = $derived(page.url.searchParams.get("folder") ?? "all");
-  const waiting = $derived(page.url.searchParams.get("status") === "new");
+  const view = $derived<View>(
+    (["new", "junk"] as const).find(
+      (v) => v === page.url.searchParams.get("status")
+    ) ?? "all"
+  );
+  const waiting = $derived(view === "new");
+  const junkView = $derived(view === "junk");
+
+  let junk = $state<AdminNeed[]>([]);
+  let junkLoaded = $state(false);
+  let renaming = $state(false);
+  let newTitle = $state("");
+  let renameBusy = $state(false);
 
   function href(
     needId: string | null,
-    next: { folder?: string; waiting?: boolean } = {}
+    next: { folder?: string; view?: View } = {}
   ) {
     const params = new URLSearchParams();
     const f = next.folder ?? folder;
-    const w = next.waiting ?? waiting;
+    const v = next.view ?? view;
     if (f !== "all") {
       params.set("folder", f);
     }
-    if (w) {
-      params.set("status", "new");
+    if (v !== "all") {
+      params.set("status", v);
     }
     const query = params.toString();
     const path = needId
@@ -87,13 +104,17 @@
     return [...seen.values()];
   });
 
+  const waitingNote = (n: number) =>
+    n > 0 ? `${n} ${plural(n, "czeka", "czekają", "czeka")}` : undefined;
+
   const tabs = $derived<FolderTab[]>([
     {
       cluster: null,
-      fresh: inbox.needs.filter((n) => inbox.unopened(n)).length,
+      fresh: 0,
       href: href(null, { folder: "all" }),
       id: "all",
-      size: Math.max(inbox.total, inbox.needs.length),
+      note: waitingNote(inbox.newCount),
+      size: inbox.totalCount,
       title: "Wszystkie potrzeby",
       week: inbox.needs.filter((n) => recent(n.created_at)).length,
     },
@@ -101,27 +122,82 @@
       .sort((a, b) => b.size - a.size || a.title.localeCompare(b.title, "pl"))
       .map((f) => ({
         ...f,
-        fresh: inbox.needs.filter(
-          (n) => n.cluster?.id === f.id && inbox.unopened(n)
-        ).length,
+        fresh: 0,
         href: href(null, { folder: f.id }),
+        note: waitingNote(
+          f.cluster?.waiting ??
+            inbox.needs.filter(
+              (n) => n.cluster?.id === f.id && n.status === "new"
+            ).length
+        ),
       })),
   ]);
 
   const currentFolder = $derived(folders.find((f) => f.id === folder) ?? null);
 
   const visible = $derived(
-    inbox.needs.filter(
+    (junkView ? junk : inbox.needs).filter(
       (n) =>
         (folder === "all" || n.cluster?.id === folder) &&
         (!waiting || n.status === "new")
     )
   );
 
-  const counts = $derived({
-    answered: inbox.needs.filter((n) => n.status === "answered").length,
-    fresh: inbox.needs.filter((n) => n.status === "new").length,
+  async function loadJunk() {
+    try {
+      const found = await listNeeds({ status: "junk" });
+      junk = found.items;
+    } catch {
+      junk = [];
+    } finally {
+      junkLoaded = true;
+    }
+  }
+
+  $effect(() => {
+    if (junkView) {
+      untrack(() => {
+        junkLoaded = false;
+        loadJunk();
+      });
+    }
   });
+
+  $effect(() => {
+    const target = folder;
+    untrack(() => {
+      renaming = false;
+      newTitle = inbox.clusters.find((c) => c.id === target)?.title ?? "";
+    });
+  });
+
+  async function saveTitle(event: SubmitEvent) {
+    event.preventDefault();
+    const cluster = currentFolder?.cluster;
+    const title = newTitle.trim();
+    if (!cluster || renameBusy) {
+      return;
+    }
+    const button = (event.currentTarget as HTMLFormElement).querySelector(
+      "button[type=submit]"
+    ) as HTMLElement | null;
+    renameBusy = true;
+    const { showTip } = await import("$lib/tip");
+    try {
+      await renameCluster(cluster.id, title);
+      await inbox.refresh();
+      renaming = false;
+      showTip(button, "Zapisano");
+    } catch (e) {
+      showTip(
+        button,
+        e instanceof ApiError ? e.message : "Nie udało się zapisać.",
+        "bad"
+      );
+    } finally {
+      renameBusy = false;
+    }
+  }
 
   $effect(() => {
     const query = matchMedia("(min-width: 900px)");
@@ -200,6 +276,9 @@
     inbox.patch({ id: need.id, status });
     try {
       inbox.patch(await setNeedStatus(need.id, status));
+      if (junkView) {
+        loadJunk();
+      }
     } catch (e) {
       inbox.patch({ id: need.id, status: before });
       const { showTip } = await import("$lib/tip");
@@ -258,6 +337,14 @@
                 hint: "E",
                 label: "Zamknij",
                 run: () => quickStatus(need, "closed", anchor),
+              },
+            ]),
+        ...(need.status === "junk"
+          ? []
+          : [
+              {
+                label: "Oznacz: nie dotyczy",
+                run: () => quickStatus(need, "junk", anchor),
               },
             ]),
         ...(need.cluster && need.cluster.size > 1
@@ -358,7 +445,7 @@
       row &&
       (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10"))
     ) {
-      const need = inbox.needs.find((n) => n.id === row.dataset.id);
+      const need = visible.find((n) => n.id === row.dataset.id);
       if (need) {
         rowMenu(need, event, row);
       }
@@ -387,14 +474,67 @@
   <main class={["board", folder === "all" && "first"]}>
     <header class="bhead">
       <div class="min-w-0">
-        <h1
-          class="font-semibold text-[26px] leading-tight tracking-tight max-[899px]:text-[22px]"
-        >
-          {currentFolder?.title ?? "Dziennik potrzeb"}
-        </h1>
+        {#if renaming && currentFolder?.cluster}
+          <form class="rename" onsubmit={saveTitle}>
+            <label class="sr-only" for="folder-title">Nazwa teczki</label>
+            <input
+              id="folder-title"
+              maxlength="80"
+              minlength="3"
+              required
+              bind:value={newTitle}
+            >
+            <button
+              class="primary cladd-clickable"
+              disabled={renameBusy}
+              type="submit"
+            >
+              <span>Zapisz</span>
+            </button>
+            <button
+              class="ghost"
+              onclick={() => {
+                renaming = false;
+              }}
+              type="button"
+            >
+              Anuluj
+            </button>
+          </form>
+        {:else}
+          <h1
+            class="font-semibold text-[26px] leading-tight tracking-tight max-[899px]:text-[22px]"
+          >
+            {currentFolder?.title ?? "Dziennik potrzeb"}
+          </h1>
+        {/if}
         <p class="mt-1.5 max-w-[70ch] text-pretty text-hm-ink-soft text-sm">
-          {#if currentFolder?.cluster?.summary}
-            {currentFolder.cluster.summary}
+          {#if currentFolder?.cluster}
+            {#if !renaming}
+              <span class="marks">
+                {#if currentFolder.cluster.title_locked}
+                  <span>nazwa nadana przez ROPS</span>
+                {:else}
+                  <span>nazwa automatyczna</span>
+                {/if}
+                <button
+                  class="rename-link"
+                  onclick={() => {
+                    newTitle = currentFolder?.title ?? "";
+                    renaming = true;
+                  }}
+                  type="button"
+                >
+                  Zmień nazwę
+                </button>
+              </span>
+            {/if}
+            {#if currentFolder.cluster.summary}
+              <span class="mt-1 block">
+                {currentFolder.cluster.summary}
+                <span class="whitespace-nowrap">(opis automatyczny)</span>
+              </span>
+            {/if}
             {#if currentFolder.cluster.powiats && currentFolder.cluster.powiats.length > 0}
               <span class="mt-1 block text-[13px]">
                 Najczęściej:
@@ -402,19 +542,19 @@
               </span>
             {/if}
           {:else if !currentFolder}
-            {counts.fresh}
-            {plural(counts.fresh, "czeka", "czekają", "czeka")}
-            na odpowiedź,
-            {counts.answered}
+            {inbox.newCount}
+            {plural(inbox.newCount, "czeka", "czekają", "czeka")}
+            na odpowiedź teraz,
+            {inbox.answeredCount}
             z&nbsp;odpowiedzią.
           {/if}
         </p>
       </div>
       <dl class="stats">
         <div>
-          <dt>potrzeb</dt>
+          <dt>potrzeb od początku</dt>
           <dd class="tabular">
-            {currentFolder ? currentFolder.size : Math.max(inbox.total, inbox.needs.length)}
+            {currentFolder ? currentFolder.size : inbox.totalCount}
           </dd>
         </div>
         <div>
@@ -453,29 +593,38 @@
           <span>Treść</span>
           <nav aria-label="Filtr" class="filter">
             <a
-              aria-current={waiting ? undefined : "true"}
+              aria-current={view === "all" ? "true" : undefined}
               data-sveltekit-noscroll
               data-sveltekit-replacestate
-              href={href(id, { waiting: false })}
+              href={href(id, { view: "all" })}
               >Wszystkie</a
             >
             <a
               aria-current={waiting ? "true" : undefined}
               data-sveltekit-noscroll
               data-sveltekit-replacestate
-              href={href(id, { waiting: true })}
+              href={href(id, { view: "new" })}
               >Czekają</a
+            >
+            <a
+              aria-current={junkView ? "true" : undefined}
+              data-sveltekit-noscroll
+              data-sveltekit-replacestate
+              href={href(id, { view: "junk" })}
+              >Nie dotyczy</a
             >
           </nav>
         </div>
         {#if inbox.needsError && inbox.needs.length === 0}
           <ErrorState error={inbox.needsError} retry={() => inbox.refresh()} />
-        {:else if !inbox.loaded}
+        {:else if !inbox.loaded || (junkView && !junkLoaded)}
           <p class="px-3 py-6 text-hm-ink-soft text-sm">Wczytywanie…</p>
         {:else if visible.length === 0}
           <p class="px-3 py-6 text-hm-ink-soft text-sm">
             {#if waiting}
               Nic nie czeka na odpowiedź.
+            {:else if junkView}
+              Żaden wpis nie jest oznaczony jako „nie dotyczy”.
             {:else if inbox.needs.length === 0}
               Nie ma jeszcze żadnych potrzeb. Pojawią się tutaj same, gdy ktoś
               opisze problem w&nbsp;aplikacji.
@@ -578,6 +727,92 @@
     text-decoration: underline;
     text-decoration-thickness: 2px;
     text-underline-offset: 4px;
+  }
+
+  .marks {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  .rename-link {
+    min-height: 24px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--hm-stamp);
+    text-decoration: underline;
+    text-decoration-color: var(--hm-rule);
+    text-underline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  .rename-link:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .rename {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .rename input {
+    flex: 1 1 260px;
+    min-width: 0;
+    height: 38px;
+    padding: 0 12px;
+    font-size: 16px;
+    font-weight: 600;
+    background: var(--hm-sunk);
+    border-radius: 10px;
+    box-shadow: var(--shadow-cladd-cut-outline);
+  }
+
+  .rename input:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1.5px var(--hm-ring),
+      var(--shadow-cladd-cut-outline);
+  }
+
+  .primary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--hm-on-stamp);
+    white-space: nowrap;
+    background-color: var(--hm-stamp);
+    border-radius: 10px;
+    box-shadow: var(--shadow-cladd-outline-fill);
+  }
+
+  .primary:hover {
+    background-color: var(--hm-stamp-press);
+  }
+
+  .primary:disabled {
+    opacity: 0.6;
+  }
+
+  .ghost {
+    height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--hm-ink-soft);
+    border-radius: 10px;
+  }
+
+  .ghost:hover {
+    color: var(--hm-ink);
+    background: var(--hm-stamp-wash);
   }
 
   .work {

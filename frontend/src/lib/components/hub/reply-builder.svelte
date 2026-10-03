@@ -1,20 +1,16 @@
-<script lang="ts" module>
-  import type { ReplySuggestions } from "$lib/api/admin";
-
-  const cache = new Map<string, ReplySuggestions>();
-</script>
-
 <script lang="ts">
   import { untrack } from "svelte";
-  import { type ReplyFragment, replySuggestions } from "$lib/api/admin";
+  import {
+    type ReplyFragment,
+    type ReplySuggestions,
+    replySuggestions,
+    storedReplySuggestions,
+  } from "$lib/api/admin";
   import { ApiError } from "$lib/api/client";
   import { registerNumber } from "$lib/format";
 
-  let {
-    needId,
-    body = $bindable(""),
-    auto,
-  }: { needId: string; body: string; auto: boolean } = $props();
+  let { needId, body = $bindable("") }: { needId: string; body: string } =
+    $props();
 
   interface Slip {
     hint: string;
@@ -38,7 +34,20 @@
   let failure = $state<string | null>(null);
   let controller: AbortController | null = null;
 
-  async function load(target: string) {
+  async function peek(target: string) {
+    controller?.abort();
+    controller = new AbortController();
+    try {
+      const stored = await storedReplySuggestions(target, controller.signal);
+      if (target === needId && stored) {
+        data = stored;
+      }
+    } catch {
+      data = null;
+    }
+  }
+
+  async function generate(target: string, refresh: boolean) {
     controller?.abort();
     controller = new AbortController();
     busy = true;
@@ -47,8 +56,7 @@
       slow = true;
     }, 300);
     try {
-      const next = await replySuggestions(target, controller.signal);
-      cache.set(target, next);
+      const next = await replySuggestions(target, refresh, controller.signal);
       if (target === needId) {
         data = next;
       }
@@ -74,18 +82,13 @@
 
   $effect(() => {
     const target = needId;
-    const eager = auto;
-    return untrack(() => {
+    untrack(() => {
       controller?.abort();
-      data = cache.get(target) ?? null;
+      data = null;
       failure = null;
       busy = false;
       slow = false;
-      if (data || !eager) {
-        return;
-      }
-      const timer = setTimeout(() => load(target), 700);
-      return () => clearTimeout(timer);
+      peek(target);
     });
   });
 
@@ -156,7 +159,10 @@
   {#if data && (slips.length > 0 || earlier.length > 0)}
     {#if slips.length > 0}
       <fieldset class="slips">
-        <legend class="label">Podpowiedzi do wstawienia</legend>
+        <legend class="label">
+          Podpowiedzi do wstawienia
+          <span class="ai">AI</span>
+        </legend>
         {#each slips as slip (slip.id)}
           <button
             aria-pressed={used(slip)}
@@ -188,10 +194,10 @@
         <button
           class="again"
           disabled={busy}
-          onclick={() => load(needId)}
+          onclick={() => generate(needId, true)}
           type="button"
         >
-          {busy ? "Układanie…" : "Inne podpowiedzi"}
+          {busy ? "Układanie…" : "Napisz od nowa"}
         </button>
       </fieldset>
     {/if}
@@ -244,7 +250,11 @@
   {:else if failure}
     <p class="note" role="status">
       {failure}
-      <button class="link" onclick={() => load(needId)} type="button">
+      <button
+        class="link"
+        onclick={() => generate(needId, false)}
+        type="button"
+      >
         Spróbuj ponownie
       </button>
     </p>
@@ -253,28 +263,34 @@
       {slow ? "Układanie podpowiedzi…" : ""}
     </p>
   {:else}
-    <button
-      class="ask cladd-clickable"
-      onclick={() => load(needId)}
-      type="button"
-    >
-      <span class="flex items-center gap-2">
-        <svg
-          aria-hidden="true"
-          fill="none"
-          height="15"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="1.75"
-          viewBox="0 0 24 24"
-          width="15"
-        >
-          <path d="M4 6h10M4 12h16M4 18h7" />
-        </svg>
-        Podpowiedz odpowiedź
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <button
+        class="ask cladd-clickable"
+        onclick={() => generate(needId, false)}
+        type="button"
+      >
+        <span class="flex items-center gap-2">
+          <svg
+            aria-hidden="true"
+            fill="none"
+            height="15"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.75"
+            viewBox="0 0 24 24"
+            width="15"
+          >
+            <path d="M4 6h10M4 12h16M4 18h7" />
+          </svg>
+          Podpowiedz odpowiedź
+          <span class="ai">AI</span>
+        </span>
+      </button>
+      <span class="note">
+        Model ułoży fragmenty z&nbsp;treści zgłoszenia. Nic nie wyśle się samo.
       </span>
-    </button>
+    </div>
   {/if}
 </div>
 
@@ -298,11 +314,29 @@
 
   .label {
     float: left;
+    display: flex;
+    gap: 6px;
+    align-items: center;
     width: 100%;
     margin-bottom: 6px;
     font-size: 12px;
     font-weight: 500;
     color: var(--hm-ink-soft);
+  }
+
+  .ai {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    padding: 0 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--hm-ink-soft);
+    letter-spacing: 0.08em;
+    border: 1px solid currentColor;
+    border-radius: 4px;
   }
 
   .slip {

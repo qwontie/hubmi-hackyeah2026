@@ -478,7 +478,7 @@
         })),
       "-",
       {
-        label: "Napisz e-mail",
+        label: "Otwórz w programie pocztowym",
         run: () => {
           location.href = `mailto:${signup.contact_email}`;
         },

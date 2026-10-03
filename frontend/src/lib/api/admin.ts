@@ -1,6 +1,15 @@
 import { api, type Params } from "$lib/api/client";
 
-export type NeedStatus = "new" | "answered" | "closed";
+export type NeedStatus = "new" | "answered" | "closed" | "junk";
+
+export interface NeedCounts {
+  answered: number;
+  closed: number;
+  junk: number;
+  total: number;
+  unread: number;
+  waiting: number;
+}
 
 export interface Page<T> {
   items: T[];
@@ -87,6 +96,7 @@ export interface AdminCluster {
   summary: string;
   summary_stale?: boolean;
   title: string;
+  title_locked?: boolean;
   waiting?: number;
 }
 
@@ -109,6 +119,9 @@ export const listNeeds = (
     { per_page: 100, ...params },
     signal
   );
+
+export const needCounts = (signal?: AbortSignal) =>
+  api.get<NeedCounts>("/admin/needs/counts", undefined, signal);
 
 export const getNeed = (id: string, signal?: AbortSignal) =>
   api.get<AdminNeedDetail>(`/admin/needs/${id}`, undefined, signal);
@@ -142,6 +155,9 @@ export const splitCluster = (id: string, needIds: string[]) =>
 
 export const refreshCluster = (id: string) =>
   api.post<AdminCluster>(`/admin/clusters/${id}/refresh`);
+
+export const renameCluster = (id: string, title: string) =>
+  api.patch<AdminCluster>(`/admin/clusters/${id}`, { title });
 
 export interface Category {
   count: number;
@@ -562,9 +578,20 @@ export interface ReplySuggestions {
   generated_at: string;
 }
 
-export const replySuggestions = (id: string, signal?: AbortSignal) =>
-  api.post<ReplySuggestions>(
+export const storedReplySuggestions = (id: string, signal?: AbortSignal) =>
+  api.get<ReplySuggestions | undefined>(
     `/admin/needs/${id}/reply-suggestions`,
+    undefined,
+    signal
+  );
+
+export const replySuggestions = (
+  id: string,
+  refresh: boolean,
+  signal?: AbortSignal
+) =>
+  api.post<ReplySuggestions>(
+    `/admin/needs/${id}/reply-suggestions${refresh ? "?refresh=true" : ""}`,
     undefined,
     signal
   );
@@ -755,3 +782,91 @@ export interface ContactProfile {
 
 export const contactProfile = (email: string) =>
   api.post<ContactProfile>("/admin/contact-profile", { email });
+
+export interface GrantSubscriber {
+  confirmed_at: string | null;
+  consent_at: string;
+  created_at: string;
+  email: string;
+  failed: number;
+  id: string;
+  sent: number;
+  state: "pending" | "confirmed" | "unsubscribed";
+  unsubscribed_at: string | null;
+}
+
+export interface GrantSubscriberList {
+  items: GrantSubscriber[];
+  totals: {
+    confirmed: number;
+    failed_deliveries: number;
+    pending: number;
+    unsubscribed: number;
+  };
+}
+
+export const grantSubscribers = (signal?: AbortSignal) =>
+  api.get<GrantSubscriberList>("/admin/grant-subscribers", undefined, signal);
+
+export const removeGrantSubscriber = (id: string) =>
+  api.del(`/admin/grant-subscribers/${id}`);
+
+export interface AdminAdaptation {
+  context: string;
+  created_at: string;
+  id: string;
+  innovation: { slug: string; title: string };
+  institution: { name: string; slug: string };
+  place: string;
+  powiat: string | null;
+  service_name: string;
+  share_path: string;
+}
+
+export interface AdaptationPlan {
+  combine: { lead: string | null; slug: string; title: string; why: string }[];
+  cost_drivers: string[];
+  local_context?: string | null;
+  local_facts?: {
+    label: string;
+    malopolska?: string | null;
+    source?: string | null;
+    value: string;
+    year?: number | null;
+  }[];
+  measures: string[];
+  partners: string[];
+  regional_challenges?: { slug: string; summary?: string; title: string }[];
+  risks: { mitigation: string; risk: string }[];
+  service_name: string;
+  staff: string[];
+  steps: { description: string; title: string }[];
+  summary: string;
+  target_group: string;
+  to_check: string[];
+}
+
+export interface Adaptation {
+  context: string;
+  created_at: string;
+  id: string;
+  innovation: { slug: string; title: string };
+  institution: { name: string; slug: string };
+  place: string;
+  plan: AdaptationPlan;
+  powiat: string | null;
+  share_path: string;
+}
+
+export const listAdaptations = (
+  params: { innovation?: string; institution_type?: string; powiat?: string },
+  signal?: AbortSignal
+) =>
+  api.get<Page<AdminAdaptation>>(
+    "/admin/adaptations",
+    { per_page: 100, ...params },
+    signal
+  );
+
+export const getAdaptation = (id: string, signal?: AbortSignal) =>
+  api.get<Adaptation>(`/adaptations/${id}`, undefined, signal);

@@ -152,7 +152,7 @@
               <rect height="14" rx="2.5" width="18" x="3" y="5" />
               <path d="m4 7 8 6 8-6" />
             </svg>
-            Napisz e-mail
+            Otwórz w&nbsp;programie pocztowym
           </span>
         </a>
         <button class="ghost cladd-clickable" onclick={copy} type="button">

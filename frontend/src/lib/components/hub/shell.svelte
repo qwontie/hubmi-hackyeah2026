@@ -136,7 +136,9 @@
           Dziennik potrzeb
           {#if inbox.newCount > 0}
             <span class="font-semibold text-hm-stamp text-xs tabular"
-              >{inbox.newCount}<span class="sr-only"> nowych</span></span
+              >{inbox.newCount}<span class="sr-only">
+                czekają na odpowiedź</span
+              ></span
             >
           {/if}
         </a>

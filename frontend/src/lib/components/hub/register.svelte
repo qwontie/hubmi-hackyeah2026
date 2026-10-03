@@ -47,7 +47,7 @@
       >
         <span class="nr mono-num">{registerNumber(need.number)}</span>
         <span class="grid min-w-0 gap-[3px]">
-          <span class="tx">{nbsp(need.title || need.text)}</span>
+          <span class="tx">{nbsp(need.text)}</span>
           <span class="text-hm-ink-soft text-xs tabular">
             {stamp(need.created_at)}{need.powiat ? ` · ${powiatName(need.powiat, powiats.names)}` : ""}{showFolder && need.cluster ? ` · ${folderTitle(need.cluster)}` : ""}{(need.unread ?? 0) > 0 ? ` · ${need.unread} ${plural(need.unread ?? 0, "nowa wiadomość", "nowe wiadomości", "nowych wiadomości")}` : ""}
           </span>
@@ -120,7 +120,8 @@
     font-weight: 560;
   }
 
-  .is-closed .tx {
+  .is-closed .tx,
+  .is-junk .tx {
     color: var(--hm-ink-soft);
   }
 

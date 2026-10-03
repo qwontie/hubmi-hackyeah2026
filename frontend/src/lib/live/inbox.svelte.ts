@@ -3,6 +3,8 @@ import {
   type AdminNeed,
   listClusters,
   listNeeds,
+  type NeedCounts,
+  needCounts,
 } from "$lib/api/admin";
 import { live } from "$lib/live/stream.svelte";
 
@@ -33,6 +35,7 @@ function persist(seen: Set<string>): boolean {
 class Inbox {
   needs = $state<AdminNeed[]>([]);
   clusters = $state<AdminCluster[]>([]);
+  counts = $state<NeedCounts | null>(null);
   total = $state(0);
   needsError = $state<Error | null>(null);
   clustersError = $state<Error | null>(null);
@@ -47,8 +50,15 @@ class Inbox {
     }
     this.#started = true;
     live.start();
-    live.on("need.created", (data) => this.#upsert(data as AdminNeed, true));
-    live.on("need.updated", (data) => this.#upsert(data as AdminNeed, false));
+    live.on("need.created", (data) => {
+      this.#upsert(data as AdminNeed, true);
+      this.#recount();
+    });
+    live.on("need.updated", (data) => {
+      this.#upsert(data as AdminNeed, false);
+      this.#recount();
+    });
+    live.on("message.created", () => this.#recount());
     live.on("cluster.updated", (data) =>
       this.#upsertCluster(data as AdminCluster)
     );
@@ -61,8 +71,32 @@ class Inbox {
   }
 
   async refresh() {
-    await Promise.all([this.#loadNeeds(), this.#loadClusters()]);
+    await Promise.all([
+      this.#loadNeeds(),
+      this.#loadClusters(),
+      this.#loadCounts(),
+    ]);
     this.loaded = true;
+  }
+
+  #recountTimer: ReturnType<typeof setTimeout> | null = null;
+
+  #recount() {
+    if (this.#recountTimer) {
+      clearTimeout(this.#recountTimer);
+    }
+    this.#recountTimer = setTimeout(() => {
+      this.#recountTimer = null;
+      this.#loadCounts();
+    }, 400);
+  }
+
+  async #loadCounts() {
+    try {
+      this.counts = await needCounts();
+    } catch {
+      this.counts = this.counts ?? null;
+    }
   }
 
   async #loadNeeds() {
@@ -88,6 +122,13 @@ class Inbox {
 
   #upsert(need: AdminNeed, fresh: boolean) {
     const index = this.needs.findIndex((n) => n.id === need.id);
+    if (need.status === "junk") {
+      if (index !== -1) {
+        this.needs = this.needs.filter((n) => n.id !== need.id);
+        this.total = Math.max(0, this.total - 1);
+      }
+      return;
+    }
     if (index === -1) {
       this.needs = [need, ...this.needs];
       this.total += 1;
@@ -115,9 +156,17 @@ class Inbox {
 
   patch(need: Partial<AdminNeed> & { id: string }) {
     const index = this.needs.findIndex((n) => n.id === need.id);
-    if (index !== -1) {
+    if (index === -1) {
+      if (need.status && need.status !== "junk" && "text" in need) {
+        this.#upsert(need as AdminNeed, false);
+      }
+    } else if (need.status === "junk") {
+      this.needs = this.needs.filter((n) => n.id !== need.id);
+      this.total = Math.max(0, this.total - 1);
+    } else {
       this.needs[index] = { ...this.needs[index], ...need };
     }
+    this.#recount();
   }
 
   markSeen(id: string) {
@@ -135,7 +184,21 @@ class Inbox {
   }
 
   get newCount(): number {
-    return this.needs.filter((n) => n.status === "new").length;
+    return (
+      this.counts?.waiting ??
+      this.needs.filter((n) => n.status === "new").length
+    );
+  }
+
+  get answeredCount(): number {
+    return (
+      this.counts?.answered ??
+      this.needs.filter((n) => n.status === "answered").length
+    );
+  }
+
+  get totalCount(): number {
+    return this.counts?.total ?? Math.max(this.total, this.needs.length);
   }
 }
 

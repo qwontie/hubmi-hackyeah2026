@@ -44,7 +44,7 @@
 
   const listed = $derived(inbox.needs.find((n) => n.id === id) ?? null);
   const need = $derived<AdminNeed | null>(detail ?? listed);
-  const statuses: NeedStatus[] = ["new", "answered", "closed"];
+  const statuses: NeedStatus[] = ["new", "answered", "closed", "junk"];
 
   async function load(target: string) {
     controller?.abort();
@@ -211,6 +211,12 @@
     button?.click();
   }
 
+  const TEMPLATE_REASON = "Pasuje do opisanego problemu: ";
+  const plainReason = (reason: string) =>
+    reason.startsWith(TEMPLATE_REASON)
+      ? reason.slice(TEMPLATE_REASON.length)
+      : reason;
+
   const deliveryWord = (m: Message) => {
     if (m.direction === "from_author") {
       return "";
@@ -289,19 +295,27 @@
 
       <p class="reading">{nbsp(need.text)}</p>
 
-      <fieldset class="seg">
-        <legend class="sr-only">Stan potrzeby</legend>
-        {#each statuses as s (s)}
-          <button
-            aria-pressed={need.status === s}
-            data-status={s}
-            onclick={(event) => changeStatus(s, event)}
-            type="button"
-          >
-            {statusLabel[s]}
-          </button>
-        {/each}
-      </fieldset>
+      <div class="grid gap-1.5">
+        <fieldset class="seg">
+          <legend class="sr-only">Stan potrzeby</legend>
+          {#each statuses as s (s)}
+            <button
+              aria-pressed={need.status === s}
+              data-status={s}
+              onclick={(event) => changeStatus(s, event)}
+              type="button"
+            >
+              {statusLabel[s]}
+            </button>
+          {/each}
+        </fieldset>
+        {#if need.status === "junk"}
+          <p class="text-[13px] text-hm-ink-soft">
+            Nie dotyczy: wpis nie liczy się w&nbsp;teczkach, na mapie ani
+            w&nbsp;statystykach. Zmień stan, aby go przywrócić.
+          </p>
+        {/if}
+      </div>
 
       {#if loadError}
         <ErrorState class="py-4" error={loadError} retry={() => load(id)} />
@@ -323,7 +337,7 @@
                   <span class="text-right text-hm-ink-soft text-xs tabular"
                     >{Math.round(m.score * 100)}%</span
                   >
-                  <span class="reason">{m.reason}</span>
+                  <span class="reason">{plainReason(m.reason)}</span>
                 </li>
               {/each}
             </ol>
@@ -360,12 +374,7 @@
           <h3 class="font-semibold text-[13px]">
             <label for="reply">Odpowiedź do autora</label>
           </h3>
-          <ReplyBuilder
-            auto={detail.status === "new" &&
-              !detail.messages.some((m) => m.direction === "to_author")}
-            needId={detail.id}
-            bind:body
-          />
+          <ReplyBuilder needId={detail.id} bind:body />
           <div class="reply">
             <textarea
               id="reply"
