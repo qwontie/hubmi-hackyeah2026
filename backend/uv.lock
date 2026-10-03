@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -686,6 +686,7 @@ dependencies = [
     { name = "dishka" },
     { name = "fastapi" },
     { name = "greenlet" },
+    { name = "httpx" },
     { name = "pgvector" },
     { name = "pydantic-ai-slim", extra = ["google"] },
     { name = "pydantic-settings" },
@@ -710,6 +711,7 @@ requires-dist = [
     { name = "dishka", specifier = ">=1.10.1" },
     { name = "fastapi", specifier = ">=0.139.0" },
     { name = "greenlet", specifier = ">=3.5.3" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "pgvector", specifier = ">=0.5.0" },
     { name = "pydantic-ai-slim", extras = ["google"], specifier = ">=2.15.0" },
     { name = "pydantic-settings", specifier = ">=2.14.2" },

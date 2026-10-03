@@ -1,3 +1,24 @@
 from .admin_user import AdminUser
+from .ai_call import AiCall
+from .category import Category
+from .import_run import ImportRun, ImportStatus, ImportTrigger
+from .innovation import EMBEDDING_DIMENSIONS, Innovation, InnovationStatus
+from .match_result import MatchResult
+from .need import Need, NeedCluster, NeedOrigin, NeedStatus
 
-__all__ = ["AdminUser"]
+__all__ = [
+    "EMBEDDING_DIMENSIONS",
+    "AdminUser",
+    "AiCall",
+    "Category",
+    "ImportRun",
+    "ImportStatus",
+    "ImportTrigger",
+    "Innovation",
+    "InnovationStatus",
+    "MatchResult",
+    "Need",
+    "NeedCluster",
+    "NeedOrigin",
+    "NeedStatus",
+]
