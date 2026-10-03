@@ -11,6 +11,8 @@ from .schemas import (
     AiSpend,
     Bucket,
     ClusterTrend,
+    FeedbackStats,
+    InnovationFeedback,
     InnovationUsage,
     Period,
     Range,
@@ -155,6 +157,37 @@ ORDER BY days.start
 """)
 
 
+FEEDBACK_SQL = text("""
+SELECT
+    count(*) FILTER (WHERE kind = 'fits') AS fits,
+    count(*) FILTER (WHERE kind = 'does_not_fit') AS does_not_fit,
+    count(*) FILTER (WHERE kind = 'improvement') AS improvements
+FROM feedback
+WHERE created_at >= :start AND created_at < :end
+""")
+
+SIGNUPS_SQL = text("""
+SELECT count(*) AS test_signups
+FROM test_signup
+WHERE created_at >= :start AND created_at < :end
+""")
+
+REJECTED_SQL = text("""
+SELECT
+    i.slug,
+    i.title,
+    count(*) FILTER (WHERE f.kind = 'fits') AS fits,
+    count(*) FILTER (WHERE f.kind = 'does_not_fit') AS does_not_fit
+FROM feedback f
+JOIN innovation i ON i.id = f.innovation_id
+WHERE f.created_at >= :start AND f.created_at < :end
+GROUP BY i.slug, i.title
+HAVING count(*) FILTER (WHERE f.kind = 'does_not_fit') > 0
+ORDER BY does_not_fit DESC, fits ASC, i.title
+LIMIT :limit
+""")
+
+
 def period_range(period: Period, now: datetime | None = None) -> Range:
     zone = ZoneInfo(TIMEZONE)
     local_now = (now or datetime.now(UTC)).astimezone(zone)
@@ -231,6 +264,23 @@ async def ai_spend(session: AsyncSession, bounds: dict[str, Any]) -> AiSpend:
     )
 
 
+async def feedback_stats(
+    session: AsyncSession, bounds: dict[str, Any]
+) -> FeedbackStats:
+    votes = (await rows(session, FEEDBACK_SQL, bounds))[0]
+    signups = (await rows(session, SIGNUPS_SQL, bounds))[0]["test_signups"]
+    rejected = await rows(session, REJECTED_SQL, {**bounds, "limit": LIST_LIMIT})
+    cast = votes["fits"] + votes["does_not_fit"]
+    return FeedbackStats(
+        fits=votes["fits"],
+        does_not_fit=votes["does_not_fit"],
+        fit_share=round(votes["fits"] / cast, 4) if cast else None,
+        improvements=votes["improvements"],
+        test_signups=signups,
+        most_rejected=[InnovationFeedback.model_validate(row) for row in rejected],
+    )
+
+
 async def collect(
     session: AsyncSession, period: Period, powiat_names: dict[str, str]
 ) -> Stats:
@@ -284,5 +334,6 @@ async def collect(
         top_clusters=top,
         growing_clusters=growing,
         top_innovations=innovations,
+        feedback=await feedback_stats(session, bounds),
         ai=await ai_spend(session, bounds),
     )

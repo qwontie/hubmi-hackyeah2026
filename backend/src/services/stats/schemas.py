@@ -91,6 +91,22 @@ class AiSpend(BaseModel):
     per_day: list[AiDay]
 
 
+class InnovationFeedback(BaseModel):
+    slug: str
+    title: str
+    fits: int
+    does_not_fit: int
+
+
+class FeedbackStats(BaseModel):
+    fits: int
+    does_not_fit: int
+    fit_share: float | None
+    improvements: int
+    test_signups: int
+    most_rejected: list[InnovationFeedback]
+
+
 class Stats(BaseModel):
     range: Range
     totals: Totals
@@ -101,4 +117,5 @@ class Stats(BaseModel):
     top_clusters: list[ClusterTrend]
     growing_clusters: list[ClusterTrend]
     top_innovations: list[InnovationUsage]
+    feedback: FeedbackStats
     ai: AiSpend
