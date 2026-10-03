@@ -138,7 +138,7 @@ async def _save(
         return need, cluster
 
 
-async def enrich_need(need_id: uuid.UUID) -> bool:
+async def enrich_need(need_id: uuid.UUID) -> bool | None:
     async with session_scope() as session:
         need = await session.get(Need, need_id)
         if need is None:
@@ -167,7 +167,9 @@ async def enrich_need(need_id: uuid.UUID) -> bool:
     bus.publish("need.updated", need_payload(need, cluster, await _matches(need_id)))
     if cluster is not None and cluster.summary_stale:
         schedule_summary(cluster.id)
-    return need.cluster_id is not None or need.status == NeedStatus.JUNK
+    if need.cluster_id is not None or need.status == NeedStatus.JUNK:
+        return True
+    return None if not titled else False
 
 
 async def _guarded(need_id: uuid.UUID) -> bool | None:

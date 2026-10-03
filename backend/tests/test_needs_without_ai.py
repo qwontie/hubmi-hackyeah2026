@@ -214,7 +214,7 @@ async def test_no_group_is_named_with_the_residents_own_words(
         )
         created_needs.append(outcome.need.id)
     monkeypatch.setattr(enrich, "run_agent", model_down)
-    assert await enrich.enrich_need(outcome.need.id) is False
+    assert await enrich.enrich_need(outcome.need.id) is None
     async with session_scope() as session:
         stored = await session.get(Need, outcome.need.id)
         assert stored is not None
