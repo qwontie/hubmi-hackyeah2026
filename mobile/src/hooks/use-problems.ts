@@ -1,4 +1,4 @@
-import { type Href, router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/api/client";
 import type { Category, Problem } from "@/api/types";
@@ -7,8 +7,10 @@ import { useFilterParams } from "./use-knowledge";
 import { usePagedList } from "./use-paged-list";
 import { useResource } from "./use-resource";
 
-export const proposeHref = (problemId: string) =>
-  `/pomysl/nowy?problem=${encodeURIComponent(problemId)}` as Href;
+export const proposeHref = (problemId: string) => ({
+  params: { problem: problemId },
+  pathname: "/pomysl/nowy" as const,
+});
 
 export const problemStats = (problem: Problem) =>
   [
