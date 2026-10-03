@@ -19,12 +19,14 @@ H1 = '<h1 style="font-size:22px;margin:0 0 16px">'
 
 class StaffItemKind(StrEnum):
     NOTHING_FITS = "nothing_fits"
+    FORM_NEED = "form_need"
     IDEA = "idea"
     AUTHOR_MESSAGE = "author_message"
 
 
 STAFF_ITEM_LABELS = {
     StaffItemKind.NOTHING_FITS: "Zgłoszenie bez pasującej innowacji",
+    StaffItemKind.FORM_NEED: "Nowe zgłoszenie potrzeby z formularza",
     StaffItemKind.IDEA: "Nowy pomysł",
     StaffItemKind.AUTHOR_MESSAGE: "Nowa wiadomość od autora zgłoszenia",
 }

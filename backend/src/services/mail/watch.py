@@ -23,13 +23,19 @@ def payload(data: object) -> Mapping[str, Any]:
 
 def staff_item(message: Message) -> StaffItem | None:
     data = payload(message.data)
-    if message.topic in NEED_TOPICS and data.get("nothing_fits"):
-        return StaffItem(
-            kind=StaffItemKind.NOTHING_FITS,
-            key=f"need:{data['id']}",
-            text=str(data.get("text", "")),
-            url=admin_need_url(data["id"]),
-        )
+    if message.topic in NEED_TOPICS and data.get("status", "new") == "new":
+        kind = None
+        if data.get("nothing_fits"):
+            kind = StaffItemKind.NOTHING_FITS
+        elif message.topic == "need.created" and data.get("origin") == "form":
+            kind = StaffItemKind.FORM_NEED
+        if kind is not None:
+            return StaffItem(
+                kind=kind,
+                key=f"need:{data['id']}",
+                text=str(data.get("text", "")),
+                url=admin_need_url(data["id"]),
+            )
     if message.topic == "idea.created" and "id" in data:
         return StaffItem(
             kind=StaffItemKind.IDEA,
