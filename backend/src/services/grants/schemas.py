@@ -16,7 +16,8 @@ from utils.db.models import ApplicationStatus, GrantCallStatus
 SECTIONS_MAX = 20
 KEY_PATTERN = r"^[a-z][a-z0-9_]{1,40}$"
 
-Trimmed = StringConstraints(strip_whitespace=True)
+NO_NUL = r"^[^\x00]*$"
+Trimmed = StringConstraints(strip_whitespace=True, pattern=NO_NUL)
 Phase = Literal["upcoming", "open", "closed"]
 
 
@@ -189,7 +190,7 @@ class StartIn(Strict):
 class SectionsPatch(Strict):
     sections: dict[
         Annotated[str, Field(pattern=KEY_PATTERN)],
-        Annotated[str, Field(max_length=10000)],
+        Annotated[str, Field(max_length=10000, pattern=NO_NUL)],
     ] = Field(max_length=SECTIONS_MAX)
 
 

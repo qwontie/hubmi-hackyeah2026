@@ -20,13 +20,13 @@ def setup_logging() -> None:
                 markup=True,
                 rich_tracebacks=True,
                 enable_link_path=False,
-                tracebacks_show_locals=True,
+                tracebacks_show_locals=False,
                 omit_repeated_times=False,
                 show_time=env.log.show_time,
             )
         ],
     )
-    install(console=console, show_locals=True)
+    install(console=console, show_locals=False)
 
 
 logger = logging.getLogger("hubmi")

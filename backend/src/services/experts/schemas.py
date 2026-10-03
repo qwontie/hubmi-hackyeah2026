@@ -12,7 +12,7 @@ NOTE_MAX = 1000
 OPINION_MAX = 5000
 PRIVATE_NOTE_MAX = 2000
 
-Trimmed = StringConstraints(strip_whitespace=True)
+Trimmed = StringConstraints(strip_whitespace=True, pattern=r"^[^\x00]*$")
 
 
 class Strict(BaseModel):
