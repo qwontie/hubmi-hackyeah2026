@@ -26,7 +26,7 @@ from utils.logging import logger
 from .payloads import cluster_payload
 
 CLUSTER_SIMILARITY = 0.80
-TITLE_SIMILARITY = 0.88
+TITLE_SIMILARITY = 0.93
 TITLE_BATCH = 100
 SIMILAR_NEED = 0.80
 CLUSTER_LOCK_KEY = 0x48554D32
