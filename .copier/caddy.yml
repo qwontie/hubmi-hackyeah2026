@@ -1,0 +1,6 @@
+_commit: v0.1.2
+_src_path: https://git.kotikot.com/templates/caddy.git
+project_slug: hubmi
+routes:
+- api
+- frontend

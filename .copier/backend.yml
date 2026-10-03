@@ -1,0 +1,17 @@
+_commit: v0.4.0
+_src_path: https://git.kotikot.com/templates/backend-python.git
+author_email: ''
+author_name: h
+backend_services:
+- api
+database: postgres
+dynamic_config: false
+install_deps: true
+layout: part
+project_description: 'HubMi: social innovation matchmaking for the Malopolska Social
+    Innovation Hub'
+project_name: hubmi
+project_slug: hubmi
+serve_spa: false
+use_llm: true
+use_redis: false

@@ -1,0 +1,5 @@
+[environment]
+python = "backend/.venv"
+
+[src]
+exclude = ["docs", "backend/migrations"]

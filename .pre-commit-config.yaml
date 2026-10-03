@@ -1,0 +1,27 @@
+repos:
+  - repo: local
+    hooks:
+      - id: backend-fmt
+        name: backend fmt
+        entry: make -C backend fmt
+        language: system
+        files: ^backend/
+        pass_filenames: false
+      - id: backend-check
+        name: backend check
+        entry: make -C backend check
+        language: system
+        files: ^backend/
+        pass_filenames: false
+      - id: frontend-fmt
+        name: frontend fmt
+        entry: make -C frontend fmt
+        language: system
+        files: ^frontend/
+        pass_filenames: false
+      - id: frontend-check
+        name: frontend check
+        entry: make -C frontend check
+        language: system
+        files: ^frontend/
+        pass_filenames: false

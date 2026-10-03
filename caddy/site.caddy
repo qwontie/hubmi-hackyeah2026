@@ -1,0 +1,17 @@
+{$HUBMI_DOMAIN} {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy hubmi-api:8080 {
+			flush_interval -1
+		}
+	}
+
+	handle /admin* {
+		reverse_proxy hubmi-frontend:3000
+	}
+
+	handle {
+		respond 404
+	}
+}

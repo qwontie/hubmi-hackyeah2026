@@ -1,0 +1,11 @@
+_commit: v0.5.0
+_src_path: https://git.kotikot.com/templates/infra.git
+init_git: true
+layout: parts
+mcp_servers: []
+parts:
+- backend
+- frontend
+project_description: 'HubMi: social innovation matchmaking for the Malopolska Social
+    Innovation Hub'
+project_name: hubmi

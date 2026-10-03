@@ -1,0 +1,5 @@
+include:
+  - path: backend/docker-compose.yml
+    project_directory: .
+  - path: frontend/docker-compose.yml
+    project_directory: .

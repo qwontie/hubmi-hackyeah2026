@@ -1,0 +1,8 @@
+_commit: v0.4.2
+_src_path: https://git.kotikot.com/templates/frontend-svelte.git
+install_deps: true
+layout: part
+project_name: hubmi
+project_slug: hubmi
+serve: bun
+ui_library: shadcn

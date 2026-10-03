@@ -1,0 +1,22 @@
+services:
+  frontend:
+    networks:
+      default: {}
+      caddy:
+        aliases:
+          - hubmi-frontend
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  frontend-dev:
+    networks:
+      default: {}
+      caddy:
+        aliases:
+          - hubmi-frontend
+    ports:
+      - "127.0.0.1:3000:3000"
+
+networks:
+  caddy:
+    external: true

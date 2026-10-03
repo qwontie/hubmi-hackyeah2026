@@ -4,3 +4,9 @@
 .codex/hooks.json
 .cursor/hooks.json
 .DS_Store
+.env
+.env.*
+!.env.example
+docker-compose.override.yml
+.idea
+t/

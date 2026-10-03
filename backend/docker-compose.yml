@@ -1,0 +1,76 @@
+services:
+  api:
+    build: backend
+    image: hubmi/backend
+    profiles: [api, services]
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+      - path: backend/.env
+        required: false
+    environment:
+      RUN_ENVIRONMENT: prod
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ./backend/src:/app/src
+    command: [api]
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    networks:
+      default:
+      database:
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    profiles: [postgres, external]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB__USER}
+      POSTGRES_PASSWORD: ${DB__PASSWORD}
+      POSTGRES_DB: ${DB__DB_NAME}
+      PGPORT: ${DB__PORT}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB__USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      database:
+        aliases:
+          - ${DB__HOST}
+
+  migrator:
+    build: backend
+    image: hubmi/backend
+    profiles: [migrate]
+    env_file:
+      - path: .env
+        required: false
+      - path: backend/.env
+        required: false
+    environment:
+      RUN_ENVIRONMENT: prod
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/migrations:/app/migrations
+      - ./backend/alembic.ini:/app/alembic.ini
+    entrypoint: [alembic]
+    command: [upgrade, head]
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    networks:
+      database:
+
+volumes:
+  database:
+
+networks:
+  database:

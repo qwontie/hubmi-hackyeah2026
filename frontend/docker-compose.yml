@@ -1,0 +1,34 @@
+services:
+  frontend:
+    build: frontend
+    image: hubmi/frontend
+    profiles: [frontend, services]
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+      - path: frontend/.env
+        required: false
+    command: [build/index.js]
+
+  frontend-dev:
+    image: oven/bun:alpine
+    profiles: [frontend-dev]
+    restart: unless-stopped
+    working_dir: /app
+    env_file:
+      - path: .env
+        required: false
+      - path: frontend/.env
+        required: false
+    environment:
+      API_PROXY_TARGET: http://api:8080
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+      - frontend_svelte_kit:/app/.svelte-kit
+    command: [sh, -c, "bun install && bun run dev --host 0.0.0.0 --port 3000"]
+
+volumes:
+  frontend_node_modules:
+  frontend_svelte_kit:

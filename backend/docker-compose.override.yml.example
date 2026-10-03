@@ -1,0 +1,17 @@
+services:
+  api:
+    networks:
+      default: {}
+      caddy:
+        aliases:
+          - hubmi-api
+    ports:
+      - "127.0.0.1:8080:${API__PORT}"
+
+  postgres:
+    ports:
+      - "127.0.0.1:5432:${DB__PORT}"
+
+networks:
+  caddy:
+    external: true
