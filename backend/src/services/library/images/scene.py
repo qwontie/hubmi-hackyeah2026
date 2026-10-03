@@ -11,8 +11,10 @@ OUTPUT_RETRIES = 2
 FIELD_LIMIT = 1200
 
 FRAMING = (
-    "Keep the main subject inside the central 70 percent of the frame, with "
-    "calm empty ground around it so the picture can be cropped to a wide strip."
+    "Use a full-bleed composition that fills the canvas edge to edge. No frame, "
+    "border, margin, mat, inset picture, vignette, poster, card, or blank outer "
+    "background. Keep the main subject inside the central 70 percent so the image "
+    "can be cropped to a wide strip."
 )
 
 INSTRUCTIONS = """

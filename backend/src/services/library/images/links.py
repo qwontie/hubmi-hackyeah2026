@@ -9,7 +9,7 @@ SourceName = Literal["rops", "youtube", "generated"]
 LABELS = {
     ImageSource.ROPS.value: "Zdjęcie z materiałów ROPS",
     ImageSource.YOUTUBE.value: "Kadr z filmu ROPS",
-    ImageSource.GENERATED.value: "Ilustracja",
+    ImageSource.GENERATED.value: "Ilustracja AI",
 }
 
 
