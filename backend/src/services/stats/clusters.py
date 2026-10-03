@@ -11,6 +11,7 @@ from sqlmodel import select as entity_select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from services.needs import POWIATS
+from services.sql import fetch, unaccent_like
 from utils.db.models import Category, Need, NeedCluster, NeedStatus
 
 from .queries import TIMEZONE
@@ -77,11 +78,6 @@ def first_day() -> date:
     return datetime.now(ZoneInfo(TIMEZONE)).date() - timedelta(days=DAYS - 1)
 
 
-async def fetch(session: AsyncSession, statement: Any) -> list[Any]:  # noqa: ANN401
-    connection = await session.connection()
-    return list((await connection.execute(statement)).all())
-
-
 def recent_count() -> Any:  # noqa: ANN401
     since = datetime.combine(
         first_day() + timedelta(days=DAYS - RECENT_DAYS),
@@ -103,12 +99,7 @@ def conditions(query: ClusterQuery) -> list[ColumnElement[bool]]:
         found.append(col(NeedCluster.category_slug) == query.category)
     text = (query.q or "").strip()
     if text:
-        escaped = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        found.append(
-            func.hubmi_unaccent(col(NeedCluster.title)).ilike(
-                func.hubmi_unaccent(f"%{escaped}%"), escape="\\"
-            )
-        )
+        found.append(unaccent_like(col(NeedCluster.title), text))
     return found
 
 

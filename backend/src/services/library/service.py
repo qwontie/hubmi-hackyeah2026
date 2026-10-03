@@ -12,6 +12,7 @@ from api.errors import invalid, not_found
 from services.bus import bus
 from services.dialogue.audit import record
 from services.ingest import refresh_embeddings
+from services.sql import unaccent_like
 from utils.db.models import AdminUser, Category, Innovation, InnovationStatus
 from utils.logging import logger
 
@@ -108,12 +109,10 @@ def filters(query: InnovationQuery) -> list[ColumnElement[bool]]:
         found.append(edited if query.edited else ~edited)
     text = (query.q or "").strip()
     if text:
-        escaped = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        pattern = func.hubmi_unaccent(f"%{escaped}%")
         found.append(
             or_(
-                func.hubmi_unaccent(col(Innovation.title)).ilike(pattern, escape="\\"),
-                func.hubmi_unaccent(col(Innovation.lead)).ilike(pattern, escape="\\"),
+                unaccent_like(col(Innovation.title), text),
+                unaccent_like(col(Innovation.lead), text),
                 col(Innovation.slug) == text,
             )
         )
