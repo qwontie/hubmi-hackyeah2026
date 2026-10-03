@@ -1,15 +1,8 @@
 import { MessageCircleQuestion, Sparkles } from "lucide-react-native";
-import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { api, errorMessage } from "@/api/client";
-import type {
-  AssistAnswer,
-  AssistOut,
-  Canvas,
-  IdeaDraft,
-  IdeaOptions,
-} from "@/api/types";
+import type { Canvas, IdeaDraft, IdeaOptions } from "@/api/types";
 import { InnovationRow } from "@/features/innovation-row";
+import { useIdeaAssistant } from "@/hooks/use-idea";
 import { useTheme } from "@/theme/settings";
 import { radius, space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
@@ -60,45 +53,11 @@ export function IdeaAssistant({
   canvas,
   onCanvas,
 }: IdeaAssistantProps) {
-  const [result, setResult] = useState<AssistOut | null>(null);
-  const [answers, setAnswers] = useState<AssistAnswer[]>([]);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const run = async () => {
-    const fresh = (result?.questions ?? [])
-      .map((item) => ({
-        answer: (drafts[item.question] ?? "").trim(),
-        field: item.field,
-        question: item.question,
-      }))
-      .filter((item) => item.answer.length > 0);
-    const merged = { ...canvas };
-    for (const item of fresh) {
-      merged[item.field] = item.answer;
-    }
-    const nextAnswers = [
-      ...answers,
-      ...fresh.map(({ question, answer }) => ({ answer, question })),
-    ];
-    setBusy(true);
-    setError(null);
-    try {
-      const response = await api.assist(
-        { ...draft, canvas: merged },
-        nextAnswers
-      );
-      setAnswers(nextAnswers);
-      setDrafts({});
-      setResult(response);
-      onCanvas(response.canvas);
-    } catch (caught) {
-      setError(errorMessage(caught));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const { answer, busy, drafts, error, result, run } = useIdeaAssistant(
+    draft,
+    canvas,
+    onCanvas
+  );
 
   const total = options.canvas_fields.length;
   const done = result ? total - result.missing.length : 0;
@@ -130,12 +89,7 @@ export function IdeaAssistant({
                   key={item.question}
                   label={item.question}
                   multiline
-                  onChangeText={(value) =>
-                    setDrafts((current) => ({
-                      ...current,
-                      [item.question]: value,
-                    }))
-                  }
+                  onChangeText={(value) => answer(item.question, value)}
                   value={drafts[item.question] ?? ""}
                 />
               ))}

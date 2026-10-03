@@ -1,13 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
 import { BookOpen, Copy } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
-import { ApiError, api, errorMessage } from "@/api/client";
-import type { Adaptation, AdaptationPlan } from "@/api/types";
+import type { Adaptation } from "@/api/types";
 import { APP_NAME } from "@/config";
 import { InnovationRow } from "@/features/innovation-row";
 import { ReadAloudButton } from "@/features/read-aloud-button";
+import { PLAN_LISTS, planSpeech, useAdaptation } from "@/hooks/use-adaptation";
 import { formatDate } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
@@ -16,30 +16,6 @@ import { Notice } from "@/ui/notice";
 import { Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
-
-type Load =
-  | { kind: "loading" }
-  | { kind: "error"; message: string; missing: boolean }
-  | { kind: "done"; adaptation: Adaptation };
-
-const LISTS: { key: keyof AdaptationPlan; title: string }[] = [
-  { key: "staff", title: "Kogo potrzebujecie" },
-  { key: "partners", title: "Z kim współpracować" },
-  { key: "cost_drivers", title: "Od czego zależy koszt" },
-  { key: "measures", title: "Co mierzyć" },
-  { key: "to_check", title: "Do sprawdzenia u siebie" },
-];
-
-const planText = (plan: AdaptationPlan) =>
-  [
-    plan.service_name,
-    plan.summary,
-    `Dla kogo: ${plan.target_group}`,
-    "Jak zacząć:",
-    ...plan.steps.map(
-      (step, index) => `Krok ${index + 1}: ${step.title}. ${step.description}`
-    ),
-  ].join(" ");
 
 function Bullets({ items }: { items: string[] }) {
   const { colors } = useTheme();
@@ -101,7 +77,7 @@ function Plan({ adaptation }: { adaptation: Adaptation }) {
         </View>
         <Txt variant="lead">{plan.summary}</Txt>
         <View style={styles.actions}>
-          <ReadAloudButton text={planText(plan)} />
+          <ReadAloudButton text={planSpeech(plan)} />
           <CopyLink path={adaptation.share_path} />
         </View>
       </Sheet>
@@ -129,7 +105,7 @@ function Plan({ adaptation }: { adaptation: Adaptation }) {
             </View>
           </View>
         ) : null}
-        {LISTS.map(({ key, title }) => {
+        {PLAN_LISTS.map(({ key, title }) => {
           const items = plan[key] as string[];
           return items.length > 0 ? (
             <View
@@ -194,35 +170,14 @@ function Plan({ adaptation }: { adaptation: Adaptation }) {
 
 export default function AdaptationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [load, setLoad] = useState<Load>({ kind: "loading" });
-
-  useEffect(() => {
-    if (!id) {
-      return;
-    }
-    const abort = new AbortController();
-    api
-      .adaptation(id, abort.signal)
-      .then((adaptation) => setLoad({ adaptation, kind: "done" }))
-      .catch((caught: unknown) => {
-        if (caught instanceof Error && caught.name === "AbortError") {
-          return;
-        }
-        setLoad({
-          kind: "error",
-          message: errorMessage(caught),
-          missing: caught instanceof ApiError && caught.code === "not_found",
-        });
-      });
-    return () => abort.abort();
-  }, [id]);
+  const { state: load } = useAdaptation(id);
 
   return (
     <Screen>
       <Head>
         <title>
           {load.kind === "done"
-            ? `${load.adaptation.plan.service_name} · ${APP_NAME}`
+            ? `${load.data.plan.service_name} · ${APP_NAME}`
             : `Plan usługi · ${APP_NAME}`}
         </title>
       </Head>
@@ -254,7 +209,7 @@ export default function AdaptationScreen() {
           </View>
         </Notice>
       ) : null}
-      {load.kind === "done" ? <Plan adaptation={load.adaptation} /> : null}
+      {load.kind === "done" ? <Plan adaptation={load.data} /> : null}
     </Screen>
   );
 }

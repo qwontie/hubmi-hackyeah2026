@@ -1,14 +1,14 @@
+import { router } from "expo-router";
 import Head from "expo-router/head";
-import { RotateCcw, Send } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { MessageSquareText, RotateCcw, Send } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
-import { ApiError, api, errorMessage } from "@/api/client";
-import type { Canvas, IdeaCreated, IdeaOptions, Powiat } from "@/api/types";
+import type { IdeaCreated } from "@/api/types";
 import { APP_NAME } from "@/config";
 import { IdeaAssistant } from "@/features/idea-assistant";
 import { InnovationRow } from "@/features/innovation-row";
 import { Stamp } from "@/features/stamp";
-import { saveIdea } from "@/storage/ideas";
+import { useIdeaForm } from "@/hooks/use-idea";
+import { usePowiats } from "@/hooks/use-powiats";
 import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { Checkbox, TextField } from "@/ui/field";
@@ -17,60 +17,6 @@ import { Screen } from "@/ui/screen";
 import { Select } from "@/ui/select";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-type Field =
-  | "title"
-  | "essence"
-  | "for_whom"
-  | "contact_email"
-  | "contact_consent";
-type Errors = Partial<Record<Field, string | null>>;
-
-interface Form {
-  consent: boolean;
-  email: string;
-  essence: string;
-  forWhom: string;
-  powiat: string;
-  stage: string;
-  title: string;
-}
-
-const emptyForm: Form = {
-  consent: false,
-  email: "",
-  essence: "",
-  forWhom: "",
-  powiat: "",
-  stage: "idea",
-  title: "",
-};
-
-const validate = (form: Form): Errors => {
-  const email = form.email.trim();
-  return {
-    contact_consent:
-      email.length > 0 && !form.consent
-        ? "Zaznacz zgodę, żeby ROPS mógł odpisać na ten adres."
-        : null,
-    contact_email:
-      email.length > 0 && !EMAIL.test(email)
-        ? "Ten adres wygląda na niepełny. Sprawdź go, np. jan@poczta.pl."
-        : null,
-    essence:
-      form.essence.trim().length < 20
-        ? "Opisz pomysł w co najmniej 20 znakach."
-        : null,
-    for_whom:
-      form.forWhom.trim().length < 3 ? "Napisz, dla kogo jest pomysł." : null,
-    title:
-      form.title.trim().length < 5
-        ? "Nazwij pomysł w co najmniej 5 znakach."
-        : null,
-  };
-};
 
 function Created({
   created,
@@ -124,6 +70,16 @@ function Created({
         </View>
       ) : null}
       <Button
+        icon={MessageSquareText}
+        label="Rozmowa z ROPS o tym pomyśle"
+        onPress={() =>
+          router.push({
+            params: { id: created.id },
+            pathname: "/pomysl/[id]",
+          })
+        }
+      />
+      <Button
         icon={RotateCcw}
         label="Zgłoś kolejny pomysł"
         onPress={onReset}
@@ -134,80 +90,24 @@ function Created({
 }
 
 export default function IdeaScreen() {
-  const [options, setOptions] = useState<IdeaOptions | null>(null);
-  const [powiats, setPowiats] = useState<Powiat[]>([]);
-  const [form, setForm] = useState<Form>(emptyForm);
-  const [canvas, setCanvas] = useState<Partial<Canvas>>({});
-  const [errors, setErrors] = useState<Errors>({});
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [created, setCreated] = useState<IdeaCreated | null>(null);
-  const [round, setRound] = useState(0);
-
-  useEffect(() => {
-    const abort = new AbortController();
-    api
-      .ideaOptions(abort.signal)
-      .then(setOptions)
-      .catch(() => setOptions(null));
-    api
-      .powiats(abort.signal)
-      .then(setPowiats)
-      .catch(() => setPowiats([]));
-    return () => abort.abort();
-  }, []);
-
-  const set = (patch: Partial<Form>) =>
-    setForm((current) => ({ ...current, ...patch }));
-
-  const submit = async () => {
-    const problems = validate(form);
-    setErrors(problems);
-    if (Object.values(problems).some(Boolean)) {
-      return;
-    }
-    const email = form.email.trim();
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await api.createIdea({
-        essence: form.essence.trim(),
-        for_whom: form.forWhom.trim(),
-        stage: form.stage,
-        title: form.title.trim(),
-        ...(Object.keys(canvas).length > 0 ? { canvas } : {}),
-        ...(form.powiat ? { powiat: form.powiat } : {}),
-        ...(email ? { contact_consent: true, contact_email: email } : {}),
-      });
-      await saveIdea({
-        createdAt: new Date().toISOString(),
-        id: result.id,
-        number: result.number,
-        title: form.title.trim(),
-        token: result.edit_token,
-      }).catch(() => undefined);
-      setCreated(result);
-    } catch (caught) {
-      if (caught instanceof ApiError) {
-        const next: Errors = {};
-        for (const field of caught.fields) {
-          next[field.field as Field] = field.message;
-        }
-        setErrors(next);
-      }
-      setError(errorMessage(caught));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const reset = () => {
-    setForm(emptyForm);
-    setCanvas({});
-    setCreated(null);
-    setErrors({});
-    setRound((value) => value + 1);
-  };
+  const powiats = usePowiats();
+  const {
+    busy,
+    canvas,
+    created,
+    draft,
+    error,
+    errors,
+    form,
+    needsConsent,
+    options,
+    reset,
+    round,
+    set,
+    setCanvas,
+    stageOptions,
+    submit,
+  } = useIdeaForm();
 
   return (
     <Screen>
@@ -255,10 +155,7 @@ export default function IdeaScreen() {
               <Select
                 label="Na jakim etapie jest pomysł?"
                 onChange={(value) => set({ stage: value })}
-                options={options.stages.map((item) => ({
-                  label: item.name,
-                  value: item.slug,
-                }))}
+                options={stageOptions}
                 value={form.stage}
               />
             ) : null}
@@ -268,12 +165,7 @@ export default function IdeaScreen() {
             <Sheet>
               <IdeaAssistant
                 canvas={canvas}
-                draft={{
-                  essence: form.essence.trim() || undefined,
-                  for_whom: form.forWhom.trim() || undefined,
-                  stage: form.stage,
-                  title: form.title.trim() || undefined,
-                }}
+                draft={draft}
                 key={round}
                 onCanvas={setCanvas}
                 options={options}
@@ -283,16 +175,13 @@ export default function IdeaScreen() {
 
           <Sheet>
             <Heading level={2}>Wyślij pomysł</Heading>
-            {powiats.length > 0 ? (
+            {powiats.options.length > 0 ? (
               <Select
                 emptyLabel="Nie wybieram"
                 label="Powiat"
                 onChange={(value) => set({ powiat: value })}
                 optional
-                options={powiats.map((item) => ({
-                  label: item.name,
-                  value: item.slug,
-                }))}
+                options={powiats.options}
                 value={form.powiat}
               />
             ) : null}
@@ -308,7 +197,7 @@ export default function IdeaScreen() {
               textContentType="emailAddress"
               value={form.email}
             />
-            {form.email.trim().length > 0 ? (
+            {needsConsent ? (
               <Checkbox
                 checked={form.consent}
                 error={errors.contact_consent}
