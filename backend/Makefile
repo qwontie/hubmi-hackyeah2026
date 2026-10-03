@@ -41,7 +41,7 @@ revision:
 	$(COMPOSE) run --rm migrator revision --autogenerate -m "$(m)"
 
 script:
-	@$(COMPOSE) run --rm api scripts.$(word 2,$(MAKECMDGOALS)) $(wordlist 3,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+	@$(COMPOSE) run --rm -e AI_BATCH_MODE=1 api scripts.$(word 2,$(MAKECMDGOALS)) $(wordlist 3,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 
 %:
 	@:

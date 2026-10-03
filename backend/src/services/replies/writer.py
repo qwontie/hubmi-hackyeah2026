@@ -46,6 +46,7 @@ Zasady:
 """.strip()
 
 FORBIDDEN = (
+    (re.compile(r"\bPan(?:a|u|em|i|ią)?\b|\bPaństw", re.IGNORECASE), "forma Pan/Pani"),
     (re.compile(r"\d[\d\s().-]{6,}\d"), "numer telefonu lub inny długi numer"),
     (re.compile(r"\b\d{1,2}[./-]\d{1,2}([./-]\d{2,4})?\b"), "data"),
     (re.compile(r"\b\d{1,2}:\d{2}\b"), "godzina"),

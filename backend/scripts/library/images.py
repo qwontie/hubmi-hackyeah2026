@@ -12,7 +12,7 @@ from sqlmodel import col, select
 
 from dependencies.container import container
 from services.ai import AiBudgetExceededError, AiUnavailableError
-from services.ai.costs import DAILY_BUDGET_USD, spent_last_day
+from services.ai.costs import budget_limit, spent_last_day
 from services.library.images.pictures import UnusableImageError
 from services.library.images.service import find_image, spent_since, store
 from services.library.images.sources import client
@@ -49,8 +49,8 @@ def parse() -> argparse.Namespace:
     parser.add_argument(
         "--reserve",
         type=float,
-        default=1.5,
-        help="leave this many USD of the daily AI budget for residents",
+        default=0.5,
+        help="leave this many USD of the batch daily AI budget",
     )
     return parser.parse_args()
 
@@ -79,7 +79,7 @@ async def process(args: argparse.Namespace) -> int:
             if spent >= args.budget:
                 console.print(f"[red]budget reached[/] ${spent:.4f}")
                 break
-            if DAILY_BUDGET_USD - await spent_last_day() < args.reserve:
+            if budget_limit() - await spent_last_day() < args.reserve:
                 console.print("[red]daily AI budget is nearly used, run again later[/]")
                 break
             try:

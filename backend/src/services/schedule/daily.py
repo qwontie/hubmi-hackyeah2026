@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import func, select
 from sqlmodel import col
 
+from services.ai.costs import use_budget_scope
 from services.ingest import ImportAlreadyRunningError, run_import
 from services.knowledge import KnowledgeImportRunningError, run_knowledge_import
 from utils.db import session_scope
@@ -75,7 +76,8 @@ async def tick(settings: ScheduleSettings) -> None:
         last = await last_run(model)
         if last is None or last < slot:
             logger.info("schedule: %s due (slot %s)", model.__tablename__, slot)
-            await job()
+            with use_budget_scope("batch"):
+                await job()
 
 
 async def loop(settings: ScheduleSettings) -> None:

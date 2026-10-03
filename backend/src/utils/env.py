@@ -70,6 +70,8 @@ class MailSettings(Section):
 class LlmSettings(Section):
     model: str = "google-gla:gemini-2.5-flash"
     gemini_api_key: SecretStr = SecretStr("")
+    daily_budget_usd: float = Field(default=5.0, gt=0)
+    batch_daily_budget_usd: float = Field(default=8.0, gt=0)
 
 
 class Settings(BaseSettings):

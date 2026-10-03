@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, Index, Integer, Numeric, Text
+from sqlalchemy import Boolean, CheckConstraint, Column, Index, Integer, Numeric, Text
 from sqlmodel import Field, SQLModel
 
 from .base import created_at_col, uuid_pk
@@ -9,10 +9,17 @@ from .base import created_at_col, uuid_pk
 
 class AiCall(SQLModel, table=True):
     __tablename__ = "ai_call"
-    __table_args__ = (Index("ix_ai_call_created_at", "created_at"),)
+    __table_args__ = (
+        Index("ix_ai_call_created_at", "created_at"),
+        CheckConstraint("scope IN ('public', 'batch')", name="ck_ai_call_scope"),
+    )
 
     id: uuid.UUID = uuid_pk()
     kind: str = Field(sa_column=Column(Text, nullable=False, index=True))
+    scope: str = Field(
+        default="public",
+        sa_column=Column(Text, nullable=False, server_default="public", index=True),
+    )
     model: str = Field(sa_column=Column(Text, nullable=False))
     input_tokens: int = Field(default=0, sa_column=Column(Integer, nullable=False))
     output_tokens: int = Field(default=0, sa_column=Column(Integer, nullable=False))
