@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { A11yButton } from "@/features/a11y-controls";
 import { useTheme } from "@/theme/settings";
 import {
   contentWidth,
@@ -92,7 +93,7 @@ export const Screen = function Screen({
   const { colors, wide } = useTheme();
   const insets = useSafeAreaInsets();
   const chromeTop = wide ? WIDE_TOP : insets.top + space.sm;
-  const hasBar = Boolean(back || trailing);
+  const hasBar = Boolean(back || trailing) || !wide;
   const barSpace = hasBar ? minTarget + space.lg : 0;
   const bottomSpace =
     tabs && !wide ? tabBarSpace + insets.bottom : space.xxxl + insets.bottom;
@@ -150,7 +151,10 @@ export const Screen = function Screen({
             ) : (
               <View />
             )}
-            {trailing ?? null}
+            <View style={styles.trail}>
+              {trailing ?? null}
+              <A11yButton />
+            </View>
           </View>
         </View>
       ) : null}
@@ -207,5 +211,10 @@ const styles = StyleSheet.create({
   },
   root: {
     flex: 1,
+  },
+  trail: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.sm,
   },
 });

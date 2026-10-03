@@ -28,7 +28,7 @@ export default function ProblemScreen() {
           {state.data.summary}
         </Txt>
         <Txt tone="soft" variant="detail" weight="500">
-          {problemStats(state.data)}
+          {problemStats(state.data).replaceAll(" · ", "\u00a0· ")}
         </Txt>
         <View>
           <Button

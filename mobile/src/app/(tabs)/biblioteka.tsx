@@ -12,7 +12,6 @@ import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
 import { PageHead, Screen } from "@/ui/screen";
-import { AccessButton } from "@/ui/shell";
 import { Heading, Txt } from "@/ui/text";
 
 export default function LibraryScreen() {
@@ -34,7 +33,7 @@ export default function LibraryScreen() {
   } = useLibrary();
 
   return (
-    <Screen tabs trailing={<AccessButton />} width={900}>
+    <Screen tabs width={900}>
       <Head>
         <title>{`Biblioteka innowacji · ${APP_NAME}`}</title>
       </Head>

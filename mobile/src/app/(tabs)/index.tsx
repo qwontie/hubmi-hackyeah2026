@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntryChoice } from "@/features/entry-choice";
-import { MatchResults } from "@/features/match-results";
+import { MatchResults, type Registration } from "@/features/match-results";
 import { ProblemComposer } from "@/features/problem-composer";
 import { Sky, skyHeight } from "@/features/sky";
 import { useMatch } from "@/hooks/use-match";
@@ -117,6 +117,25 @@ const useDawn = (loading: boolean, done: boolean) => {
 
 const Fit = Platform.OS === "ios" ? View : ScrollView;
 
+interface RegistrationApi {
+  register: (input: { consent: boolean }) => Promise<void>;
+  registeredNeed: { at: Date; number: number | null } | null;
+  registering: boolean;
+  registrationError: string | null;
+}
+
+const registrationOf = (match: ReturnType<typeof useMatch>): Registration => {
+  const api = match as ReturnType<typeof useMatch> & Partial<RegistrationApi>;
+  return {
+    busy: api.registering === true,
+    error: api.registrationError ?? null,
+    need: api.registeredNeed ?? null,
+    onRegister: () => {
+      api.register?.({ consent: false }).catch(() => undefined);
+    },
+  };
+};
+
 const chromeTone = (
   asking: boolean,
   done: boolean,
@@ -158,8 +177,9 @@ export default function MatchScreen() {
       <View style={[styles.root, { backgroundColor: colors.ground }]}>
         <MatchResults
           at={state.at}
-          key={state.response.need.id}
+          key={state.at.getTime()}
           onReset={reset}
+          registration={registrationOf(match)}
           response={state.response}
           settle={reduceMotion ? 0 : motion.dawn - 200}
           text={text.trim()}
@@ -183,7 +203,6 @@ export default function MatchScreen() {
               wide ? null : (
                 <View style={styles.top}>
                   <Brand night />
-                  <AccessButton night />
                 </View>
               )
             }

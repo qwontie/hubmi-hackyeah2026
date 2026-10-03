@@ -40,9 +40,9 @@ function RegionMap({ onChange, value }: Omit<PowiatPickerProps, "options">) {
               fill={active ? colors.onNight : colors.nightRise}
               key={shape.slug}
               onPress={() => onChange(active ? "" : shape.slug)}
-              stroke={highContrast ? colors.onNight : colors.night}
+              stroke={active ? colors.night : colors.onNightSoft}
               strokeLinejoin="round"
-              strokeWidth={highContrast ? 3 : 5}
+              strokeWidth={highContrast ? 4 : 2.5}
             />
           );
         })}

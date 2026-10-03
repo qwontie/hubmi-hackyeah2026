@@ -14,7 +14,6 @@ import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
 import { PageHead, Screen } from "@/ui/screen";
-import { AccessButton } from "@/ui/shell";
 import { Heading, Txt } from "@/ui/text";
 
 const ownIdea = () => router.push("/pomysl/nowy");
@@ -39,7 +38,7 @@ export default function ProblemsScreen() {
   const empty = !(list.loading || list.error) && list.items.length === 0;
 
   return (
-    <Screen tabs trailing={<AccessButton />} width={900}>
+    <Screen tabs width={900}>
       <Head>
         <title>{`Problemy mieszkańców · ${APP_NAME}`}</title>
       </Head>

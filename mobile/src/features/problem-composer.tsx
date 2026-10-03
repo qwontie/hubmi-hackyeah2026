@@ -26,6 +26,7 @@ type Match = ReturnType<typeof useMatch>;
 const TITLE_ID = "problem-title";
 const ERROR_ID = "problem-error";
 const WASH = "rgba(252, 252, 255, 0.14)";
+const HINT = "rgba(218, 219, 252, 0.72)";
 const QUESTION = "Opowiedz, co się dzieje.";
 
 const web = Platform.OS === "web";
@@ -148,7 +149,7 @@ function Feedback({ match }: { match: Match }) {
 }
 
 function Words({ match }: { match: Match }) {
-  const { colors, wide, roomy, type } = useTheme();
+  const { colors, wide, roomy, type, highContrast } = useTheme();
   const { width } = useWindowDimensions();
   const [focused, setFocused] = useState(false);
   const [height, setHeight] = useState(0);
@@ -159,8 +160,10 @@ function Words({ match }: { match: Match }) {
     ? Math.round(64 * factor)
     : Math.min(type.display, Math.floor((width - 44) / 6.5));
   const questionSize = typed ? type.lead : display;
-  const size = wordsSize(text.length, wide, factor);
-  const line = Math.round(size * 1.22);
+  const hintSize = wide ? type.h3 : type.lead;
+  const size = typed ? wordsSize(text.length, wide, factor) : hintSize;
+  const line = Math.round(size * (typed ? 1.22 : 1.4));
+  const floor = Math.round(wordsSize(0, wide, factor) * 1.22) * 2 + space.lg;
   return (
     <View style={styles.words}>
       <Text
@@ -208,7 +211,7 @@ function Words({ match }: { match: Match }) {
         placeholder={
           "Na przykład: mama z\u00a0demencją wychodzi z\u00a0domu i\u00a0się gubi."
         }
-        placeholderTextColor={colors.onNightSoft}
+        placeholderTextColor={highContrast ? colors.onNightSoft : HINT}
         ref={inputRef}
         selectionColor={colors.onNightSoft}
         style={[
@@ -219,7 +222,7 @@ function Words({ match }: { match: Match }) {
             color: colors.onNight,
             fontFamily: typed ? fonts["600"] : fonts["400"],
             fontSize: size,
-            height: Math.max(line * (wide ? 3 : 4) + space.lg, height),
+            height: Math.max(floor, height),
             letterSpacing: typed ? size * -0.025 : 0,
             lineHeight: line,
           },

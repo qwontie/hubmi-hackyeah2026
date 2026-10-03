@@ -51,7 +51,7 @@ export function Select({
   night = false,
   compact = false,
 }: SelectProps) {
-  const { colors, borderWidth } = useTheme();
+  const { colors, borderWidth, reduceMotion } = useTheme();
   const ink = night ? colors.onNight : colors.ink;
   const soft = night ? colors.onNightSoft : colors.inkSoft;
   const [open, setOpen] = useState(false);
@@ -99,7 +99,7 @@ export function Select({
         </Txt>
       ) : null}
       <Modal
-        animationType="slide"
+        animationType={reduceMotion ? "none" : "slide"}
         onRequestClose={() => setOpen(false)}
         presentationStyle="pageSheet"
         visible={open}

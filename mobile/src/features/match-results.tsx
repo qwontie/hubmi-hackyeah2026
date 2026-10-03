@@ -1,8 +1,16 @@
 import { Link } from "expo-router";
+import { ArrowRight, CircleAlert } from "lucide-react-native";
 import { type Ref, useState } from "react";
-import { ScrollView, StyleSheet, type Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  type Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { MatchResponse } from "@/api/types";
+import { A11yButton } from "@/features/a11y-controls";
 import { ContactForm } from "@/features/contact-form";
 import { CardGrid, InnovationCard } from "@/features/innovation-card";
 import { ReadAloudPill } from "@/features/read-aloud-button";
@@ -18,13 +26,79 @@ import { BackPill, WIDE_TOP } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
-function NothingFits({
-  response,
-  empty,
-}: {
-  response: MatchResponse;
-  empty: boolean;
-}) {
+type SearchNeed = NonNullable<MatchResponse["need"]>;
+
+export interface Registration {
+  busy: boolean;
+  error: string | null;
+  need: { at: Date; number: number | null } | null;
+  onRegister: () => void;
+}
+
+function Unsolved({ registration }: { registration: Registration }) {
+  const { colors, wide } = useTheme();
+  const { busy, error, need, onRegister } = registration;
+  return (
+    <View
+      aria-live="polite"
+      style={[styles.unsolved, { backgroundColor: colors.night }]}
+      {...nightAttr(true)}
+    >
+      {need ? (
+        <View style={[styles.unsolvedDone, wide && styles.unsolvedDoneWide]}>
+          <Stamp at={need.at} number={need.number} word="PRZYJĘTO" />
+          <View style={styles.unsolvedText}>
+            <Heading level={3} night>
+              ROPS przyjął Twoje zgłoszenie
+            </Heading>
+            <Txt tone="onNightSoft">
+              Pracownik urzędu przeczyta opis. Odpowiedź znajdziesz w zakładce
+              Zgłoszenia, tam też możesz podać e-mail.
+            </Txt>
+            <Link asChild href="/zgloszenia">
+              <Pressable role="link" style={styles.unsolvedLink}>
+                <Txt tone="onNight" variant="label" weight="600">
+                  Przejdź do zgłoszeń
+                </Txt>
+                <ArrowRight aria-hidden color={colors.onNight} size={22} />
+              </Pressable>
+            </Link>
+          </View>
+        </View>
+      ) : (
+        <>
+          <View style={styles.unsolvedText}>
+            <Heading level={3} night size="h2">
+              Żadne z tych rozwiązań nie pomaga?
+            </Heading>
+            <Txt tone="onNightSoft" variant="lead">
+              Przekaż swój problem do ROPS. Pracownik urzędu przeczyta go i
+              odpowie.
+            </Txt>
+          </View>
+          {error ? (
+            <View style={styles.unsolvedError}>
+              <CircleAlert aria-hidden color={colors.onNight} size={24} />
+              <Txt style={styles.metaText} tone="onNight" weight="600">
+                {error}
+              </Txt>
+            </View>
+          ) : null}
+          <Button
+            busy={busy}
+            fill={!wide}
+            label="Mój problem nie został rozwiązany"
+            onPress={onRegister}
+            size="large"
+            variant="light"
+          />
+        </>
+      )}
+    </View>
+  );
+}
+
+function NothingFits({ need, empty }: { need: SearchNeed; empty: boolean }) {
   const { colors } = useTheme();
   const [open, setOpen] = useState(empty);
   const [done, setDone] = useState<{ email: string | null } | null>(null);
@@ -59,11 +133,11 @@ function NothingFits({
       </View>
       {open ? (
         <ContactForm
-          needId={response.need.id}
+          needId={need.id}
           nothingFits
           onDone={(email) => setDone({ email })}
           submitLabel="Wyślij do ROPS"
-          token={response.need.edit_token}
+          token={need.edit_token}
         />
       ) : (
         <Button label="Nic nie pasuje" onPress={() => setOpen(true)} />
@@ -75,6 +149,7 @@ function NothingFits({
 interface MatchResultsProps {
   at: Date;
   onReset: () => void;
+  registration: Registration;
   response: MatchResponse;
   settle: number;
   text: string;
@@ -88,7 +163,9 @@ export function MatchResults({
   text,
   onReset,
   settle,
+  registration,
 }: MatchResultsProps) {
+  const searchNeed = response.need as SearchNeed | null | undefined;
   const { colors, type, wide, roomy } = useTheme();
   const insets = useSafeAreaInsets();
   const count = response.results.length;
@@ -114,7 +191,10 @@ export function MatchResults({
     >
       <View style={[styles.bandBar, wide && styles.bandBarWide]}>
         <BackPill label="Nowe pytanie" night onPress={onReset} />
-        {empty ? null : <ReadAloudPill night text={matchSpeech(response)} />}
+        {wide && !empty ? (
+          <ReadAloudPill night text={matchSpeech(response)} />
+        ) : null}
+        <A11yButton night />
       </View>
       <Txt
         style={{
@@ -130,14 +210,16 @@ export function MatchResults({
       <Txt tone="onNightSoft" variant="label">
         {similar}
       </Txt>
-      <View style={wide ? styles.stampWide : styles.stamp}>
-        <Stamp
-          at={at}
-          delay={settle + 200}
-          number={response.need.number}
-          word="PRZYJĘTO"
-        />
-      </View>
+      {searchNeed ? (
+        <View style={wide ? styles.stampWide : styles.stamp}>
+          <Stamp
+            at={at}
+            delay={settle + 200}
+            number={searchNeed.number}
+            word="PRZYJĘTO"
+          />
+        </View>
+      ) : null}
     </View>
   );
 
@@ -171,7 +253,7 @@ export function MatchResults({
             featured
             index={1}
             innovation={first.innovation}
-            needId={response.need.id}
+            needId={searchNeed?.id}
             reason={first.reason}
           />
         </Rise>
@@ -185,7 +267,7 @@ export function MatchResults({
                 index={index + 2}
                 innovation={result.innovation}
                 key={result.innovation.slug}
-                needId={response.need.id}
+                needId={searchNeed?.id}
                 reason={result.reason}
               />
             ))}
@@ -193,7 +275,11 @@ export function MatchResults({
         </Rise>
       ) : null}
 
-      <NothingFits empty={empty} response={response} />
+      {searchNeed ? (
+        <NothingFits empty={empty} need={searchNeed} />
+      ) : (
+        <Unsolved registration={registration} />
+      )}
     </View>
   );
 
@@ -258,7 +344,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 44,
     borderTopRightRadius: 44,
     gap: space.xl,
-    paddingBottom: 40,
+    paddingBottom: 190,
     paddingHorizontal: 40,
     paddingTop: WIDE_TOP,
     width: 440,
@@ -342,5 +428,33 @@ const styles = StyleSheet.create({
     bottom: 64,
     position: "absolute",
     right: -64,
+  },
+  unsolved: {
+    borderRadius: radius.sheet,
+    gap: space.xl,
+    padding: space.xl,
+  },
+  unsolvedDone: {
+    gap: space.xl,
+  },
+  unsolvedDoneWide: {
+    alignItems: "center",
+    flexDirection: "row",
+  },
+  unsolvedError: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: space.sm + 2,
+  },
+  unsolvedLink: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: space.sm,
+    minHeight: minTarget,
+  },
+  unsolvedText: {
+    flex: 1,
+    gap: space.sm + 2,
   },
 });

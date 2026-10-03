@@ -10,6 +10,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { A11yControls } from "@/features/a11y-controls";
 import { useTheme } from "@/theme/settings";
 import { radius, space, tabBarSpace } from "@/theme/tokens";
 import { nightAttr } from "@/ui/night";
@@ -90,7 +91,7 @@ const usePanelPadding = (night: boolean): ViewStyle => {
       ? space.xl + radius.band
       : tabBarSpace + insets.bottom + space.sm,
     paddingHorizontal: space.xl - 2,
-    paddingTop: night ? insets.top + 132 : space.xxl,
+    paddingTop: night ? insets.top + 180 : space.xxl,
   };
 };
 
@@ -210,7 +211,10 @@ export function EntryChoice({
         {...nightAttr(true)}
       >
         {top}
-        <Heading level={1} night size="h3">
+        <View style={wide ? styles.controlsWide : undefined}>
+          <A11yControls night />
+        </View>
+        <Heading level={1} night size="h3" style={styles.hidden}>
           Z czym przychodzisz?
         </Heading>
       </View>
@@ -230,6 +234,15 @@ const styles = StyleSheet.create({
   body: {
     gap: space.md,
     marginTop: "auto",
+  },
+  controlsWide: {
+    maxWidth: 480,
+  },
+  hidden: {
+    height: 1,
+    overflow: "hidden",
+    position: "absolute",
+    width: 1,
   },
   over: {
     gap: space.lg,

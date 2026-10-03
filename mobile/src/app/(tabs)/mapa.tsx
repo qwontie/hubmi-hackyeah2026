@@ -1,6 +1,5 @@
-import { router } from "expo-router";
 import Head from "expo-router/head";
-import { Check, Clock, Lightbulb, MapPin } from "lucide-react-native";
+import { Check, Clock, MapPin } from "lucide-react-native";
 import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { MapPowiat } from "@/api/types";
@@ -11,11 +10,9 @@ import { pluralPl } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
 import { minTarget, space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
-import { ExternalLink } from "@/ui/external-link";
 import { Notice } from "@/ui/notice";
 import { Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
-import { AccessButton } from "@/ui/shell";
 import { Heading, Txt } from "@/ui/text";
 
 const openWords = (count: number) =>
@@ -101,42 +98,12 @@ function PowiatPanel({
         </View>
       ) : null}
 
-      {powiat.figures.length > 0 ? (
-        <View style={styles.group}>
-          <Heading level={3}>Dane ROPS o powiecie</Heading>
-          {powiat.figures.map((figure) => (
-            <View key={figure.key} style={styles.figure}>
-              <Txt>
-                {`${figure.label}: `}
-                <Txt weight="600">
-                  {`${figure.value.toLocaleString("pl-PL")}${figure.unit ? ` ${figure.unit}` : ""}`}
-                </Txt>
-                {figure.year ? ` (${figure.year})` : ""}
-              </Txt>
-              <ExternalLink
-                href={`${figure.source_url}#page=${figure.page}`}
-                label={`Źródło: ${figure.source_title}, s. ${figure.page}`}
-              />
-            </View>
-          ))}
-        </View>
-      ) : null}
-
       <Button
         icon={MapPin}
         label="Zgłoś problem w tym powiecie"
         onPress={onReport}
         size="large"
         variant="primary"
-      />
-      <Button
-        icon={Lightbulb}
-        label="Problemy z tego powiatu"
-        onPress={() =>
-          router.push({ params: { powiat: powiat.slug }, pathname: "/pomysl" })
-        }
-        role="link"
-        variant="quiet"
       />
     </Sheet>
   );
@@ -232,7 +199,7 @@ export default function MapScreen() {
   ) : null;
 
   return (
-    <Screen tabs trailing={<AccessButton />} width={wide ? 1180 : undefined}>
+    <Screen tabs width={wide ? 1180 : undefined}>
       <Head>
         <title>{`Mapa potrzeb · ${APP_NAME}`}</title>
       </Head>

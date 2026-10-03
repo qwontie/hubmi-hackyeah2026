@@ -128,7 +128,7 @@ export default function IdeaScreen() {
                 {problem ? "Twój pomysł na ten problem" : "Opisz swój pomysł"}
               </Heading>
               <Txt tone="soft" variant="lead">
-                Opisz go krótko. ROPS w Krakowie przeczyta każdy pomysł.
+                ROPS w Krakowie przeczyta każdy pomysł.
               </Txt>
             </View>
             {problem ? (

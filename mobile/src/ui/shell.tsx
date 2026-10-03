@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { APP_NAME } from "@/config";
+import { A11yButton, A11yPanel } from "@/features/a11y-controls";
 import { useChromeTone } from "@/theme/chrome";
 import { useTheme } from "@/theme/settings";
 import { minTarget, radius, space } from "@/theme/tokens";
@@ -86,6 +87,9 @@ const isActive = (pathname: string, href: string) => {
   }
   if (href === "/zgloszenia") {
     return pathname.startsWith("/zgloszeni");
+  }
+  if (href === "/pomysl") {
+    return pathname.startsWith("/pomysl") || pathname.startsWith("/problemy");
   }
   return pathname.startsWith(href);
 };
@@ -222,27 +226,34 @@ export function Brand({ night = false }: { night?: boolean }) {
 }
 
 export function AccessButton({ night = false }: { night?: boolean }) {
-  const { colors, wide } = useTheme();
-  if (wide) {
-    return null;
-  }
+  return <A11yButton night={night} />;
+}
+
+function WideA11y() {
+  const ink = useChromeInk();
+  const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const color = open || hovered ? ink.active : ink.rest;
   return (
-    <Link asChild href="/dostepnosc">
+    <>
       <Pressable
-        aria-label="Dostępność: wielkość tekstu i kontrast"
-        role="link"
-        style={styles.round}
+        aria-expanded={open}
+        onHoverIn={() => setHovered(true)}
+        onHoverOut={() => setHovered(false)}
+        onPress={() => setOpen(true)}
+        role="button"
+        style={[
+          styles.wideLink,
+          { backgroundColor: open ? ink.wash : "transparent" },
+        ]}
       >
-        <Glass interactive night={night} style={styles.roundGlass}>
-          <ALargeSmall
-            aria-hidden
-            color={night ? colors.onNight : colors.ink}
-            size={26}
-            strokeWidth={2}
-          />
-        </Glass>
+        <ALargeSmall aria-hidden color={color} size={20} strokeWidth={2} />
+        <Txt style={[styles.wideLabel, { color }]} weight="600">
+          Dostępność
+        </Txt>
       </Pressable>
-    </Link>
+      <A11yPanel onClose={() => setOpen(false)} open={open} />
+    </>
   );
 }
 
@@ -251,7 +262,7 @@ function WideLink({
   icon: Icon,
   label,
 }: {
-  href: TabHref | "/dostepnosc";
+  href: TabHref;
   icon: LucideIcon;
   label: string;
 }) {
@@ -317,7 +328,7 @@ export function WideChrome() {
             label={item.label}
           />
         ))}
-        <WideLink href="/dostepnosc" icon={ALargeSmall} label="Dostępność" />
+        <WideA11y />
       </Glass>
     </View>
   );

@@ -23,7 +23,8 @@ function Cell({
   onPress: () => void;
   wide: boolean;
 }) {
-  const { colors, highContrast } = useTheme();
+  const { colors, highContrast, type } = useTheme();
+  const scaled = type.body > 19;
   const [hovered, setHovered] = useState(false);
   const Icon = active ? Check : categoryIcon(item.slug);
   const ink = active ? colors.onStamp : colors.ink;
@@ -38,6 +39,7 @@ function Cell({
       style={[
         styles.cell,
         wide ? styles.cellWide : styles.cellNarrow,
+        wide && scaled && styles.cellScaled,
         {
           backgroundColor: active ? colors.stamp : rest,
           borderColor: highContrast ? colors.ink : colors.tone,
@@ -136,15 +138,18 @@ const styles = StyleSheet.create({
   cellNarrow: {
     maxWidth: 250,
   },
+  cellScaled: {
+    flexBasis: "48.5%",
+  },
   cellWide: {
-    flexBasis: "31.5%",
-    flexGrow: 1,
+    flexBasis: "32.4%",
     minHeight: 92,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: space.sm + 2,
+    justifyContent: "space-between",
+    rowGap: space.sm + 2,
   },
   icon: {
     flexShrink: 0,

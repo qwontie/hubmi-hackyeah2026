@@ -14,7 +14,6 @@ import { Button } from "@/ui/button";
 import { Notice } from "@/ui/notice";
 import { PageHead, Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
-import { AccessButton } from "@/ui/shell";
 import { Heading, Txt } from "@/ui/text";
 
 function NeedEntry({ need, last }: { need: StoredNeed; last: boolean }) {
@@ -130,7 +129,7 @@ function NeedEntry({ need, last }: { need: StoredNeed; last: boolean }) {
 export default function SubmissionsScreen() {
   const needs = useStoredNeeds();
   return (
-    <Screen tabs trailing={<AccessButton />}>
+    <Screen tabs>
       <Head>
         <title>{`Moje zgłoszenia · ${APP_NAME}`}</title>
       </Head>

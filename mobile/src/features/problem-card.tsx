@@ -53,7 +53,7 @@ export function ProblemCard({
           {problem.summary}
         </Txt>
         <Txt tone="soft" variant="small" weight="500">
-          {problemStats(problem)}
+          {problemStats(problem).replaceAll(" · ", "\u00a0· ")}
         </Txt>
       </View>
       <View style={styles.foot}>
