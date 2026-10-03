@@ -1,4 +1,5 @@
 from .admin_action import AdminAction
+from .adaptation import Adaptation
 from .admin_user import AdminUser
 from .ai_call import AiCall
 from .category import Category
@@ -13,6 +14,7 @@ from .test_signup import SignupStatus, TesterRole, TestSignup
 __all__ = [
     "EMBEDDING_DIMENSIONS",
     "AdminAction",
+    "Adaptation",
     "AdminUser",
     "AiCall",
     "Category",

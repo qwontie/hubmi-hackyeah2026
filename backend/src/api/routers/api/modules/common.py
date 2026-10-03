@@ -1,3 +1,5 @@
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, Query, status
@@ -5,6 +7,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import ApiError, invalid, not_found
 from api.limits import rate_limit
+from services.ai import AiBudgetExceededError, AiUnavailableError
 from services.modules import (
     MAX_PER_PAGE,
     clean,
@@ -13,12 +16,16 @@ from services.modules import (
     normalize_email,
     published_innovation,
 )
+from services.needs import POWIATS
 from utils.db.models import Innovation
+from utils.logging import logger
 
 CONSENT_MESSAGE = "Zaznacz zgodę na kontakt, abyśmy mogli odpisać."
 EMAIL_MESSAGE = "Wpisz poprawny adres e-mail."
 UNCLEAR_MESSAGE = "Nie rozumiemy tego tekstu. Napisz kilka słów pełnymi zdaniami."
 INNOVATION_MISSING = "Nie znaleziono takiej innowacji."
+AI_MESSAGE = "Asystent jest chwilowo niedostępny. Spróbuj ponownie za kilka minut."
+POWIAT_MESSAGE = "Wybierz powiat z listy."
 
 read_limit = rate_limit("modules_read", per_minute=120)
 
@@ -83,3 +90,24 @@ async def innovation_or_404(session: AsyncSession, slug: str) -> Innovation:
     if innovation is None:
         raise not_found(INNOVATION_MISSING)
     return innovation
+
+
+def powiat_name(field: str, slug: str | None) -> str | None:
+    if slug is None:
+        return None
+    name = POWIATS.get(slug)
+    if name is None:
+        error = invalid(field, POWIAT_MESSAGE)
+        raise error
+    return name
+
+
+@asynccontextmanager
+async def ai_guard() -> AsyncGenerator[None]:
+    try:
+        yield
+    except (AiUnavailableError, AiBudgetExceededError) as e:
+        logger.warning("ai unavailable: %r", e.__cause__ or e)
+        raise ApiError(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "ai_unavailable", AI_MESSAGE
+        ) from e
