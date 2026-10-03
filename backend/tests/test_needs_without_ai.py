@@ -1,4 +1,5 @@
 import uuid
+from datetime import timedelta
 from typing import Any
 
 import pytest
@@ -201,3 +202,24 @@ async def test_duplicate_never_overwrites_the_first_contact(
         stored = await session.get(Need, first.need.id)
         assert stored is not None
         assert stored.contact_email == "pierwszy@hubmi.test"
+
+
+@pytest.mark.usefixtures("fake_ai")
+async def test_no_group_is_named_with_the_residents_own_words(
+    monkeypatch: pytest.MonkeyPatch, created_needs: list[uuid.UUID]
+) -> None:
+    async with session_scope() as session:
+        outcome = await create_need(
+            session, unique_text(), powiat=None, contact_email=None
+        )
+        created_needs.append(outcome.need.id)
+    monkeypatch.setattr(enrich, "run_agent", model_down)
+    assert await enrich.enrich_need(outcome.need.id) is False
+    async with session_scope() as session:
+        stored = await session.get(Need, outcome.need.id)
+        assert stored is not None
+        assert stored.embedding is not None
+        assert stored.cluster_id is None
+    monkeypatch.setattr(enrich, "SWEEP_MIN_AGE", timedelta(0))
+    monkeypatch.setattr(enrich, "SWEEP_BATCH", 10_000)
+    assert outcome.need.id in await enrich.pending_needs()

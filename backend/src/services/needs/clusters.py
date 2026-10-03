@@ -27,6 +27,7 @@ from .payloads import cluster_payload
 
 CLUSTER_SIMILARITY = 0.80
 TITLE_SIMILARITY = 0.93
+PUBLIC_MIN_SIZE = 3
 TITLE_BATCH = 100
 SIMILAR_NEED = 0.80
 CLUSTER_LOCK_KEY = 0x48554D32
@@ -85,7 +86,10 @@ async def nearest_cluster(
     nearest = (
         await session.exec(
             select(NeedCluster, distance)
-            .where(col(NeedCluster.centroid).is_not(None))
+            .where(
+                col(NeedCluster.centroid).is_not(None),
+                col(NeedCluster.size) >= PUBLIC_MIN_SIZE,
+            )
             .order_by(distance)
             .limit(1)
         )

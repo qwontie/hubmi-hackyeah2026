@@ -156,7 +156,10 @@ async def enrich_need(need_id: uuid.UUID) -> bool:
             return False
     new_title = await _title(need_id, need_text) if wants_title else None
     title = new_title or title or first_words(need_text)
-    title_vector = None if grouped else await _title_vector(need_id, title)
+    titled = new_title is not None or not wants_title
+    title_vector = (
+        None if grouped or not titled else await _title_vector(need_id, title)
+    )
     saved = await _save(need_id, vector, new_title, title_vector)
     if saved is None:
         return True
