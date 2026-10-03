@@ -2,11 +2,11 @@ import uuid
 from typing import Annotated
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Query, Request, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import not_found
-from api.limits import rate_limit
+from api.limits import client_ip, rate_limit
 from api.security import AdminPerson
 from services.ai.models import chat_model_name
 from services.bus import bus
@@ -52,18 +52,15 @@ async def institution_types(_: ReadLimited) -> list[InstitutionOption]:
     ]
 
 
-@public.post(
-    "/innovations/{slug}/adapt",
-    status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(adapt_limit)],
-)
+@public.post("/innovations/{slug}/adapt", status_code=status.HTTP_201_CREATED)
 async def adapt(
-    slug: str, body: AdaptIn, session: FromDishka[AsyncSession]
+    slug: str, body: AdaptIn, request: Request, session: FromDishka[AsyncSession]
 ) -> AdaptationOut:
     innovation = await innovation_or_404(session, slug)
     place = required_text("place", body.place, minimum=PLACE_MIN).replace("\n", " ")
     context = required_text("context", body.context, minimum=CONTEXT_MIN)
     powiat = powiat_name("powiat", body.powiat)
+    adapt_limit.check(client_ip(request))
     candidates = await repository.candidates(session, innovation)
     async with ai_guard():
         try:
@@ -76,7 +73,8 @@ async def adapt(
                 candidates=candidates,
             )
         except UnclearRequestError:
-            raise unclear("context") from None
+            error = unclear("context")
+            raise error from None
     adaptation = await repository.store(
         session,
         innovation=innovation,

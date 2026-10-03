@@ -118,7 +118,9 @@ def sanitize(plan: ServicePlan, sources: Sources) -> ServicePlan:
             "cost_drivers": sources.clean_list(plan.cost_drivers),
             "measures": sources.clean_list(plan.measures),
             "risks": [
-                r for r in plan.risks if not sources.invented(f"{r.risk} {r.mitigation}")
+                r
+                for r in plan.risks
+                if not sources.invented(f"{r.risk} {r.mitigation}")
             ],
             "combine": [c for c in plan.combine if not sources.invented(c.why)],
             "to_check": sources.clean_list(plan.to_check),
@@ -127,7 +129,7 @@ def sanitize(plan: ServicePlan, sources: Sources) -> ServicePlan:
 
 
 def make_agent(sources: Sources, allowed: set[str]) -> Agent[None, ServicePlan]:
-    agent = Agent(
+    agent: Agent[None, ServicePlan] = Agent(
         output_type=ServicePlan, instructions=INSTRUCTIONS, retries=OUTPUT_RETRIES
     )
 
@@ -136,7 +138,9 @@ def make_agent(sources: Sources, allowed: set[str]) -> Agent[None, ServicePlan]:
         if plan.unclear:
             return plan
         unknown = [c.slug for c in plan.combine if c.slug not in allowed]
-        invented = sorted({item for t in plan_texts(plan) for item in sources.invented(t)})
+        invented = sorted(
+            {item for t in plan_texts(plan) for item in sources.invented(t)}
+        )
         if (unknown or invented) and ctx.retry < OUTPUT_RETRIES:
             problems = []
             if invented:

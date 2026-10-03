@@ -33,6 +33,7 @@ from .common import (
     consented_email,
     innovation_or_404,
     optional_text,
+    powiat_name,
     required_text,
 )
 
@@ -114,6 +115,7 @@ async def post_test_signup(
 ) -> Created:
     innovation = await innovation_or_404(session, slug)
     email = consented_email(body.contact_email, body.contact_consent)
+    powiat_name("powiat", body.powiat)
     signup = await repository.add_signup(
         session,
         innovation_id=innovation.id,
