@@ -197,7 +197,7 @@ export function Brand({ night = false }: { night?: boolean }) {
   return (
     <Link asChild href="/">
       <Pressable
-        aria-label={`${APP_NAME}, strona główna`}
+        aria-label={`${APP_NAME} ROPS Kraków, strona główna`}
         role="link"
         style={styles.brand}
       >

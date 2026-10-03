@@ -142,6 +142,9 @@ function Conversation({
   const answered = thread.messages.some(
     (message) => message.direction === "to_author"
   );
+  const label = thread.code ? `${copy.title} ${thread.code}` : copy.unnamed;
+  const named = kind === "idea" && thread.text.length > 0;
+  const headline = named ? thread.text : label;
   return (
     <>
       <Head>
@@ -149,9 +152,12 @@ function Conversation({
       </Head>
       <Sheet raised>
         <View style={styles.group}>
-          <Heading level={1}>
-            {thread.code ? `${copy.title} ${thread.code}` : copy.unnamed}
-          </Heading>
+          {named ? (
+            <Txt tone="stamp" variant="detail" weight="600">
+              {label}
+            </Txt>
+          ) : null}
+          <Heading level={1}>{headline}</Heading>
           <View style={styles.status}>
             <View
               style={[
@@ -168,7 +174,7 @@ function Conversation({
             </Txt>
           </View>
         </View>
-        {thread.text ? (
+        {thread.text && !named ? (
           <View style={[styles.quote, { backgroundColor: colors.sunk }]}>
             <Txt>{thread.text}</Txt>
           </View>

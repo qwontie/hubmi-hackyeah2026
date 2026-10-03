@@ -38,7 +38,7 @@ export const useA11yControls = () => {
       toggle: () => update({ reduceMotion: !settings.reduceMotion }),
     },
     read: {
-      label: reader.speaking ? "Zatrzymaj czytanie" : "Przeczytaj stronę",
+      label: reader.speaking ? "Zatrzymaj czytanie" : "Posłuchaj strony",
       on: reader.speaking,
       supported: reader.supported,
       toggle: (fallback?: string) => {

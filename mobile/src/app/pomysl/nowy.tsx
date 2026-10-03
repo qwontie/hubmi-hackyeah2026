@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import Head from "expo-router/head";
 import { MessageSquareText, RotateCcw, Send } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { type ScrollView, StyleSheet, type Text, View } from "react-native";
 import type { IdeaCreated } from "@/api/types";
 import { APP_NAME } from "@/config";
 import { IdeaAssistant } from "@/features/idea-assistant";
@@ -9,6 +10,7 @@ import { InnovationRow } from "@/features/innovation-row";
 import { Stamp } from "@/features/stamp";
 import { useIdeaForm } from "@/hooks/use-idea";
 import { usePowiats } from "@/hooks/use-powiats";
+import { focusAndAnnounce } from "@/lib/a11y";
 import { useTheme } from "@/theme/settings";
 import { radius, space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
@@ -19,6 +21,8 @@ import { Select } from "@/ui/select";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
+const SENT = "Pomysł trafił do ROPS";
+
 function Created({
   created,
   onReset,
@@ -26,11 +30,18 @@ function Created({
   created: IdeaCreated;
   onReset: () => void;
 }) {
+  const { wide } = useTheme();
+  const title = useRef<Text>(null);
+  useEffect(() => {
+    focusAndAnnounce(title.current, SENT);
+  }, []);
   return (
     <Sheet raised>
-      <View style={styles.row}>
-        <View style={[styles.block, styles.flex]}>
-          <Heading level={2}>Pomysł trafił do ROPS</Heading>
+      <View style={[styles.sent, wide && styles.sentWide]}>
+        <View style={[styles.block, wide && styles.flex]}>
+          <Heading level={1} ref={title} size="h2">
+            {SENT}
+          </Heading>
           <Txt>
             Pracownicy ROPS przeczytają pomysł. Po akceptacji będzie widoczny
             dla innych.
@@ -40,7 +51,9 @@ function Created({
       </View>
       {created.similar_ideas.length > 0 ? (
         <View style={styles.block}>
-          <Heading level={3}>Podobne pomysły innych osób</Heading>
+          <Heading level={2} size="h3">
+            Podobne pomysły innych osób
+          </Heading>
           {created.similar_ideas.map((idea) => (
             <View key={idea.id} style={styles.small}>
               <Txt weight="600">{idea.title}</Txt>
@@ -51,7 +64,9 @@ function Created({
       ) : null}
       {created.similar_innovations.length > 0 ? (
         <View style={styles.block}>
-          <Heading level={3}>Podobne rozwiązania z biblioteki ROPS</Heading>
+          <Heading level={2} size="h3">
+            Podobne rozwiązania z biblioteki ROPS
+          </Heading>
           <View role="list">
             {created.similar_innovations.map((item, index) => (
               <InnovationRow
@@ -112,9 +127,17 @@ export default function IdeaScreen() {
     stageOptions,
     submit,
   } = useIdeaForm();
+  const scroll = useRef<ScrollView>(null);
+  const sent = Boolean(created);
+
+  useEffect(() => {
+    if (sent) {
+      scroll.current?.scrollTo({ animated: false, y: 0 });
+    }
+  }, [sent]);
 
   return (
-    <Screen back="Pomysły" backFallback="/pomysl">
+    <Screen back="Pomysły" backFallback="/pomysl" ref={scroll}>
       <Head>
         <title>{`Zgłoś pomysł · ${APP_NAME}`}</title>
       </Head>
@@ -255,10 +278,12 @@ const styles = StyleSheet.create({
     paddingRight: space.sm,
     paddingVertical: space.sm,
   },
-  row: {
+  sent: {
+    alignItems: "flex-start",
+    gap: space.xl,
+  },
+  sentWide: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: space.lg,
   },
   small: {
     gap: space.xs,

@@ -72,7 +72,7 @@ export default function GrantCallScreen() {
       </View>
       <Sheet>
         <View style={styles.group}>
-          <Heading level={2}>Złóż wniosek z pomysłu</Heading>
+          <Heading level={2}>Przygotuj wniosek na podstawie pomysłu</Heading>
           {call.phase === "open" ? null : (
             <Txt tone="soft">
               Wniosek można utworzyć tylko podczas otwartego naboru.
@@ -89,7 +89,7 @@ export default function GrantCallScreen() {
                   busy={start.busyId === idea.id}
                   disabled={start.busyId !== null}
                   key={idea.id}
-                  label={`Złóż wniosek: ${idea.title}`}
+                  label={`Przygotuj wniosek: ${idea.title}`}
                   onPress={() => start.start(idea)}
                 />
               ))

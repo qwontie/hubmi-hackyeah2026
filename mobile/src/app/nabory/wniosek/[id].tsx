@@ -60,6 +60,12 @@ export default function GrantApplicationScreen() {
         {application.call.demo ? <Txt weight="600">Nabór pokazowy</Txt> : null}
       </View>
       {form.error ? <Notice tone="error">{form.error}</Notice> : null}
+      {readOnly ? null : (
+        <Notice live={false} tone="info">
+          Szkic przygotowała sztuczna inteligencja na podstawie Twojego pomysłu.
+          Przeczytaj każdą sekcję i popraw ją, zanim złożysz wniosek.
+        </Notice>
+      )}
       {application.sections.map((section) => (
         <Sheet key={section.key}>
           <View style={styles.group}>

@@ -99,7 +99,7 @@ function PowiatPanel({
           </View>
           {otherOpen + otherAnswered > 0 ? (
             <Txt tone="soft" variant="label">
-              {`Inne zgłoszenia: ${otherOpen + otherAnswered}.`}
+              {`Pozostałe zgłoszenia w tym powiecie: ${otherOpen + otherAnswered}.`}
             </Txt>
           ) : null}
         </View>

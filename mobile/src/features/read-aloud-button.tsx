@@ -15,7 +15,7 @@ export function ReadAloudButton({ text }: { text: string }) {
   return (
     <Button
       icon={speaking ? Square : Volume2}
-      label={speaking ? "Zatrzymaj czytanie" : "Przeczytaj na głos"}
+      label={speaking ? "Zatrzymaj czytanie" : "Posłuchaj"}
       onPress={() => toggle(text)}
       pressed={speaking}
     />
@@ -41,7 +41,7 @@ export function ReadAloudPill({
   const narrow = width < 380;
   return (
     <Pressable
-      aria-label={label}
+      aria-label={speaking ? "Zatrzymaj czytanie" : "Posłuchaj strony"}
       aria-pressed={speaking}
       onPress={() => toggle(text)}
       role="button"

@@ -89,7 +89,7 @@ function NeedEntry({ need, last }: { need: StoredNeed; last: boolean }) {
           <Button
             fill={!wide}
             icon={Mail}
-            label="Odpowiedź e-mailem"
+            label="Chcę odpowiedź e-mailem"
             onPress={() => setAdding(true)}
           />
         )}

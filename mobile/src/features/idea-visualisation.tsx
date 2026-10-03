@@ -73,9 +73,9 @@ export function IdeaVisualisation({ id }: { id: string | undefined }) {
           </Txt>
         )}
       </View>
-      <View aria-live="polite" style={styles.group}>
+      <View style={styles.group}>
         {error ? (
-          <Txt tone="bad" weight="500">
+          <Txt role="alert" tone="bad" weight="500">
             {error}
           </Txt>
         ) : null}
@@ -90,7 +90,7 @@ export function IdeaVisualisation({ id }: { id: string | undefined }) {
           />
         ) : null}
         {idea.visualisation_url ? (
-          <Txt tone="soft" variant="small">
+          <Txt aria-live="polite" tone="soft" variant="small">
             {`Ilustracja wygenerowana przez AI. Zostało prób: ${left}.`}
           </Txt>
         ) : null}

@@ -120,9 +120,9 @@ export function A11yControls({ night = false }: { night?: boolean }) {
       />
       {read.supported ? (
         <Tile
-          hint={read.on ? "Zatrzymaj czytanie" : "Czytaj stronę na głos"}
+          hint={read.on ? "Zatrzymaj czytanie" : "Posłuchaj strony"}
           icon={read.on ? Square : Volume2}
-          label={read.on ? "Zatrzymaj" : "Czytaj"}
+          label={read.on ? "Zatrzymaj" : "Posłuchaj"}
           night={night}
           onPress={() => read.toggle()}
         />
