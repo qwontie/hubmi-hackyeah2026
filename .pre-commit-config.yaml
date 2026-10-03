@@ -25,3 +25,15 @@ repos:
         language: system
         files: ^frontend/
         pass_filenames: false
+      - id: mobile-fmt
+        name: mobile fmt
+        entry: make -C mobile fmt
+        language: system
+        files: ^mobile/
+        pass_filenames: false
+      - id: mobile-check
+        name: mobile check
+        entry: make -C mobile check
+        language: system
+        files: ^mobile/
+        pass_filenames: false

@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["ultracite/biome/core", "ultracite/biome/react"],
+  "files": {
+    "includes": ["!.expo", "!dist", "!ios", "!android", "!expo-env.d.ts"]
+  },
+  "javascript": { "globals": ["Bun"] },
+  "linter": {
+    "rules": {
+      "performance": { "noJsxPropsBind": "off" }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/app/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": {
+              "level": "error",
+              "options": { "maxAllowedComplexity": 30 }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

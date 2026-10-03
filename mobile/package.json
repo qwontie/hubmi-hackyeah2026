@@ -1,0 +1,44 @@
+{
+  "name": "hubmi-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "export": "expo export --platform web --output-dir dist",
+    "fix": "ultracite fix",
+    "ios": "expo run:ios",
+    "lint": "ultracite check",
+    "serve": "bun serve.ts",
+    "start": "expo start",
+    "typecheck": "tsc --noEmit",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo-google-fonts/geist": "^0.4.2",
+    "@expo-google-fonts/geist-mono": "^0.4.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "~57.0.26",
+    "expo-constants": "~57.0.20",
+    "expo-font": "~57.0.4",
+    "expo-image": "~57.0.5",
+    "expo-linking": "~57.0.11",
+    "expo-router": "~57.0.24",
+    "expo-speech": "~57.0.3",
+    "expo-status-bar": "~57.0.1",
+    "lucide-react-native": "^1.51.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-svg": "15.15.4",
+    "react-native-web": "^0.21.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.13",
+    "@types/bun": "^1.4.2",
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3",
+    "ultracite": "7.12.0"
+  }
+}

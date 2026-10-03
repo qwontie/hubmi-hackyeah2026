@@ -12,8 +12,6 @@
 	}
 
 	handle {
-		root * /etc/caddy/projects.d/hubmi/public
-		try_files {path} /index.html
-		file_server
+		reverse_proxy hubmi-mobile:3000
 	}
 }

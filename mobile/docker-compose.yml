@@ -1,0 +1,11 @@
+services:
+  mobile:
+    build: mobile
+    image: hubmi/mobile
+    profiles: [mobile, services]
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+      - path: mobile/.env
+        required: false

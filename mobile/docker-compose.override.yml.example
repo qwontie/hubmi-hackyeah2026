@@ -1,0 +1,13 @@
+services:
+  mobile:
+    networks:
+      default: {}
+      caddy:
+        aliases:
+          - hubmi-mobile
+    ports:
+      - "127.0.0.1:3001:3000"
+
+networks:
+  caddy:
+    external: true

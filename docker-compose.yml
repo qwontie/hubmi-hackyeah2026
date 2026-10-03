@@ -3,3 +3,5 @@ include:
     project_directory: .
   - path: frontend/docker-compose.yml
     project_directory: .
+  - path: mobile/docker-compose.yml
+    project_directory: .

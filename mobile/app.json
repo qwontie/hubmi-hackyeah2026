@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "HubMi",
+    "slug": "hubmi",
+    "scheme": "hubmi",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kotikot.hubmi",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.kotikot.hubmi",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "lang": "pl",
+      "name": "HubMi",
+      "shortName": "HubMi"
+    },
+    "plugins": ["expo-router", "expo-status-bar", "expo-image", "expo-font"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
