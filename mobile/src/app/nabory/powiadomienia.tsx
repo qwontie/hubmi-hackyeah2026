@@ -2,7 +2,7 @@ import { addEventListener, getInitialURL } from "expo-linking";
 import Head from "expo-router/head";
 import { useEffect, useRef, useState } from "react";
 import { Platform, StyleSheet, type TextInput, View } from "react-native";
-import { api, errorMessage } from "@/api/client";
+import { ApiError, api, errorMessage } from "@/api/client";
 import { APP_NAME } from "@/config";
 import { EMAIL_INVALID, isEmail } from "@/lib/validation";
 import { space } from "@/theme/tokens";
@@ -33,6 +33,11 @@ const check = (value: string, consent: boolean): Problems => ({
   consent: consent ? null : "Zaznacz zgodę na wiadomości o naborach.",
   email: emailProblem(value),
 });
+
+const linkProblem = (caught: unknown) =>
+  caught instanceof ApiError && caught.status >= 400 && caught.status < 500
+    ? "Ten link jest nieprawidłowy albo wygasł."
+    : errorMessage(caught);
 
 const tokenFromUrl = (url: string) => {
   const fragment = url.split("#", 2)[1] ?? "";
@@ -86,7 +91,7 @@ export default function GrantNotificationsScreen() {
           );
         }
       } catch (caught) {
-        setResult({ message: errorMessage(caught), tone: "error" });
+        setResult({ message: linkProblem(caught), tone: "error" });
       } finally {
         setBusy(false);
       }

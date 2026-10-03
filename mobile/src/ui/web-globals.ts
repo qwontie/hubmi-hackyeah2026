@@ -39,6 +39,10 @@ a:hover { text-decoration-thickness: 2px; }
 * { scrollbar-color: ${colors.ruleStrong} transparent; }
 .hubmi-skip { position: absolute; left: 12px; top: -80px; z-index: 10; }
 .hubmi-skip:focus { top: 12px; }
+@media (forced-colors: active) {
+  [role="button"], [role="link"], [role="checkbox"], [role="tab"], a[href] { outline: 1px solid ButtonText; outline-offset: -1px; }
+  svg [stroke]:not([stroke="none"]) { stroke: CanvasText !important; }
+}
 ${reduceMotion ? "*, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }" : "@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }"}
 `;
 };
