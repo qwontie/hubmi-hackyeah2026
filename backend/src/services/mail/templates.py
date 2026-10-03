@@ -24,6 +24,8 @@ class StaffItemKind(StrEnum):
     AUTHOR_MESSAGE = "author_message"
     IDEA_MESSAGE = "idea_message"
     APPLICATION = "application"
+    VOLUNTEER = "volunteer"
+    VOLUNTEER_REPORT = "volunteer_report"
 
 
 STAFF_ITEM_LABELS = {
@@ -33,6 +35,8 @@ STAFF_ITEM_LABELS = {
     StaffItemKind.AUTHOR_MESSAGE: "Nowa wiadomość od autora zgłoszenia",
     StaffItemKind.IDEA_MESSAGE: "Nowa wiadomość od autora pomysłu",
     StaffItemKind.APPLICATION: "Nowy wniosek złożony w naborze",
+    StaffItemKind.VOLUNTEER: "Nowe zgłoszenie wolontariusza do testu",
+    StaffItemKind.VOLUNTEER_REPORT: "Nowy raport wolontariusza z testu",
 }
 
 

@@ -12,11 +12,39 @@ from .staff import StaffNotifier
 from .templates import StaffItem, StaffItemKind
 
 NEED_TOPICS = frozenset({"need.created", "need.updated"})
+VOLUNTEER_TOPICS = frozenset({"volunteer.created", "volunteer.reported"})
 
 
 def admin_application_url(application_id: str) -> str:
     base = env.mailer.public_url.rstrip("/")
     return f"{base}/admin/applications/{application_id}"
+
+
+def admin_volunteer_url(signup_id: str) -> str:
+    base = env.mailer.public_url.rstrip("/")
+    return f"{base}/admin/volunteers/{signup_id}"
+
+
+def volunteer_item(topic: str, data: Mapping[str, Any]) -> StaffItem | None:
+    innovation = (data.get("innovation") or {}).get("title", "")
+    if topic == "volunteer.created":
+        return StaffItem(
+            kind=StaffItemKind.VOLUNTEER,
+            key=f"volunteer:{data['id']}",
+            text=f"{innovation}: {data.get('proposal', '')}",
+            url=admin_volunteer_url(data["id"]),
+        )
+    report = data.get("report") or {}
+    if topic == "volunteer.reported" and report.get("created_at") == report.get(
+        "updated_at"
+    ):
+        return StaffItem(
+            kind=StaffItemKind.VOLUNTEER_REPORT,
+            key=f"volunteer-report:{data['id']}",
+            text=f"{innovation}: {report.get('activity', '')}",
+            url=admin_volunteer_url(data["id"]),
+        )
+    return None
 
 
 def payload(data: object) -> Mapping[str, Any]:
@@ -57,6 +85,8 @@ def staff_item(message: Message) -> StaffItem | None:
             text=f"Wniosek nr {data.get('number')}: {idea.get('title', '')}",
             url=admin_application_url(data["id"]),
         )
+    if message.topic in VOLUNTEER_TOPICS and "id" in data:
+        return volunteer_item(message.topic, data)
     if message.topic == "message.created" and data.get("direction") == "from_author":
         idea_id = data.get("idea_id")
         return StaffItem(

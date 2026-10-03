@@ -356,9 +356,9 @@
       "organization": "Gminny Ośrodek Pomocy Społecznej",
       "powiat": "powiat-myslenicki",
       "email": "gops.testy.mys@example.org",
-      "note": "Chcemy przetestować na 15 podopiecznych z otępieniem.",
-      "status": "contacted",
-      "days_ago": 20
+      "status": "accepted",
+      "days_ago": 20,
+      "proposal": "Chcemy sprawdzić kody QR u 15 podopiecznych z otępieniem, razem z ich opiekunami, przez dwa miesiące."
     },
     {
       "key": "s02",
@@ -367,9 +367,9 @@
       "organization": "Stowarzyszenie wspierające młodzież",
       "powiat": "nowy-sacz",
       "email": "mlodziez.ns@example.org",
-      "note": "Prowadzimy świetlicę dla młodzieży, chętnie sprawdzimy materiały w grupie.",
       "status": "new",
-      "days_ago": 4
+      "days_ago": 4,
+      "proposal": "Prowadzimy świetlicę dla młodzieży, chętnie sprawdzimy materiały w grupie 12 osób na zajęciach popołudniowych."
     },
     {
       "key": "s03",
@@ -378,9 +378,16 @@
       "organization": null,
       "powiat": "krakow",
       "email": "psycholog.szkolny@example.org",
-      "note": "Psycholożka szkolna, dwie szkoły podstawowe.",
-      "status": "contacted",
-      "days_ago": 11
+      "status": "reported",
+      "days_ago": 11,
+      "proposal": "Jestem psycholożką szkolną w dwóch szkołach podstawowych, chcę przeprowadzić zajęcia z materiałami w dwóch klasach siódmych.",
+      "report": {
+        "activity": "Dwie lekcje wychowawcze w klasach 7a i 7b, prowadziłam je razem z wychowawczyniami.",
+        "participants": 46,
+        "worked": "Krótkie filmy i karty pracy, uczniowie chętnie rozmawiali w małych grupach.",
+        "not_worked": "Za mało czasu na jednej lekcji, lepiej rozłożyć materiał na dwie.",
+        "recommend": "after_changes"
+      }
     },
     {
       "key": "s04",
@@ -389,9 +396,16 @@
       "organization": "Urząd Gminy",
       "powiat": "powiat-limanowski",
       "email": "urzad.gminy.lim@example.org",
-      "note": "Gmina górska, rozproszona zabudowa.",
-      "status": "contacted",
-      "days_ago": 15
+      "status": "reported",
+      "days_ago": 15,
+      "proposal": "Gmina górska, rozproszona zabudowa. Chcemy sprawdzić jeden wyjazd centrum w miesiącu do trzech najdalszych sołectw.",
+      "report": {
+        "activity": "Trzy wyjazdy centrum do sołectw Zalesie, Wola i Przysłop, razem z pracownicą GOPS.",
+        "participants": 38,
+        "worked": "Badanie ciśnienia i pomoc w sprawach urzędowych na miejscu, ludzie przychodzili całymi rodzinami.",
+        "not_worked": "Termin w dzień targowy był lepszy niż w niedzielę, trzeba wcześniej rozwiesić ogłoszenia w sklepach.",
+        "recommend": "yes"
+      }
     },
     {
       "key": "s05",
@@ -400,9 +414,9 @@
       "organization": "Klub seniora",
       "powiat": "tarnow",
       "email": "klub.seniora.tarnow@example.org",
-      "note": null,
       "status": "new",
-      "days_ago": 8
+      "days_ago": 8,
+      "proposal": "Klub seniora chce nagrać wspomnienia pięciu najstarszych członków i pokazać je na spotkaniu z uczniami."
     },
     {
       "key": "s06",
@@ -411,9 +425,9 @@
       "organization": "Fundacja pomocy osobom w kryzysie bezdomności",
       "powiat": "krakow",
       "email": "fundacja.pomoc@example.org",
-      "note": "Mamy busa, brakuje nam wyposażenia punktu higienicznego.",
       "status": "new",
-      "days_ago": 3
+      "days_ago": 3,
+      "proposal": "Mamy busa, brakuje nam wyposażenia punktu higienicznego. Chcemy sprawdzić trasę po trzech dzielnicach przez miesiąc."
     },
     {
       "key": "s07",
@@ -422,9 +436,9 @@
       "organization": null,
       "powiat": "powiat-nowotarski",
       "email": "mama.troje@example.org",
-      "note": "Mam troje dzieci, najmłodszy z niepełnosprawnością.",
       "status": "new",
-      "days_ago": 6
+      "days_ago": 6,
+      "proposal": "Mam brata z niepełnosprawnością, chcę sprawdzić zajęcia z innymi rodzinami z naszej parafii, około pięciu rodzin."
     },
     {
       "key": "s08",
@@ -433,9 +447,9 @@
       "organization": "Szkoła podstawowa",
       "powiat": "powiat-wielicki",
       "email": "sp.integracja@example.org",
-      "note": "W szkole mamy 40 uczniów z Ukrainy.",
       "status": "closed",
-      "days_ago": 26
+      "days_ago": 26,
+      "proposal": "Chcemy sprawdzić warsztaty w szkole z dziećmi z Ukrainy i ich polskimi kolegami, cztery spotkania."
     },
     {
       "key": "s09",
@@ -444,9 +458,9 @@
       "organization": "Dzienny Dom Senior+",
       "powiat": "powiat-wadowicki",
       "email": "senior.plus@example.org",
-      "note": null,
       "status": "new",
-      "days_ago": 2
+      "days_ago": 2,
+      "proposal": "Chcemy sprawdzić aplikację w dwóch przedszkolach gminnych przez jeden semestr, z rodzicami i nauczycielkami."
     },
     {
       "key": "s10",
@@ -455,9 +469,9 @@
       "organization": "Praktyka fizjoterapeutyczna",
       "powiat": "powiat-nowotarski",
       "email": "fizjo.podhale@example.org",
-      "note": "Mogę poprowadzić pilotaż z pacjentami z POChP.",
       "status": "new",
-      "days_ago": 9
+      "days_ago": 9,
+      "proposal": "Jestem fizjoterapeutą, chcę sprawdzić ćwiczenia online z sześcioma pacjentami po covidzie z mojej przychodni."
     },
     {
       "key": "s11",
@@ -466,9 +480,10 @@
       "organization": "Powiatowe Centrum Pomocy Rodzinie",
       "powiat": "powiat-tarnowski",
       "email": "pcpr.piecza.tarn@example.org",
-      "note": "Dla rodzin zastępczych z nastolatkami.",
-      "status": "contacted",
-      "days_ago": 13
+      "status": "rejected",
+      "days_ago": 13,
+      "proposal": "Chcemy wydrukować komiks i rozdać go w urzędzie gminy osobom, które przychodzą po zasiłek.",
+      "decision_reason": "Na razie testujemy to rozwiązanie z organizacjami, które prowadzą zajęcia z grupą, a nie w urzędzie."
     }
   ],
   "ideas": [
@@ -683,6 +698,78 @@
       "powiat": "powiat-nowotarski",
       "days_ago": 2,
       "context": "Powiatowe centrum pomocy rodzinie. Współpracujemy z około 60 rodzinami wychowującymi dziecko z niepełnosprawnością. Rodzice mówią, że zdrowe rodzeństwo jest pomijane. Mamy psychologa i dwóch terapeutów, możemy prowadzić zajęcia w soboty."
+    }
+  ],
+  "demand": [
+    {
+      "key": "d01",
+      "slug": "mobilne-centrum-pomocy-dla-osob-starszych",
+      "powiat": "powiat-limanowski",
+      "email": "soltys.zalesie@example.org",
+      "days_ago": 2
+    },
+    {
+      "key": "d02",
+      "slug": "mobilne-centrum-pomocy-dla-osob-starszych",
+      "powiat": "powiat-limanowski",
+      "email": null,
+      "days_ago": 3
+    },
+    {
+      "key": "d03",
+      "slug": "mobilne-centrum-pomocy-dla-osob-starszych",
+      "powiat": "powiat-limanowski",
+      "email": null,
+      "days_ago": 5
+    },
+    {
+      "key": "d04",
+      "slug": "mobilne-centrum-pomocy-dla-osob-starszych",
+      "powiat": "powiat-nowotarski",
+      "email": "kgw.nowotarski@example.org",
+      "days_ago": 6
+    },
+    {
+      "key": "d05",
+      "slug": "kody-qr-na-pomoc-seniorom",
+      "powiat": "powiat-myslenicki",
+      "email": null,
+      "days_ago": 1
+    },
+    {
+      "key": "d06",
+      "slug": "kody-qr-na-pomoc-seniorom",
+      "powiat": "krakow",
+      "email": "opiekunka.krakow@example.org",
+      "days_ago": 4
+    },
+    {
+      "key": "d07",
+      "slug": "bez-presji-z-depresji",
+      "powiat": "nowy-sacz",
+      "email": "rodzic.ns@example.org",
+      "days_ago": 2
+    },
+    {
+      "key": "d08",
+      "slug": "bez-presji-z-depresji",
+      "powiat": "nowy-sacz",
+      "email": null,
+      "days_ago": 7
+    },
+    {
+      "key": "d09",
+      "slug": "bez-presji-z-depresji",
+      "powiat": "tarnow",
+      "email": null,
+      "days_ago": 9
+    },
+    {
+      "key": "d10",
+      "slug": "szlakiem-ludzi-bezdomnych",
+      "powiat": "krakow",
+      "email": null,
+      "days_ago": 3
     }
   ]
 }

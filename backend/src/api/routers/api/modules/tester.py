@@ -1,7 +1,6 @@
 import hashlib
 import hmac
 import re
-import uuid
 from typing import Annotated
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
@@ -24,14 +23,15 @@ from services.tester import (
     ImprovementIn,
     InnovationFeedback,
     TestSignupIn,
-    TestSignupPatch,
     VoteRemoved,
     repository,
 )
+from services.tester.volunteers import admin_volunteer
 from utils.db.models.feedback import FeedbackKind
 from utils.db.models.test_signup import SignupStatus, TesterRole
 from utils.env import env
 
+from . import volunteers
 from .common import (
     PageNumber,
     PerPage,
@@ -48,6 +48,8 @@ from .common import (
 
 public = APIRouter(route_class=DishkaRoute, tags=["tester"])
 admin = APIRouter(route_class=DishkaRoute, tags=["tester"])
+public.include_router(volunteers.public)
+admin.include_router(volunteers.admin)
 
 vote_limit = rate_limit("feedback", per_minute=20, per_day=200)
 improvement_limit = rate_limit("improvement", per_minute=5, per_day=30)
@@ -174,7 +176,7 @@ async def post_test_signup(
         contact_email=email,
         note=optional_text("note", body.note) or "",
     )
-    bus.publish("test_signup.created", repository.admin_signup(signup, innovation))
+    bus.publish("volunteer.created", admin_volunteer(signup, innovation, None))
     return Created(id=signup.id)
 
 
@@ -228,16 +230,3 @@ async def list_test_signups(  # noqa: PLR0913
         page=page,
         per_page=per_page,
     )
-
-
-@admin.patch("/test-signups/{signup_id}")
-async def patch_test_signup(
-    signup_id: uuid.UUID,
-    body: TestSignupPatch,
-    _admin: AdminPerson,
-    session: FromDishka[AsyncSession],
-) -> AdminTestSignup:
-    signup = await repository.set_signup_status(session, signup_id, body.status)
-    if signup is None:
-        raise not_found()
-    return signup

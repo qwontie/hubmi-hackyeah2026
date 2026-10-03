@@ -1,4 +1,4 @@
-from . import repository
+from . import demand, emails, repository, volunteers
 from .schemas import (
     AdminFeedback,
     AdminTestSignup,
@@ -9,7 +9,6 @@ from .schemas import (
     ImprovementIn,
     InnovationFeedback,
     TestSignupIn,
-    TestSignupPatch,
     VoteRemoved,
     Votes,
 )
@@ -24,8 +23,10 @@ __all__ = [
     "ImprovementIn",
     "InnovationFeedback",
     "TestSignupIn",
-    "TestSignupPatch",
     "VoteRemoved",
     "Votes",
+    "demand",
+    "emails",
     "repository",
+    "volunteers",
 ]

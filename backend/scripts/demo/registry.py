@@ -18,7 +18,8 @@ FEEDBACK = "feedback"
 SIGNUP = "test_signup"
 IDEA = "idea"
 ADAPTATION = "adaptation"
-KINDS = (ADMIN, NEED, CLUSTER, MESSAGE, FEEDBACK, SIGNUP, IDEA, ADAPTATION)
+DEMAND = "innovation_demand"
+KINDS = (ADMIN, NEED, CLUSTER, MESSAGE, FEEDBACK, SIGNUP, IDEA, ADAPTATION, DEMAND)
 
 
 async def register(

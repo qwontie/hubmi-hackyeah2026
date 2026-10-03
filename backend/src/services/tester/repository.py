@@ -26,7 +26,10 @@ SELECT
     count(*) FILTER (WHERE kind = 'fits') AS fits,
     count(*) FILTER (WHERE kind = 'does_not_fit') AS does_not_fit,
     count(*) FILTER (WHERE kind = 'improvement') AS improvements,
-    (SELECT count(*) FROM test_signup WHERE innovation_id = :id) AS testers
+    (
+        SELECT count(*) FROM test_signup
+        WHERE innovation_id = :id AND status <> 'rejected'
+    ) AS testers
 FROM feedback
 WHERE innovation_id = :id
 """)
@@ -332,26 +335,6 @@ async def list_signups(  # noqa: PLR0913
         page=page,
         per_page=per_page,
     )
-
-
-async def set_signup_status(
-    session: AsyncSession, signup_id: uuid.UUID, status: SignupStatus
-) -> AdminTestSignup | None:
-    row = (
-        await session.exec(
-            select(TestSignup, Innovation)
-            .join(Innovation, col(Innovation.id) == col(TestSignup.innovation_id))
-            .where(TestSignup.id == signup_id)
-        )
-    ).first()
-    if row is None:
-        return None
-    signup, innovation = row
-    signup.status = status
-    session.add(signup)
-    await session.commit()
-    await session.refresh(signup)
-    return admin_signup(signup, innovation)
 
 
 async def feedback_by_innovation(

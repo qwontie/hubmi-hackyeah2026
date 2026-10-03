@@ -6,7 +6,7 @@ from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Text
 from sqlalchemy.dialects import postgresql
 from sqlmodel import Field, SQLModel
 
-from .base import created_at_col, updated_at_col, uuid_pk
+from .base import created_at_col, nullable_ts_col, updated_at_col, uuid_pk
 
 
 class TesterRole(StrEnum):
@@ -18,7 +18,9 @@ class TesterRole(StrEnum):
 
 class SignupStatus(StrEnum):
     NEW = "new"
-    CONTACTED = "contacted"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    REPORTED = "reported"
     CLOSED = "closed"
 
 
@@ -62,6 +64,10 @@ class TestSignup(SQLModel, table=True):
             index=True,
         ),
     )
+    decision_reason: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
+    decided_at: datetime | None = nullable_ts_col()
     created_at: datetime = created_at_col()
     updated_at: datetime = updated_at_col()
 

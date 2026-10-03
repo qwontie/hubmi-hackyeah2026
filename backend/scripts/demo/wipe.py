@@ -28,12 +28,20 @@ from utils.db.models import (
     TestSignup,
 )
 from utils.db.models.adaptation import Adaptation
+from utils.db.models.demand import InnovationDemand
 from utils.logging import setup_logging
 
 console = Console()
 
 type DemoModel = type[
-    Feedback | TestSignup | Adaptation | Message | Need | Idea | AdminUser
+    Feedback
+    | TestSignup
+    | InnovationDemand
+    | Adaptation
+    | Message
+    | Need
+    | Idea
+    | AdminUser
 ]
 
 
@@ -85,6 +93,7 @@ async def wipe(session: AsyncSession) -> dict[str, int]:
     removed = {
         registry.FEEDBACK: await remove(session, Feedback, ids[registry.FEEDBACK]),
         registry.SIGNUP: await remove(session, TestSignup, ids[registry.SIGNUP]),
+        registry.DEMAND: await remove(session, InnovationDemand, ids[registry.DEMAND]),
         registry.ADAPTATION: await remove(
             session, Adaptation, ids[registry.ADAPTATION]
         ),

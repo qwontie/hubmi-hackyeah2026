@@ -66,7 +66,9 @@ from utils.db.models import (
     TestSignup,
 )
 from utils.db.models.adaptation import Adaptation
+from utils.db.models.demand import InnovationDemand
 from utils.db.models.feedback import Feedback
+from utils.db.models.volunteer import Recommendation, VolunteerReport
 from utils.env import MailSettings
 from utils.logging import setup_logging
 
@@ -469,27 +471,67 @@ async def load_signups(run: Run, entries: list[dict[str, Any]]) -> None:
         target = await innovation(run, entry["slug"])
         if target is None:
             continue
-        signup = await tester.add_signup(
-            run.session,
+        moment = timeline.days_ago(entry["key"], entry["days_ago"], now=run.now)
+        status = SignupStatus(entry["status"])
+        decided = moment + timedelta(days=1) if status != SignupStatus.NEW else None
+        signup = TestSignup(
             innovation_id=target.id,
             who=TesterRole(entry["who"]),
             organization=entry["organization"],
             powiat=entry["powiat"],
             contact_email=entry["email"],
-            note=entry["note"] or "",
+            consent_at=moment,
+            note=entry["proposal"],
+            status=status,
+            decision_reason=entry.get("decision_reason"),
+            decided_at=decided,
+            created_at=moment,
+            updated_at=decided or moment,
         )
-        await registry.register(run.session, registry.SIGNUP, entry["key"], signup.id)
-        status = SignupStatus(entry["status"])
-        if status != SignupStatus.NEW:
-            await tester.set_signup_status(run.session, signup.id, status)
-        moment = timeline.days_ago(entry["key"], entry["days_ago"], now=run.now)
-        await run.session.exec(
-            update(TestSignup)
-            .where(col(TestSignup.id) == signup.id)
-            .values(created_at=moment, consent_at=moment, updated_at=moment)
-        )
+        run.session.add(signup)
         await run.session.commit()
+        await registry.register(run.session, registry.SIGNUP, entry["key"], signup.id)
+        report = entry.get("report")
+        if report and decided is not None:
+            reported = decided + timedelta(days=2)
+            run.session.add(
+                VolunteerReport(
+                    signup_id=signup.id,
+                    activity=report["activity"],
+                    participants=report["participants"],
+                    worked=report["worked"],
+                    not_worked=report["not_worked"],
+                    recommend=Recommendation(report["recommend"]),
+                    created_at=reported,
+                    updated_at=reported,
+                )
+            )
+            await run.session.commit()
         run.count(registry.SIGNUP)
+
+
+async def load_demand(run: Run, entries: list[dict[str, Any]]) -> None:
+    for entry in entries:
+        if await registry.lookup(run.session, registry.DEMAND, entry["key"]):
+            continue
+        target = await innovation(run, entry["slug"])
+        if target is None:
+            continue
+        moment = timeline.days_ago(entry["key"], entry["days_ago"], now=run.now)
+        email = entry["email"]
+        row = InnovationDemand(
+            innovation_id=target.id,
+            powiat=entry["powiat"],
+            contact_email=email,
+            consent_at=moment if email else None,
+            client_key=f"demo:{entry['key']}",
+            day=moment.date(),
+            created_at=moment,
+        )
+        run.session.add(row)
+        await run.session.commit()
+        await registry.register(run.session, registry.DEMAND, entry["key"], row.id)
+        run.count(registry.DEMAND)
 
 
 async def load_idea(run: Run, entry: dict[str, Any]) -> None:
@@ -687,6 +729,7 @@ async def run(args: argparse.Namespace) -> int:
             await load_innovation_votes(state, modules["innovation_votes"][:share])
             await load_improvements(state, modules["improvements"][:share])
             await load_signups(state, modules["test_signups"][:share])
+            await load_demand(state, modules["demand"][:share])
             for entry in modules["ideas"][:share]:
                 await load_idea(state, entry)
             for entry in modules["adaptations"][:share]:
