@@ -157,6 +157,23 @@ export const useGrantApplication = (id?: string, ideaId?: string) => {
       .map((section) => [section.key, drafts[section.key] ?? ""])
   );
   const dirty = Object.keys(changedSections).length > 0;
+  const missingRequired = (application?.sections ?? [])
+    .filter((section) => {
+      const draft = drafts[section.key] ?? "";
+      if (section.required && draft.trim().length === 0) {
+        return true;
+      }
+      return (
+        application?.missing_required.includes(section.key) === true &&
+        draft === section.text
+      );
+    })
+    .map((section) => section.key);
+  const canSubmit =
+    missingRequired.length === 0 &&
+    (application?.sections ?? []).every(
+      (section) => (drafts[section.key] ?? "").length <= section.max_length
+    );
 
   const save = () => {
     if (id && token && dirty) {
@@ -171,18 +188,25 @@ export const useGrantApplication = (id?: string, ideaId?: string) => {
     }
   };
   const submit = () => {
-    if (id && token) {
-      return run("submit", () => api.submitGrantApplication(id, token));
+    if (id && token && canSubmit) {
+      return run("submit", async () => {
+        if (dirty) {
+          await api.updateGrantApplication(id, token, changedSections);
+        }
+        return api.submitGrantApplication(id, token);
+      });
     }
   };
 
   return {
     application,
     busy,
+    canSubmit,
     dirty,
     drafts,
     error,
     loading,
+    missingRequired,
     redraft,
     retry: load,
     save,
