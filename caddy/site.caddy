@@ -12,6 +12,8 @@
 	}
 
 	handle {
-		respond 404
+		root * /etc/caddy/projects.d/hubmi/public
+		try_files {path} /index.html
+		file_server
 	}
 }
