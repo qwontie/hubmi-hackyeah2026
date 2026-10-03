@@ -14,7 +14,6 @@ interface ProblemMapProps {
   height: number;
   onSelect: (slug: string) => void;
   selected: string | null;
-  shade: (slug: string) => number | null;
   shapes: PowiatShape[];
   width: number;
 }
@@ -38,7 +37,6 @@ export function ProblemMap({
   height,
   onSelect,
   selected,
-  shade,
   shapes,
   width,
 }: ProblemMapProps) {
@@ -56,8 +54,7 @@ export function ProblemMap({
     }
     const count = counts[slug];
     const total = count ? count.open + count.answered : 0;
-    const level =
-      total > 0 ? 0.25 + (0.75 * total) / most : (shade(slug) ?? 0) * 0.2;
+    const level = total > 0 ? 0.25 + (0.75 * total) / most : 0;
     return mix(colors.paper, colors.sun, Math.min(1, level));
   };
   return (

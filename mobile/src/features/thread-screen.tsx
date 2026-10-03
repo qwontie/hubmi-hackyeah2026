@@ -100,7 +100,7 @@ function Reply({
         <Button
           busy={busy}
           icon={Send}
-          label={busy ? "Wysyłam…" : "Wyślij wiadomość"}
+          label={busy ? "Wysyłam" : "Wyślij wiadomość"}
           onPress={send}
           variant="primary"
         />
@@ -213,7 +213,7 @@ export function ThreadScreen({
     <Screen back={copy.back} backFallback={copy.backHref}>
       {load.kind === "loading" ? (
         <Txt aria-live="polite" tone="soft">
-          Wczytuję rozmowę…
+          Wczytuję rozmowę.
         </Txt>
       ) : null}
       {load.kind === "no-token" ? (

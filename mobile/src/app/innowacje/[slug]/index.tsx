@@ -70,7 +70,7 @@ export default function InnovationScreen() {
     >
       {state.kind === "loading" ? (
         <Txt aria-live="polite" tone="soft">
-          Wczytuję opis rozwiązania…
+          Wczytuję opis rozwiązania.
         </Txt>
       ) : null}
 

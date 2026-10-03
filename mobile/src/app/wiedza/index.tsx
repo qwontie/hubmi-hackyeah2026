@@ -3,6 +3,7 @@ import Head from "expo-router/head";
 import { FileText, Search, X } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
+import { categoryIcon } from "@/features/category-icon";
 import { ChallengeRow } from "@/features/knowledge";
 import { useChallenges } from "@/hooks/use-knowledge";
 import { pluralPl } from "@/lib/plural";
@@ -80,6 +81,7 @@ export default function ChallengesScreen() {
           <View aria-label="Obszary" role="group" style={styles.chips}>
             {areas.map((item) => (
               <Button
+                icon={categoryIcon(item.slug)}
                 key={item.slug}
                 label={`${item.name} (${item.count})`}
                 onPress={() => selectArea(item.slug)}
@@ -107,7 +109,7 @@ export default function ChallengesScreen() {
         ) : (
           <Txt aria-live="polite" tone="soft" weight="500">
             {list.loading && list.items.length === 0
-              ? "Wczytuję…"
+              ? "Wczytuję"
               : `${list.total} ${pluralPl(list.total, "wyzwanie", "wyzwania", "wyzwań")}`}
           </Txt>
         )}
@@ -128,7 +130,7 @@ export default function ChallengesScreen() {
         {hasMore ? (
           <Button
             busy={list.loading}
-            label={list.loading ? "Wczytuję…" : "Pokaż więcej"}
+            label={list.loading ? "Wczytuję" : "Pokaż więcej"}
             onPress={loadMore}
           />
         ) : null}

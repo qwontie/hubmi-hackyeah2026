@@ -125,7 +125,7 @@ export function IdeaAssistant({
         icon={result ? MessageCircleQuestion : Sparkles}
         label={(() => {
           if (busy) {
-            return "Asystent myśli…";
+            return "Asystent myśli";
           }
           return result
             ? "Wyślij odpowiedzi asystentowi"

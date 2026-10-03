@@ -67,7 +67,7 @@ export function ContactForm({
       <Button
         busy={busy}
         icon={Send}
-        label={busy ? "Wysyłam…" : submitLabel}
+        label={busy ? "Wysyłam" : submitLabel}
         onPress={submit}
         variant="primary"
       />

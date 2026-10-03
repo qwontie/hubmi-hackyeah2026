@@ -143,7 +143,7 @@ export default function LibraryScreen() {
         {hasMore ? (
           <Button
             busy={list.loading}
-            label={list.loading ? "Wczytuję…" : "Pokaż więcej"}
+            label={list.loading ? "Wczytuję" : "Pokaż więcej"}
             onPress={loadMore}
           />
         ) : null}

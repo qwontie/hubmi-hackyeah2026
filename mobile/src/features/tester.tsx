@@ -122,7 +122,7 @@ function SignupForm({ signup }: { signup: ReturnType<typeof useTestSignup> }) {
       <Button
         busy={signup.busy}
         icon={Send}
-        label={signup.busy ? "Wysyłam…" : "Zgłoś się do testów"}
+        label={signup.busy ? "Wysyłam" : "Zgłoś się do testów"}
         onPress={signup.submit}
         variant="primary"
       />
@@ -177,7 +177,7 @@ export function ImprovementBlock({ slug }: { slug: string }) {
           <Button
             busy={busy}
             icon={Send}
-            label={busy ? "Wysyłam…" : "Wyślij pomysł"}
+            label={busy ? "Wysyłam" : "Wyślij pomysł"}
             onPress={submit}
             variant="primary"
           />

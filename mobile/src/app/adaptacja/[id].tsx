@@ -183,7 +183,7 @@ export default function AdaptationScreen() {
       </Head>
       {load.kind === "loading" ? (
         <Txt aria-live="polite" tone="soft">
-          Wczytuję plan…
+          Wczytuję plan.
         </Txt>
       ) : null}
       {load.kind === "error" ? (

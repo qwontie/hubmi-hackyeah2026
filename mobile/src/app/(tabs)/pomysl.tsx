@@ -210,7 +210,7 @@ export default function IdeaScreen() {
             <Button
               busy={busy}
               icon={Send}
-              label={busy ? "Wysyłam…" : "Wyślij pomysł do ROPS"}
+              label={busy ? "Wysyłam" : "Wyślij pomysł do ROPS"}
               onPress={submit}
               size="large"
               variant="primary"

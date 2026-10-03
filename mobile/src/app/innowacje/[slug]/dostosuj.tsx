@@ -89,7 +89,7 @@ export default function AdaptScreen() {
         <Button
           busy={busy}
           icon={FileText}
-          label={busy ? "Przygotowuję plan…" : "Przygotuj plan"}
+          label={busy ? "Przygotowuję plan" : "Przygotuj plan"}
           onPress={submit}
           size="large"
           variant="primary"

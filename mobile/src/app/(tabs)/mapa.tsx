@@ -133,8 +133,7 @@ function PowiatPanel({
 
 export default function MapScreen() {
   const { colors, wide, highContrast } = useTheme();
-  const { data, load, projection, report, retry, select, selected, shade } =
-    useMap();
+  const { data, load, projection, report, retry, select, selected } = useMap();
   const counts: Record<string, MapCount> = Object.fromEntries(
     (data?.powiats ?? []).map((powiat) => [powiat.slug, countOf(powiat)])
   );
@@ -154,7 +153,6 @@ export default function MapScreen() {
           height={projection.height}
           onSelect={select}
           selected={selected?.slug ?? null}
-          shade={shade}
           shapes={projection.shapes}
           width={projection.width}
         />

@@ -22,7 +22,7 @@ export default function MaterialScreen() {
     <Screen back="Materiały" backFallback="/materialy">
       {state.kind === "loading" ? (
         <Txt aria-live="polite" tone="soft">
-          Wczytuję opis materiału…
+          Wczytuję opis materiału.
         </Txt>
       ) : null}
       {state.kind === "error" ? (

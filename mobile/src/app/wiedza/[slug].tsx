@@ -22,7 +22,7 @@ export default function ChallengeScreen() {
     <Screen back="Wyzwania" backFallback="/wiedza">
       {state.kind === "loading" ? (
         <Txt aria-live="polite" tone="soft">
-          Wczytuję opis wyzwania…
+          Wczytuję opis wyzwania.
         </Txt>
       ) : null}
       {state.kind === "error" ? (

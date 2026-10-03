@@ -110,7 +110,7 @@ export default function MaterialsScreen() {
         ) : (
           <Txt aria-live="polite" tone="soft" weight="500">
             {list.loading && list.items.length === 0
-              ? "Wczytuję…"
+              ? "Wczytuję"
               : `${list.total} ${pluralPl(list.total, "materiał", "materiały", "materiałów")}`}
           </Txt>
         )}
@@ -131,7 +131,7 @@ export default function MaterialsScreen() {
         {hasMore ? (
           <Button
             busy={list.loading}
-            label={list.loading ? "Wczytuję…" : "Pokaż więcej"}
+            label={list.loading ? "Wczytuję" : "Pokaż więcej"}
             onPress={loadMore}
           />
         ) : null}
