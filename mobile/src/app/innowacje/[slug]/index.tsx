@@ -3,6 +3,7 @@ import Head from "expo-router/head";
 import {
   ArrowLeft,
   BookOpen,
+  Building2,
   Download,
   FileText,
   Landmark,
@@ -14,6 +15,11 @@ import type { InnovationDetail } from "@/api/types";
 import { APP_NAME } from "@/config";
 import { ReadAloudButton } from "@/features/read-aloud-button";
 import { plainText, RichText } from "@/features/rich-text";
+import {
+  ImprovementBlock,
+  TestSignupBlock,
+  VoteBlock,
+} from "@/features/tester";
 import { Video } from "@/features/video";
 import { formatDate } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
@@ -49,7 +55,10 @@ const goBack = () => {
 };
 
 export default function InnovationScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { slug, potrzeba } = useLocalSearchParams<{
+    slug: string;
+    potrzeba?: string;
+  }>();
   const { colors, wide } = useTheme();
   const [state, setState] = useState<State>({ kind: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -197,6 +206,35 @@ export default function InnovationScreen() {
           </Sheet>
 
           <Sheet>
+            <VoteBlock needId={potrzeba} slug={state.innovation.slug} />
+          </Sheet>
+
+          <Sheet>
+            <Heading level={2}>Chcesz wprowadzić to u siebie?</Heading>
+            <Txt>
+              Opisz swoją gminę lub instytucję, a przygotujemy plan usługi
+              opartej na tym rozwiązaniu.
+            </Txt>
+            <Button
+              icon={Building2}
+              label="Dostosuj dla mojej instytucji"
+              onPress={() =>
+                router.push({
+                  params: { slug: state.innovation.slug },
+                  pathname: "/innowacje/[slug]/dostosuj",
+                })
+              }
+              variant="primary"
+            />
+          </Sheet>
+
+          <Sheet>
+            <TestSignupBlock slug={state.innovation.slug} />
+            <View style={[styles.divider, { backgroundColor: colors.rule }]} />
+            <ImprovementBlock slug={state.innovation.slug} />
+          </Sheet>
+
+          <Sheet>
             <Heading level={2}>Materiały i źródło</Heading>
             <View style={styles.links}>
               {state.innovation.materials_url ? (
@@ -247,6 +285,9 @@ export default function InnovationScreen() {
 }
 
 const styles = StyleSheet.create({
+  divider: {
+    height: 1,
+  },
   errorBody: {
     gap: space.md,
   },

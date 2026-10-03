@@ -121,3 +121,61 @@ export interface NeedThread {
     created_at: string;
   };
 }
+
+export interface FeedbackSummary {
+  does_not_fit: number;
+  fits: number;
+  improvements: number;
+  testers: number;
+}
+
+export type FeedbackKind = "fits" | "does_not_fit";
+
+export type TesterRole = "resident" | "ngo" | "local_government" | "expert";
+
+export interface TestSignup {
+  contact_consent: true;
+  contact_email: string;
+  note?: string;
+  organization?: string;
+  powiat?: string;
+  who: TesterRole;
+}
+
+export interface InstitutionType {
+  name: string;
+  slug: string;
+}
+
+export interface AdaptationRequest {
+  context: string;
+  institution_type: string;
+  place: string;
+  powiat?: string;
+}
+
+export interface AdaptationPlan {
+  combine: { slug: string; title: string; lead: string; why: string }[];
+  cost_drivers: string[];
+  measures: string[];
+  partners: string[];
+  risks: { risk: string; mitigation: string }[];
+  service_name: string;
+  staff: string[];
+  steps: { title: string; description: string }[];
+  summary: string;
+  target_group: string;
+  to_check: string[];
+}
+
+export interface Adaptation {
+  context: string;
+  created_at: string;
+  id: string;
+  innovation: { slug: string; title: string };
+  institution: InstitutionType;
+  place: string;
+  plan: AdaptationPlan;
+  powiat: string | null;
+  share_path: string;
+}

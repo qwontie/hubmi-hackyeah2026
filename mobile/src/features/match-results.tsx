@@ -165,6 +165,7 @@ export function MatchResults({ response, at, titleRef }: MatchResultsProps) {
               innovation={result.innovation}
               key={result.innovation.slug}
               last={index === count - 1}
+              needId={response.need.id}
               reason={result.reason}
             />
           ))}

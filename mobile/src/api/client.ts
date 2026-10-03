@@ -1,10 +1,15 @@
 import { API_BASE } from "@/config";
 import type {
+  Adaptation,
+  AdaptationRequest,
   Category,
   ErrorCode,
+  FeedbackKind,
+  FeedbackSummary,
   FieldError,
   InnovationDetail,
   InnovationSummary,
+  InstitutionType,
   MatchRequest,
   MatchResponse,
   NeedPatch,
@@ -12,6 +17,7 @@ import type {
   NeedThread,
   Page,
   Powiat,
+  TestSignup,
   ThreadMessage,
 } from "./types";
 
@@ -179,8 +185,28 @@ const query = (params: Record<string, string | number | undefined>) => {
 };
 
 export const api = {
+  adapt: (slug: string, body: AdaptationRequest, signal?: AbortSignal) =>
+    request<Adaptation>(`/api/innovations/${encodeURIComponent(slug)}/adapt`, {
+      body,
+      method: "POST",
+      signal,
+    }),
+  adaptation: (id: string, signal?: AbortSignal) =>
+    request<Adaptation>(`/api/adaptations/${encodeURIComponent(id)}`, {
+      signal,
+    }),
   categories: (signal?: AbortSignal) =>
     request<Category[]>("/api/categories", { signal }),
+  feedbackSummary: (slug: string, signal?: AbortSignal) =>
+    request<FeedbackSummary>(
+      `/api/innovations/${encodeURIComponent(slug)}/feedback`,
+      { signal }
+    ),
+  improve: (slug: string, text: string) =>
+    request<{ id: string }>(
+      `/api/innovations/${encodeURIComponent(slug)}/improvements`,
+      { body: { text }, method: "POST" }
+    ),
   innovation: (slug: string, signal?: AbortSignal) =>
     request<InnovationDetail>(`/api/innovations/${encodeURIComponent(slug)}`, {
       signal,
@@ -192,6 +218,8 @@ export const api = {
     request<Page<InnovationSummary>>(`/api/innovations${query(params)}`, {
       signal,
     }),
+  institutionTypes: (signal?: AbortSignal) =>
+    request<InstitutionType[]>("/api/institution-types", { signal }),
   match: (body: MatchRequest, signal?: AbortSignal) =>
     request<MatchResponse>("/api/match", { body, method: "POST", signal }),
   patchNeed: (id: string, token: string, body: NeedPatch) =>
@@ -208,11 +236,29 @@ export const api = {
       headers: { "x-need-token": token },
       method: "POST",
     }),
+  testSignup: (slug: string, body: TestSignup) =>
+    request<{ id: string }>(
+      `/api/innovations/${encodeURIComponent(slug)}/test-signup`,
+      { body, method: "POST" }
+    ),
   thread: (id: string, token: string, signal?: AbortSignal) =>
     request<NeedThread>(`/api/needs/${encodeURIComponent(id)}/thread`, {
       headers: { "x-need-token": token },
       signal,
     }),
+  vote: (
+    slug: string,
+    kind: FeedbackKind,
+    need?: { id: string; token: string }
+  ) =>
+    request<{ id: string; kind: FeedbackKind; summary: FeedbackSummary }>(
+      `/api/innovations/${encodeURIComponent(slug)}/feedback`,
+      {
+        body: need ? { kind, need_id: need.id } : { kind },
+        headers: need ? { "x-need-token": need.token } : {},
+        method: "POST",
+      }
+    ),
 };
 
 export const errorMessage = (error: unknown) =>

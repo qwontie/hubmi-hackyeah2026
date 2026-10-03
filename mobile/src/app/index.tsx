@@ -13,7 +13,6 @@ import { ApiError, api, errorMessage } from "@/api/client";
 import type { MatchResponse, Powiat } from "@/api/types";
 import { TEXT_MAX, TEXT_MIN } from "@/config";
 import { MatchResults, resultsTitle } from "@/features/match-results";
-import { PowiatSelect } from "@/features/powiat-select";
 import { VoiceInput } from "@/features/voice-input";
 import { pluralPl } from "@/lib/plural";
 import { useRecognition } from "@/speech/recognition";
@@ -24,6 +23,7 @@ import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
 import { Screen } from "@/ui/screen";
+import { Select } from "@/ui/select";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 import { focusElement } from "@/ui/web-globals";
@@ -249,7 +249,17 @@ export default function MatchScreen() {
         <VoiceInput recognition={recognition} />
 
         {powiats.length > 0 ? (
-          <PowiatSelect onChange={setPowiat} powiats={powiats} value={powiat} />
+          <Select
+            emptyLabel="Nie wybieram"
+            label="Powiat"
+            onChange={setPowiat}
+            optional
+            options={powiats.map((item) => ({
+              label: item.name,
+              value: item.slug,
+            }))}
+            value={powiat}
+          />
         ) : null}
 
         <View style={[styles.actions, wide && styles.actionsWide]}>

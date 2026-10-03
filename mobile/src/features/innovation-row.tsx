@@ -11,6 +11,7 @@ interface InnovationRowProps {
   index?: number;
   innovation: InnovationSummary;
   last?: boolean;
+  needId?: string;
   reason?: string;
 }
 
@@ -28,9 +29,11 @@ export function InnovationRow({
   index,
   reason,
   last = false,
+  needId,
 }: InnovationRowProps) {
   const { colors, type, highContrast } = useTheme();
   const [hovered, setHovered] = useState(false);
+  const meta = metaLine(innovation);
   return (
     <View
       role="listitem"
@@ -46,7 +49,9 @@ export function InnovationRow({
       <Link
         asChild
         href={{
-          params: { slug: innovation.slug },
+          params: needId
+            ? { potrzeba: needId, slug: innovation.slug }
+            : { slug: innovation.slug },
           pathname: "/innowacje/[slug]",
         }}
       >
@@ -80,14 +85,16 @@ export function InnovationRow({
               {innovation.title}
             </Txt>
             {reason ? <Txt>{reason}</Txt> : null}
-            <Txt tone="soft" variant="detail">
-              {reason ? metaLine(innovation) : innovation.lead}
-            </Txt>
             {reason ? null : (
               <Txt tone="soft" variant="detail">
-                {metaLine(innovation)}
+                {innovation.lead}
               </Txt>
             )}
+            {meta ? (
+              <Txt tone="soft" variant="detail">
+                {meta}
+              </Txt>
+            ) : null}
           </View>
           <ChevronRight
             aria-hidden

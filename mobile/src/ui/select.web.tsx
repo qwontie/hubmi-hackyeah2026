@@ -1,51 +1,62 @@
 import { useId } from "react";
 import { StyleSheet, View } from "react-native";
-import type { Powiat } from "@/api/types";
 import { useTheme } from "@/theme/settings";
 import { fonts, minTarget, radius, space } from "@/theme/tokens";
-import { Txt } from "@/ui/text";
+import type { SelectProps } from "./select";
+import { Txt } from "./text";
 
-interface PowiatSelectProps {
-  onChange: (value: string) => void;
-  powiats: Powiat[];
-  value: string;
-}
-
-export function PowiatSelect({ powiats, value, onChange }: PowiatSelectProps) {
+export function Select({
+  label,
+  optional = false,
+  options,
+  value,
+  onChange,
+  emptyLabel,
+  error,
+}: SelectProps) {
   const { colors, type, borderWidth } = useTheme();
   const id = useId();
+  const errorId = `${id}-error`;
   return (
     <View style={styles.wrap}>
       <label htmlFor={id}>
         <Txt variant="label" weight="600">
-          Powiat <Txt tone="soft">(nieobowiązkowo)</Txt>
+          {label}
+          {optional ? <Txt tone="soft"> (nieobowiązkowo)</Txt> : null}
         </Txt>
       </label>
       <select
+        aria-describedby={error ? errorId : undefined}
+        aria-invalid={error ? true : undefined}
         id={id}
         onChange={(event) => onChange(event.target.value)}
         style={{
           appearance: "auto",
           background: colors.sunk,
-          border: `${borderWidth}px solid ${colors.ruleStrong}`,
+          border: `${error ? 2 : borderWidth}px solid ${error ? colors.bad : colors.ruleStrong}`,
           borderRadius: radius.md,
           color: colors.ink,
           fontFamily: fonts["400"],
           fontSize: type.body,
-          maxWidth: 420,
+          maxWidth: 480,
           minHeight: minTarget + 8,
           padding: `0 ${space.md}px`,
           width: "100%",
         }}
         value={value}
       >
-        <option value="">Nie wybieram</option>
-        {powiats.map((powiat) => (
-          <option key={powiat.slug} value={powiat.slug}>
-            {powiat.name}
+        {emptyLabel ? <option value="">{emptyLabel}</option> : null}
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>
+      {error ? (
+        <Txt nativeID={errorId} tone="bad" weight="500">
+          {error}
+        </Txt>
+      ) : null}
     </View>
   );
 }
