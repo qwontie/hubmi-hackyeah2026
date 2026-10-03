@@ -1,8 +1,12 @@
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
+import { FileText, Pencil } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
+import type { GrantCall, GrantSection } from "@/api/types";
 import { APP_NAME } from "@/config";
 import { useApplicationStart, useGrantCall } from "@/hooks/use-grants";
+import { pluralPl } from "@/lib/plural";
+import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { ExternalLink } from "@/ui/external-link";
@@ -22,13 +26,107 @@ const phaseLabel = {
   upcoming: "Nabór zapowiedziany",
 } as const;
 
+function Start({ call, ideaId }: { call: GrantCall; ideaId?: string }) {
+  const start = useApplicationStart(call.id, ideaId);
+  const open = call.phase === "open";
+  return (
+    <Sheet raised={open}>
+      <View style={styles.group}>
+        <Heading level={2}>Przygotuj wniosek na podstawie pomysłu</Heading>
+        {open ? (
+          <Txt tone="soft">
+            Sztuczna inteligencja ułoży szkic odpowiedzi z Twojego pomysłu.
+            Potem przeczytasz go i poprawisz.
+          </Txt>
+        ) : (
+          <Txt tone="soft">
+            Wniosek można utworzyć tylko podczas otwartego naboru.
+          </Txt>
+        )}
+        {open && start.ideas.length === 0 ? (
+          <View style={styles.group}>
+            <Txt>Na tym urządzeniu nie ma jeszcze zapisanego pomysłu.</Txt>
+            <View style={styles.actions}>
+              <Button
+                icon={Pencil}
+                label="Opisz pomysł"
+                onPress={() => router.push("/pomysl/nowy")}
+                variant="primary"
+              />
+            </View>
+          </View>
+        ) : null}
+        {open ? (
+          <View style={styles.actions}>
+            {start.ideas.map((idea) => (
+              <Button
+                busy={start.busyId === idea.id}
+                disabled={start.busyId !== null}
+                icon={FileText}
+                key={idea.id}
+                label={`Przygotuj wniosek: ${idea.title}`}
+                onPress={() => start.start(idea)}
+                variant="primary"
+              />
+            ))}
+          </View>
+        ) : null}
+        {start.error ? <Notice tone="error">{start.error}</Notice> : null}
+      </View>
+    </Sheet>
+  );
+}
+
+function Questions({ sections }: { sections: GrantSection[] }) {
+  const { colors } = useTheme();
+  const allRequired = sections.every((section) => section.required);
+  return (
+    <Sheet>
+      <View style={styles.group}>
+        <Heading level={2}>Pytania we wniosku</Heading>
+        <Txt tone="soft">
+          {`${sections.length} ${pluralPl(sections.length, "pytanie", "pytania", "pytań")}.`}
+          {allRequired ? " Odpowiedź na każde jest wymagana." : ""}
+        </Txt>
+      </View>
+      <View role="list">
+        {sections.map((section, index) => (
+          <View
+            key={section.key}
+            role="listitem"
+            style={[
+              styles.question,
+              { borderTopColor: colors.rule },
+              index === 0 && styles.first,
+            ]}
+          >
+            <Txt mono style={styles.number} tone="stamp" weight="600">
+              {String(index + 1).padStart(2, "0")}
+            </Txt>
+            <View style={styles.questionText}>
+              <Txt weight="600">
+                {section.label}
+                {allRequired || section.required ? "" : " (nieobowiązkowe)"}
+              </Txt>
+              {section.hint ? (
+                <Txt tone="soft" variant="detail">
+                  {section.hint}
+                </Txt>
+              ) : null}
+            </View>
+          </View>
+        ))}
+      </View>
+    </Sheet>
+  );
+}
+
 export default function GrantCallScreen() {
   const { id, pomysl } = useLocalSearchParams<{
     id: string;
     pomysl?: string;
   }>();
   const { state, retry } = useGrantCall(id);
-  const start = useApplicationStart(id ?? "", pomysl);
   if (state.kind === "loading") {
     return (
       <Screen back="Nabory">
@@ -49,68 +147,53 @@ export default function GrantCallScreen() {
     );
   }
   const call = state.data;
+  const hero = (
+    <View style={styles.group}>
+      <Txt
+        tone={call.phase === "open" ? "stamp" : "soft"}
+        variant="detail"
+        weight="600"
+      >
+        {phaseLabel[call.phase]}
+        {call.demo ? " · Nabór pokazowy" : ""}
+      </Txt>
+      <Heading level={1}>{call.title}</Heading>
+      <Txt tone="soft" variant="lead">
+        {`Od ${date(call.opens_at)} do ${date(call.closes_at)}`}
+      </Txt>
+    </View>
+  );
   return (
-    <Screen back="Nabory" width={900}>
+    <Screen back="Nabory" backFallback="/nabory" hero={hero} width={900}>
       <Head>
         <title>{`${call.title} · ${APP_NAME}`}</title>
       </Head>
       <View style={styles.group}>
-        <Txt tone={call.phase === "open" ? "stamp" : "soft"} weight="600">
-          {phaseLabel[call.phase]}
-          {call.demo ? " · Nabór pokazowy" : ""}
-        </Txt>
-        <Heading level={1}>{call.title}</Heading>
-        <Txt tone="soft">
-          Od {date(call.opens_at)} do {date(call.closes_at)}
-        </Txt>
         {call.description.split("\n\n").map((paragraph) => (
           <Txt key={paragraph}>{paragraph}</Txt>
         ))}
         {call.source_url ? (
-          <ExternalLink href={call.source_url} label="Źródło naboru" />
+          <View style={styles.actions}>
+            <ExternalLink href={call.source_url} label="Źródło naboru" />
+          </View>
         ) : null}
       </View>
-      <Sheet>
-        <View style={styles.group}>
-          <Heading level={2}>Przygotuj wniosek na podstawie pomysłu</Heading>
-          {call.phase === "open" ? null : (
-            <Txt tone="soft">
-              Wniosek można utworzyć tylko podczas otwartego naboru.
-            </Txt>
-          )}
-          {call.phase === "open" && start.ideas.length === 0 ? (
-            <Txt tone="soft">
-              Najpierw opisz pomysł w zakładce Pomysł na tym urządzeniu.
-            </Txt>
-          ) : null}
-          {call.phase === "open"
-            ? start.ideas.map((idea) => (
-                <Button
-                  busy={start.busyId === idea.id}
-                  disabled={start.busyId !== null}
-                  key={idea.id}
-                  label={`Przygotuj wniosek: ${idea.title}`}
-                  onPress={() => start.start(idea)}
-                />
-              ))
-            : null}
-          {start.error ? <Notice tone="error">{start.error}</Notice> : null}
-        </View>
-      </Sheet>
-      <View style={styles.group}>
-        <Heading level={2}>Sekcje wniosku</Heading>
-        {call.sections.map((section) => (
-          <View key={section.key}>
-            <Txt weight="600">
-              {section.label}
-              {section.required ? " (wymagane)" : ""}
-            </Txt>
-            {section.hint ? <Txt tone="soft">{section.hint}</Txt> : null}
-          </View>
-        ))}
-      </View>
+      <Start call={call} ideaId={pomysl} />
+      <Questions sections={call.sections} />
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({ group: { gap: space.md } });
+const styles = StyleSheet.create({
+  actions: { alignItems: "flex-start", gap: space.sm },
+  first: { borderTopWidth: 0 },
+  group: { gap: space.md },
+  number: { minWidth: 32 },
+  question: {
+    borderTopWidth: 1,
+    flexDirection: "row",
+    gap: space.md,
+    paddingVertical: space.md,
+  },
+  questionText: { flex: 1, gap: space.xs },
+});

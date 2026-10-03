@@ -29,6 +29,7 @@ interface FieldProps extends Omit<TextInputProps, "style"> {
   label: string;
   labelledBy?: string;
   large?: boolean;
+  rows?: number;
 }
 
 export const TextField = function TextField({
@@ -39,6 +40,7 @@ export const TextField = function TextField({
   hideLabel = false,
   large = false,
   multiline,
+  rows = 5,
   ref,
   ...rest
 }: FieldProps & { ref?: Ref<TextInput> }) {
@@ -90,7 +92,7 @@ export const TextField = function TextField({
             fontSize,
             lineHeight: lineHeight(fontSize),
             minHeight: multiline
-              ? lineHeight(fontSize) * 5 + 32
+              ? lineHeight(fontSize) * rows + 32
               : minTarget + 8,
             textAlignVertical: multiline ? "top" : "center",
           },

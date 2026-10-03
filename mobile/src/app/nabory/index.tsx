@@ -1,6 +1,8 @@
 import { router } from "expo-router";
 import Head from "expo-router/head";
+import { ArrowRight, Bell } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
+import type { GrantCall } from "@/api/types";
 import { APP_NAME } from "@/config";
 import { useGrantCalls } from "@/hooks/use-grants";
 import { space } from "@/theme/tokens";
@@ -15,6 +17,39 @@ const date = (value: string) =>
     new Date(value)
   );
 
+function CallCard({ call }: { call: GrantCall }) {
+  const open = call.phase === "open";
+  return (
+    <Sheet raised={open}>
+      <View style={styles.group}>
+        <Txt tone={open ? "stamp" : "soft"} variant="detail" weight="600">
+          {open ? "Nabór otwarty" : "Nabór zapowiedziany"}
+          {call.demo ? " · Nabór pokazowy" : ""}
+        </Txt>
+        <Heading level={2}>{call.title}</Heading>
+        <Txt tone="soft">
+          {open
+            ? `Wnioski do ${date(call.closes_at)}`
+            : `Start ${date(call.opens_at)}`}
+        </Txt>
+      </View>
+      <View style={styles.actions}>
+        <Button
+          icon={ArrowRight}
+          label="Zobacz nabór"
+          onPress={() =>
+            router.push({
+              params: { id: call.id },
+              pathname: "/nabory/[id]",
+            })
+          }
+          variant={open ? "primary" : "secondary"}
+        />
+      </View>
+    </Sheet>
+  );
+}
+
 export default function GrantCallsScreen() {
   const { calls, error, loading, retry } = useGrantCalls();
   return (
@@ -27,11 +62,14 @@ export default function GrantCallsScreen() {
           Sprawdź otwarte i zapowiedziane nabory. Zapisany na tym urządzeniu
           pomysł możesz zamienić w roboczy wniosek.
         </Txt>
-        <Button
-          label="Powiadomienia o naborach"
-          onPress={() => router.push("/nabory/powiadomienia")}
-          variant="secondary"
-        />
+        <View style={styles.actions}>
+          <Button
+            icon={Bell}
+            label="Powiadomienia o naborach"
+            onPress={() => router.push("/nabory/powiadomienia")}
+            variant="quiet"
+          />
+        </View>
       </View>
       {loading ? <Txt aria-live="polite">Wczytuję nabory.</Txt> : null}
       {error ? (
@@ -50,33 +88,7 @@ export default function GrantCallsScreen() {
       <View role="list" style={styles.list}>
         {calls.map((call) => (
           <View key={call.id} role="listitem">
-            <Sheet>
-              <View style={styles.group}>
-                <Txt
-                  tone={call.phase === "open" ? "stamp" : "soft"}
-                  weight="600"
-                >
-                  {call.phase === "open"
-                    ? "Nabór otwarty"
-                    : "Nabór zapowiedziany"}
-                  {call.demo ? " · Nabór pokazowy" : ""}
-                </Txt>
-                <Heading level={2}>{call.title}</Heading>
-                <Txt>
-                  {call.phase === "open" ? "Do" : "Od"}{" "}
-                  {date(call.phase === "open" ? call.closes_at : call.opens_at)}
-                </Txt>
-                <Button
-                  label="Zobacz nabór"
-                  onPress={() =>
-                    router.push({
-                      params: { id: call.id },
-                      pathname: "/nabory/[id]",
-                    })
-                  }
-                />
-              </View>
-            </Sheet>
+            <CallCard call={call} />
           </View>
         ))}
       </View>
@@ -85,6 +97,7 @@ export default function GrantCallsScreen() {
 }
 
 const styles = StyleSheet.create({
+  actions: { alignItems: "flex-start" },
   group: { gap: space.md },
   list: { gap: space.lg },
 });
