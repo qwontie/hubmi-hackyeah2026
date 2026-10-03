@@ -16,15 +16,14 @@ export function PowiatField({
   const powiats = usePowiats();
   return (
     <View style={styles.block}>
-      <View style={styles.picker}>
-        <PowiatPicker
-          night={false}
-          onChange={onChange}
-          options={powiats.options}
-          required
-          value={value}
-        />
-      </View>
+      <PowiatPicker
+        mapWidth={340}
+        night={false}
+        onChange={onChange}
+        options={powiats.options}
+        required
+        value={value}
+      />
       {error ? (
         <Txt tone="bad" weight="500">
           {error}
@@ -37,8 +36,5 @@ export function PowiatField({
 const styles = StyleSheet.create({
   block: {
     gap: space.md,
-  },
-  picker: {
-    maxWidth: 460,
   },
 });

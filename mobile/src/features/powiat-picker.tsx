@@ -11,6 +11,7 @@ import { Txt } from "@/ui/text";
 const EVERYWHERE = "Cała Małopolska";
 
 interface PowiatPickerProps {
+  mapWidth?: number;
   night?: boolean;
   onChange: (slug: string) => void;
   options: SelectOption[];
@@ -40,6 +41,7 @@ const usePalette = (night: boolean) => {
 };
 
 function RegionMap({
+  mapWidth,
   night = true,
   onChange,
   value,
@@ -53,7 +55,10 @@ function RegionMap({
   return (
     <View
       aria-hidden
-      style={{ aspectRatio: projection.width / projection.height }}
+      style={{
+        aspectRatio: projection.width / projection.height,
+        maxWidth: mapWidth,
+      }}
     >
       <Svg
         height="100%"
@@ -119,6 +124,7 @@ function NameList({
 }
 
 export function PowiatPicker({
+  mapWidth,
   night = true,
   onChange,
   options,
@@ -133,7 +139,7 @@ export function PowiatPicker({
   const Chevron = open ? ChevronUp : ChevronDown;
   const pick = (slug: string) => {
     onChange(slug);
-    if (!wide && slug) {
+    if (slug) {
       setOpen(false);
     }
   };
@@ -148,7 +154,12 @@ export function PowiatPicker({
         </Txt>
       </View>
       {showMap ? (
-        <RegionMap night={night} onChange={pick} value={value} />
+        <RegionMap
+          mapWidth={mapWidth}
+          night={night}
+          onChange={pick}
+          value={value}
+        />
       ) : null}
       <View style={styles.bar}>
         <Pressable
