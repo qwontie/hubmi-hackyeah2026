@@ -33,6 +33,13 @@ class MaterialSummary(BaseModel):
     topics: list[str] = Field(
         description="1 to 4 topic slugs copied exactly from the allowed list"
     )
+    title: str = Field(
+        default="",
+        description=(
+            "the document's own title as printed on its cover or first page, in "
+            "Polish, max 120 characters; empty when there is none"
+        ),
+    )
 
 
 INSTRUCTIONS = f"""
@@ -101,4 +108,5 @@ async def summarize(title: str, pages: list[str]) -> MaterialSummary:
         readable=result.readable,
         summary=clip(result.summary) if result.readable else "",
         topics=clean_topics(result.topics),
+        title=" ".join(result.title.split())[:120],
     )

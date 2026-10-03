@@ -22,6 +22,7 @@ from .innovation_image import ImageSource, InnovationImage
 from .knowledge_run import KnowledgeRun
 from .match_result import MatchResult
 from .material import KnowledgeStatus, Material, MaterialKind, SummaryState
+from .material_file import MaterialFile
 from .material_text import MaterialText
 from .message import Message, MessageDelivery, MessageDirection
 from .need import Need, NeedCluster, NeedOrigin, NeedStatus
@@ -63,6 +64,7 @@ __all__ = [
     "KnowledgeStatus",
     "MatchResult",
     "Material",
+    "MaterialFile",
     "MaterialKind",
     "MaterialText",
     "Message",

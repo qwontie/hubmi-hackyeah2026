@@ -23,6 +23,22 @@ BLANK_LINES = re.compile(r"\n{3,}")
 class Document:
     data: bytes
     sha256: str
+    etag: str | None = None
+    modified: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class Validators:
+    etag: str | None
+    modified: str | None
+
+    def headers(self) -> dict[str, str]:
+        found: dict[str, str] = {}
+        if self.etag:
+            found["If-None-Match"] = self.etag
+        if self.modified:
+            found["If-Modified-Since"] = self.modified
+        return found
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,30 +56,25 @@ def _cache_path(cache_dir: Path | None, url: str) -> Path | None:
     return cache_dir / f"{hashlib.sha256(url.encode()).hexdigest()[:32]}.bin"
 
 
-async def remote_size(fetcher: PageFetcher, url: str) -> int | None:
-    try:
-        response = await fetcher.client.head(url)
-        response.raise_for_status()
-    except httpx.HTTPError as e:
-        logger.warning("head %s failed: %r", url, e)
-        return None
-    finally:
-        await asyncio.sleep(fetcher.delay / 2)
-    length = response.headers.get("content-length")
-    return int(length) if length and length.isdigit() else None
-
-
 async def download(
-    fetcher: PageFetcher, url: str, *, cache_dir: Path | None = None
-) -> Document:
+    fetcher: PageFetcher,
+    url: str,
+    *,
+    cache_dir: Path | None = None,
+    validators: Validators | None = None,
+) -> Document | None:
     cached = _cache_path(cache_dir, url)
     if cached is not None and cached.exists():
         data = cached.read_bytes()
         return Document(data=data, sha256=hashlib.sha256(data).hexdigest())
+    headers = validators.headers() if validators else {}
     last_error: Exception | None = None
     for attempt in range(RETRIES):
         try:
-            response = await fetcher.client.get(url)
+            response = await fetcher.client.get(url, headers=headers)
+            if response.status_code == httpx.codes.NOT_MODIFIED and headers:
+                await asyncio.sleep(fetcher.delay)
+                return None
             response.raise_for_status()
         except httpx.HTTPError as e:
             last_error = e
@@ -78,7 +89,12 @@ async def download(
         if cached is not None:
             cached.parent.mkdir(parents=True, exist_ok=True)
             cached.write_bytes(data)
-        return Document(data=data, sha256=hashlib.sha256(data).hexdigest())
+        return Document(
+            data=data,
+            sha256=hashlib.sha256(data).hexdigest(),
+            etag=response.headers.get("etag"),
+            modified=response.headers.get("last-modified"),
+        )
     msg = f"cannot download {url}"
     raise RuntimeError(msg) from last_error
 

@@ -17,6 +17,7 @@ class ImportStatus(StrEnum):
 class ImportTrigger(StrEnum):
     SCRIPT = "script"
     ADMIN = "admin"
+    SCHEDULE = "schedule"
 
 
 def _count() -> int:

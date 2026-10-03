@@ -78,6 +78,10 @@ class Material(SQLModel, table=True):
     )
     pages: int | None = Field(default=None, sa_column=Column(Integer, nullable=True))
     source_hash: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    source_etag: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    source_modified: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
     summary_state: SummaryState = Field(
         default=SummaryState.PENDING,
         sa_column=Column(

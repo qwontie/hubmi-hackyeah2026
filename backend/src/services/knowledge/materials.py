@@ -23,7 +23,7 @@ from utils.db.models.material import (
 from utils.db.models.material_text import MaterialText
 from utils.logging import logger
 
-from .documents import download, extract_text, remote_size
+from .documents import Validators, download, extract_text
 from .sources import MaterialLink
 from .summaries import has_text, summarize
 from .topics import TOPICS
@@ -144,10 +144,14 @@ async def import_material(  # noqa: PLR0913
     link_changed = _apply_link(material, link)
     pages: list[str] | None = None
     file_changed = False
-    known = material.source_hash is not None and material.file_size is not None
-    size = None if (force or not known) else await remote_size(fetcher, link.file_url)
-    if not known or force or size != material.file_size:
-        document = await download(fetcher, link.file_url, cache_dir=cache_dir)
+    known = material.source_hash is not None and not force
+    validators = (
+        Validators(material.source_etag, material.source_modified) if known else None
+    )
+    document = await download(
+        fetcher, link.file_url, cache_dir=cache_dir, validators=validators
+    )
+    if document is not None:
         if document.sha256 != material.source_hash or force:
             extracted = await extract_text(document.data)
             pages = extracted.pages
@@ -156,6 +160,8 @@ async def import_material(  # noqa: PLR0913
             file_changed = document.sha256 != material.source_hash
             material.source_hash = document.sha256
         material.file_size = len(document.data)
+        material.source_etag = document.etag
+        material.source_modified = document.modified
     if pages is None:
         pages = await stored_text(session, material.id)
     before = (material.summary_hash, material.summary_state)

@@ -1,18 +1,32 @@
 import uuid
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
+from urllib.parse import quote
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    Path,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
+from pydantic import BaseModel, Field, HttpUrl
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.errors import conflict, not_found
+from api.errors import conflict, invalid, not_found
 from api.limits import rate_limit
-from api.security import AdminPerson, current_admin
+from api.security import AdminPerson, admin_from_secret, current_admin
 from services.bus import bus
 from services.dialogue.audit import record
 from services.knowledge import (
     KnowledgeImportRunningError,
     MaterialFilters,
+    adding,
     get_material,
     latest_runs,
     list_materials,
@@ -55,8 +69,10 @@ from services.knowledge.schemas import (
     kind_refs,
 )
 from services.knowledge.topics import AREAS, TOPICS
+from utils.db.models import AdminRole, MaterialFile
 from utils.db.models.import_run import ImportTrigger
 from utils.db.models.material import KnowledgeStatus, MaterialKind
+from utils.env import env
 
 router = APIRouter(route_class=DishkaRoute, tags=["knowledge"])
 admin_router = APIRouter(
@@ -72,6 +88,47 @@ PageNumber = Annotated[int, Query(ge=1, le=1000)]
 PerPage = Annotated[int, Query(ge=1, le=100)]
 SearchText = Annotated[str | None, Query(min_length=2, max_length=200)]
 Key = Annotated[str, Path(min_length=1, max_length=120)]
+add_limit = rate_limit("material_add", per_minute=10, per_day=200)
+TOO_BIG = "Plik jest za duży. Limit to 30 MB."
+NOT_PDF = "Dodaj plik PDF."
+NO_JOB = "Nie znaleziono tego zadania."
+NO_FILE = "Ten materiał nie ma pliku w HubMi."
+BAD_CHARS = "Tekst zawiera niedozwolone znaki."
+Year = Annotated[int, Field(ge=1990, le=2100)]
+
+
+class MaterialLinkBody(BaseModel):
+    kind: Literal["url"]
+    url: HttpUrl
+    title: Annotated[str, Field(max_length=200)] | None = None
+    material_kind: MaterialKind = MaterialKind.PUBLICATION
+    year: Year | None = None
+
+
+class MaterialTextBody(BaseModel):
+    kind: Literal["text"]
+    title: Annotated[str, Field(min_length=3, max_length=200)]
+    text: Annotated[str, Field(min_length=400, max_length=adding.MAX_TEXT_CHARS)]
+    material_kind: MaterialKind = MaterialKind.PUBLICATION
+    year: Year | None = None
+
+
+class JobStarted(BaseModel):
+    job_id: str
+
+
+def _accepted(
+    admin: AdminPerson, session: AsyncSession, source: adding.NewMaterial
+) -> str:
+    job_id = adding.start(source)
+    record(
+        session,
+        admin,
+        "material.add",
+        target=("material_job", job_id),
+        details={"kind": source.kind, "url": source.url, "filename": source.filename},
+    )
+    return job_id
 
 
 def _topic(value: str | None) -> str | None:
@@ -127,6 +184,31 @@ async def material(
     if found is None:
         raise not_found(NO_MATERIAL)
     return await material_detail(session, found)
+
+
+@router.get(
+    "/materials/{material_id}/file",
+    response_class=Response,
+    dependencies=[Depends(limiter)],
+)
+async def material_file(
+    material_id: uuid.UUID, request: Request, session: FromDishka[AsyncSession]
+) -> Response:
+    found = await get_material(session, material_id, published_only=False)
+    stored = await session.get(MaterialFile, material_id) if found else None
+    if found is None or stored is None:
+        raise not_found(NO_FILE)
+    published = found.status == KnowledgeStatus.PUBLISHED
+    if not published:
+        viewer = await admin_from_secret(request.cookies.get(env.auth.cookie_name))
+        if viewer is None or viewer.role != AdminRole.ADMIN:
+            raise not_found(NO_FILE)
+    headers = {
+        "Cache-Control": "public, max-age=3600" if published else "private, no-store",
+        "Content-Disposition": f"inline; filename*=UTF-8''{quote(stored.filename)}",
+        "X-Content-Type-Options": "nosniff",
+    }
+    return Response(content=stored.data, media_type=stored.mime_type, headers=headers)
 
 
 @router.get("/challenges", dependencies=[Depends(limiter)])
@@ -237,6 +319,83 @@ async def admin_materials(  # noqa: PLR0913
         page=page,
         per_page=per_page,
     )
+
+
+@admin_router.post(
+    "/materials",
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(add_limit)],
+)
+async def add_material(
+    body: Annotated[MaterialLinkBody | MaterialTextBody, Field(discriminator="kind")],
+    admin: AdminPerson,
+    session: FromDishka[AsyncSession],
+) -> JobStarted:
+    if isinstance(body, MaterialLinkBody):
+        source = adding.NewMaterial(
+            kind="url",
+            url=str(body.url),
+            title=body.title,
+            material_kind=body.material_kind,
+            year=body.year,
+        )
+    else:
+        if "\x00" in body.text or "\x00" in body.title:
+            error = invalid("text", BAD_CHARS)
+            raise error
+        source = adding.NewMaterial(
+            kind="text",
+            text=body.text,
+            title=body.title,
+            material_kind=body.material_kind,
+            year=body.year,
+        )
+    job_id = _accepted(admin, session, source)
+    await session.commit()
+    return JobStarted(job_id=job_id)
+
+
+@admin_router.post(
+    "/materials/upload",
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(add_limit)],
+)
+async def upload_material(  # noqa: PLR0913
+    *,
+    file: Annotated[UploadFile, File()],
+    admin: AdminPerson,
+    session: FromDishka[AsyncSession],
+    title: Annotated[str | None, Form(max_length=200)] = None,
+    material_kind: Annotated[MaterialKind, Form()] = MaterialKind.PUBLICATION,
+    year: Annotated[int | None, Form(ge=1990, le=2100)] = None,
+) -> JobStarted:
+    data = await file.read(adding.MAX_PDF_BYTES + 1)
+    if len(data) > adding.MAX_PDF_BYTES:
+        error = invalid("file", TOO_BIG)
+        raise error
+    if not data.startswith(b"%PDF-"):
+        error = invalid("file", NOT_PDF)
+        raise error
+    filename = (file.filename or "material.pdf").rsplit("/", 1)[-1][:120]
+    source = adding.NewMaterial(
+        kind="pdf",
+        data=data,
+        filename=filename,
+        title=title,
+        material_kind=material_kind,
+        year=year,
+    )
+    job_id = _accepted(admin, session, source)
+    await session.commit()
+    return JobStarted(job_id=job_id)
+
+
+@admin_router.get("/materials/jobs/{job_id}")
+async def material_job(job_id: Annotated[str, Path(max_length=40)]) -> dict[str, Any]:
+    found = adding.job(job_id)
+    if found is None:
+        raise not_found(NO_JOB)
+    return found
 
 
 @admin_router.get("/materials/{material_id}")

@@ -20,6 +20,7 @@ from services.middleman import (
     generate_plan,
     repository,
 )
+from services.middleman.local import local_data
 from services.modules import Page
 
 from .common import (
@@ -66,6 +67,7 @@ async def adapt(
     powiat = powiat_name("powiat", body.powiat)
     adapt_limit.check(client_ip(request))
     candidates = await repository.candidates(session, innovation)
+    local = await local_data(session, body.powiat, innovation)
     await session.commit()
     async with ai_guard():
         try:
@@ -76,6 +78,7 @@ async def adapt(
                 powiat_name=powiat,
                 context=context,
                 candidates=candidates,
+                local=local,
             )
         except UnclearRequestError:
             error = unclear("context", OFF_TOPIC)

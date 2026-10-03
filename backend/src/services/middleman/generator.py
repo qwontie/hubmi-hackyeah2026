@@ -6,6 +6,7 @@ from services.ai import AiUnavailableError, run_agent
 from services.modules.grounding import Sources
 from utils.db.models import Innovation
 
+from .local import LocalData
 from .schemas import (
     INSTITUTION_NAMES,
     CombinedInnovation,
@@ -34,6 +35,9 @@ Zasady, których nie wolno złamać:
   nazw źródeł finansowania.
 - Innowacje do połączenia wybierasz tylko z listy KANDYDACI, podając ich slug
   bez zmian. Jeśli żadna nie pasuje, zostawiasz listę pustą.
+- Liczby i fakty o miejscu bierzesz tylko z sekcji DANE ROPS, zawsze z rokiem.
+  Opisz je w polu local_context. Jeśli sekcji DANE ROPS nie ma, local_context
+  zostaw pusty i nie zgaduj niczego o miejscu.
 - Plan ma być konkretny dla tego typu instytucji, tego miejsca i opisanego
   kontekstu: inny dla gminy, inny dla organizacji pozarządowej, inny dla szkoły.
   Wykorzystaj to, co instytucja napisała o budżecie, ludziach i odbiorcach.
@@ -77,20 +81,23 @@ def build_prompt(  # noqa: PLR0913
     powiat_name: str | None,
     context: str,
     candidates: Sequence[Innovation],
+    local: LocalData | None = None,
 ) -> str:
     where = place if not powiat_name else f"{place} ({powiat_name})"
-    return "\n\n".join(
+    local_text = local.text() if local else ""
+    parts = [
+        f"INNOWACJA\n\n{innovation_text(innovation)}",
         (
-            f"INNOWACJA\n\n{innovation_text(innovation)}",
-            (
-                "INSTYTUCJA\n\n"
-                f"Typ: {INSTITUTION_NAMES[institution]}\n"
-                f"Miejsce: {where}\n"
-                f"Opis od instytucji:\n<<<\n{context}\n>>>"
-            ),
-            f"KANDYDACI\n\n{candidates_text(candidates)}",
-        )
-    )
+            "INSTYTUCJA\n\n"
+            f"Typ: {INSTITUTION_NAMES[institution]}\n"
+            f"Miejsce: {where}\n"
+            f"Opis od instytucji:\n<<<\n{context}\n>>>"
+        ),
+    ]
+    if local_text:
+        parts.append(f"DANE ROPS\n\n{local_text}")
+    parts.append(f"KANDYDACI\n\n{candidates_text(candidates)}")
+    return "\n\n".join(parts)
 
 
 def plan_texts(plan: ServicePlan) -> list[str]:
@@ -100,6 +107,7 @@ def plan_texts(plan: ServicePlan) -> list[str]:
     texts += [f"{r.risk} {r.mitigation}" for r in plan.risks]
     texts += [c.why for c in plan.combine]
     texts += plan.to_check
+    texts.append(plan.local_context)
     return texts
 
 
@@ -125,6 +133,7 @@ def sanitize(plan: ServicePlan, sources: Sources) -> ServicePlan:
             ],
             "combine": [c for c in plan.combine if not sources.invented(c.why)],
             "to_check": sources.clean_list(plan.to_check),
+            "local_context": sources.clean_text(plan.local_context),
         }
     )
 
@@ -159,7 +168,9 @@ def make_agent(sources: Sources, allowed: set[str]) -> Agent[None, ServicePlan]:
     return agent
 
 
-def to_plan(plan: ServicePlan, candidates: Sequence[Innovation]) -> Plan:
+def to_plan(
+    plan: ServicePlan, candidates: Sequence[Innovation], local: LocalData | None = None
+) -> Plan:
     by_slug = {c.slug: c for c in candidates}
     combine: list[CombinedInnovation] = []
     for item in plan.combine:
@@ -183,6 +194,9 @@ def to_plan(plan: ServicePlan, candidates: Sequence[Innovation]) -> Plan:
         measures=plan.measures[:MAX_ITEMS],
         combine=combine[:MAX_COMBINE],
         to_check=plan.to_check[:MAX_ITEMS],
+        local_context=plan.local_context if local and local.text() else "",
+        local_facts=local.facts if local else [],
+        regional_challenges=local.challenges if local else [],
     )
 
 
@@ -198,6 +212,7 @@ async def generate_plan(  # noqa: PLR0913
     powiat_name: str | None,
     context: str,
     candidates: Sequence[Innovation],
+    local: LocalData | None = None,
 ) -> Plan:
     sources = Sources(
         [
@@ -206,6 +221,7 @@ async def generate_plan(  # noqa: PLR0913
             powiat_name or "",
             context,
             candidates_text(candidates),
+            local.text() if local else "",
         ]
     )
     agent = make_agent(sources, {c.slug for c in candidates})
@@ -216,11 +232,12 @@ async def generate_plan(  # noqa: PLR0913
         powiat_name=powiat_name,
         context=context,
         candidates=candidates,
+        local=local,
     )
     result = await run_agent(agent, prompt, kind="adaptation")
     if result.unclear:
         raise UnclearRequestError
-    plan = to_plan(result, candidates)
+    plan = to_plan(result, candidates, local)
     if not (plan.service_name and plan.summary and plan.steps):
         raise AiUnavailableError
     return plan

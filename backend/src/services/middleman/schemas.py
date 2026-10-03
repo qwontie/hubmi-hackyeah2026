@@ -98,6 +98,42 @@ class ServicePlan(BaseModel):
             "Czego nie ma w źródłach, a instytucja musi sprawdzić sama, 1 do 4."
         )
     )
+    local_context: str = Field(
+        default="",
+        description=(
+            "1 do 3 zdań: co z sekcji DANE ROPS ma znaczenie dla tej usługi w tym "
+            "miejscu; każdą liczbę podaj z rokiem; pusty tekst, gdy tej sekcji nie ma."
+        ),
+    )
+
+
+class LocalFact(BaseModel):
+    label: str
+    value: float
+    unit: str
+    year: int
+    region_value: float | None
+    source_title: str
+    source_url: str
+    page: int | None
+
+    def sentence(self) -> str:
+        unit = self.unit if self.unit in {"", "%"} else f" {self.unit}"
+        text = f"{self.label}: {self.value:g}{unit} ({self.year})"
+        if self.region_value is not None:
+            text += f", w całej Małopolsce {self.region_value:g}{unit}"
+        page = f", s. {self.page}" if self.page else ""
+        return f"{text}. Źródło: {self.source_title}{page}."
+
+
+class LocalChallenge(BaseModel):
+    slug: str
+    title: str
+    area: str
+    summary: str
+    source_title: str
+    source_url: str
+    pages: list[int]
 
 
 class CombinedInnovation(BaseModel):
@@ -119,6 +155,9 @@ class Plan(BaseModel):
     measures: list[str]
     combine: list[CombinedInnovation]
     to_check: list[str]
+    local_context: str = ""
+    local_facts: list[LocalFact] = []
+    regional_challenges: list[LocalChallenge] = []
 
 
 class AdaptationOut(BaseModel):
