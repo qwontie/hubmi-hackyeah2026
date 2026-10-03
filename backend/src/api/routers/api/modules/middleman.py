@@ -43,9 +43,7 @@ adapt_limit = rate_limit("adapt", per_minute=3, per_day=20)
 
 PLACE_MIN = 2
 CONTEXT_MIN = 20
-OFF_TOPIC = (
-    "Opisz instytucję: kim są wasi odbiorcy, kto u was pracuje, jaki macie budżet."
-)
+OFF_TOPIC = "Opisz instytucję: kim są odbiorcy, kto w niej pracuje i jaki ma budżet."
 ADAPTATION_MISSING = "Nie znaleziono tego planu."
 
 

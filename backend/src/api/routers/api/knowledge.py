@@ -21,6 +21,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from api.errors import conflict, invalid, not_found
 from api.limits import rate_limit
 from api.security import AdminPerson, admin_from_secret, current_admin
+from services.ai.costs import use_budget_scope
 from services.bus import bus
 from services.dialogue.audit import record
 from services.knowledge import (
@@ -278,7 +279,8 @@ async def run_import(
     admin: AdminPerson, session: FromDishka[AsyncSession]
 ) -> dict[str, str]:
     try:
-        started = await start_knowledge_import(trigger=ImportTrigger.ADMIN)
+        with use_budget_scope("batch"):
+            started = await start_knowledge_import(trigger=ImportTrigger.ADMIN)
     except KnowledgeImportRunningError as exc:
         raise conflict(RUNNING) from exc
     record(session, admin, "knowledge.import.run", target=("knowledge_run", started.id))

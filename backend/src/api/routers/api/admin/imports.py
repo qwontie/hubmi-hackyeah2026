@@ -6,6 +6,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import conflict
 from api.security import AdminPerson
+from services.ai.costs import use_budget_scope
 from services.dialogue.audit import record
 from services.ingest import (
     ImportAlreadyRunningError,
@@ -23,7 +24,8 @@ RUNNING = "Import już trwa. Poczekaj na jego zakończenie."
 @router.post("/run", status_code=status.HTTP_202_ACCEPTED)
 async def run(admin: AdminPerson, session: FromDishka[AsyncSession]) -> dict[str, str]:
     try:
-        started = await start_import(trigger=ImportTrigger.ADMIN)
+        with use_budget_scope("batch"):
+            started = await start_import(trigger=ImportTrigger.ADMIN)
     except ImportAlreadyRunningError as exc:
         raise conflict(RUNNING) from exc
     record(session, admin, "import.run", target=("import_run", started.id))
