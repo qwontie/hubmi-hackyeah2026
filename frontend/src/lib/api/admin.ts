@@ -690,3 +690,36 @@ export const setApplicationStatus = (
   id: string,
   status: "in_review" | "accepted" | "rejected"
 ) => api.patch<AdminApplication>(`/admin/applications/${id}`, { status });
+
+export type IngestResult =
+  | { id: string; kind: "material"; title: string }
+  | { kind: "innovation"; slug: string; title: string };
+
+export interface IngestJob {
+  done?: number;
+  error?: string | null;
+  existing?: IngestResult | null;
+  job_id: string;
+  result?: IngestResult | null;
+  status: "running" | "done" | "failed";
+  step?: "fetch" | "text" | "summary" | "save" | "embedding";
+  total?: number;
+}
+
+export const addMaterial = (
+  body:
+    | { kind: "url"; url: string; title?: string }
+    | { kind: "text"; text: string; title: string }
+) => api.post<{ job_id: string }>("/admin/materials", body);
+
+export const uploadMaterial = (file: File, title?: string) => {
+  const form = new FormData();
+  form.set("file", file);
+  if (title) {
+    form.set("title", title);
+  }
+  return api.postForm<{ job_id: string }>("/admin/materials/upload", form);
+};
+
+export const ingestJob = (id: string) =>
+  api.get<IngestJob>(`/admin/materials/jobs/${id}`);

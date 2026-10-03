@@ -4,6 +4,7 @@
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
   import { logout } from "$lib/api/auth";
+  import { api } from "$lib/api/client";
   import { session } from "$lib/auth/session.svelte";
   import { inbox } from "$lib/live/inbox.svelte";
   import { powiats } from "$lib/live/powiats.svelte";
@@ -14,6 +15,19 @@
   const expert = $derived(session.me?.role === "expert");
   const expertPath = resolve("/expert");
   const onExpert = $derived(page.url.pathname.startsWith(expertPath));
+
+  let demo = $state(false);
+
+  $effect(() => {
+    api
+      .get<{ demo: boolean }>("/meta")
+      .then(({ demo: loaded }) => {
+        demo = loaded;
+      })
+      .catch(() => {
+        demo = false;
+      });
+  });
 
   $effect(() => {
     powiats.load();
@@ -124,6 +138,10 @@
       {/if}
     </nav>
     <div class="ml-auto flex items-center gap-4 text-[13px] text-hm-ink-soft">
+      {#if demo}
+        <span class="demo max-[899px]:hidden">W bazie są dane pokazowe</span>
+        <span class="demo min-[900px]:hidden">Dane pokazowe</span>
+      {/if}
       {#if !expert}
         <span class="flex items-center gap-2" role="status">
           <i class={["size-[7px] rounded-full", liveDots[live.state]]}></i>
@@ -196,6 +214,11 @@
       transparent
     );
     box-shadow: var(--shadow-cladd-outline);
+  }
+
+  .demo {
+    font-size: 12px;
+    white-space: nowrap;
   }
 
   .signout {

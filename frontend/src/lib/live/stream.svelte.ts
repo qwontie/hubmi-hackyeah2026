@@ -27,6 +27,8 @@ const TOPICS = [
   "application.submitted",
   "application.updated",
   "grant_call.updated",
+  "ingest.progress",
+  "ingest.finished",
 ] as const;
 
 export type Topic = (typeof TOPICS)[number];

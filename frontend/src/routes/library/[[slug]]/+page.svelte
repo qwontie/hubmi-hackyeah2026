@@ -17,6 +17,7 @@
   import ErrorState from "$lib/components/error-state.svelte";
   import FolderTabs from "$lib/components/hub/folder-tabs.svelte";
   import InnovationSheet from "$lib/components/hub/innovation-sheet.svelte";
+  import MaterialIntake from "$lib/components/hub/material-intake.svelte";
   import type { FolderTab } from "$lib/components/hub/types";
   import { plural, when } from "$lib/format";
   import { live } from "$lib/live/stream.svelte";
@@ -34,6 +35,21 @@
   const slug = $derived(page.params.slug ?? null);
   const category = $derived(page.url.searchParams.get("category") ?? "all");
   const drafts = $derived(page.url.searchParams.get("status") === "draft");
+  const adding = $derived(page.url.searchParams.get("add") === "1");
+
+  function toggleAdd(open: boolean) {
+    const next = new URL(page.url);
+    if (open) {
+      next.searchParams.set("add", "1");
+    } else {
+      next.searchParams.delete("add");
+    }
+    goto(`${next.pathname}${next.search}`, {
+      keepFocus: true,
+      noScroll: true,
+      replaceState: true,
+    });
+  }
 
   function href(
     target: string | null,
@@ -47,6 +63,9 @@
     }
     if (d) {
       params.set("status", "draft");
+    }
+    if (adding) {
+      params.set("add", "1");
     }
     const q = params.toString();
     const path = target
@@ -227,7 +246,7 @@
     <FolderTabs current={category} {tabs} />
   </nav>
 
-  <main class={["board", category === "all" && "first"]}>
+  <main class={["board", category === "all" && "first", adding && "adding"]}>
     <header class="bhead">
       <div class="min-w-0">
         <h1
@@ -253,15 +272,43 @@
           </div>
         {/if}
       </div>
-      <button
-        class="ghost cladd-clickable"
-        disabled={running}
-        onclick={refreshFromRops}
-        type="button"
-      >
-        <span>{running ? "Import trwa…" : "Odśwież z ROPS"}</span>
-      </button>
+      <div class="flex flex-wrap gap-2">
+        <button
+          aria-expanded={adding}
+          class="ghost cladd-clickable"
+          onclick={() => toggleAdd(!adding)}
+          type="button"
+        >
+          <span class="flex items-center gap-2">
+            <svg
+              aria-hidden="true"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-width="1.75"
+              viewBox="0 0 24 24"
+              width="16"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Dodaj materiał
+          </span>
+        </button>
+        <button
+          class="ghost cladd-clickable"
+          disabled={running}
+          onclick={refreshFromRops}
+          type="button"
+        >
+          <span>{running ? "Import trwa…" : "Odśwież z ROPS"}</span>
+        </button>
+      </div>
     </header>
+
+    {#if adding}
+      <MaterialIntake onclose={() => toggleAdd(false)} />
+    {/if}
 
     <div class="work">
       <section aria-label="Lista innowacji" class="register">
@@ -376,6 +423,10 @@
 
   .board.first {
     border-top-left-radius: 0;
+  }
+
+  .board.adding {
+    grid-template-rows: auto auto minmax(0, 1fr);
   }
 
   .bhead {
