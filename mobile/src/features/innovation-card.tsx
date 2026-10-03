@@ -1,3 +1,4 @@
+import { Image } from "expo-image";
 import { Link } from "expo-router";
 import {
   ArrowRight,
@@ -8,6 +9,7 @@ import {
 import { type ReactNode, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import type { FeedbackKind, InnovationSummary } from "@/api/types";
+import { API_BASE } from "@/config";
 import { CategoryIcon } from "@/features/category-icon";
 import { innovationHref, metaLine } from "@/features/innovation-row";
 import { useVote } from "@/hooks/use-tester";
@@ -123,6 +125,27 @@ function Votes({
   );
 }
 
+interface Pictured {
+  image_alt?: string | null;
+  image_card_url?: string | null;
+  image_label?: string | null;
+}
+
+const pictureOf = (innovation: InnovationSummary) => {
+  const fields = innovation as InnovationSummary & Pictured;
+  if (!fields.image_card_url) {
+    return null;
+  }
+  const uri = fields.image_card_url.startsWith("/")
+    ? `${API_BASE}${fields.image_card_url}`
+    : fields.image_card_url;
+  return {
+    alt: fields.image_alt ?? "",
+    label: fields.image_label ?? null,
+    uri,
+  };
+};
+
 interface InnovationCardProps {
   featured?: boolean;
   index?: number;
@@ -138,22 +161,42 @@ export function InnovationCard({
   needId,
   featured = false,
 }: InnovationCardProps) {
-  const { colors, type, wide } = useTheme();
+  const { colors, type, wide, reduceMotion } = useTheme();
   const [hovered, setHovered] = useState(false);
+  const picture = pictureOf(innovation);
   const titleSize = featured && wide ? type.h2 : type.h3;
   const votes = innovation.votes ?? null;
   return (
     <Sheet raised={featured} style={styles.card}>
-      <View style={styles.head}>
-        <View style={[styles.tile, { backgroundColor: colors.tone }]}>
-          <CategoryIcon size={26} slug={innovation.category.slug} />
+      {picture ? (
+        <View style={[styles.picture, { backgroundColor: colors.tone }]}>
+          <Image
+            accessibilityLabel={picture.alt}
+            contentFit="cover"
+            source={{ uri: picture.uri }}
+            style={styles.image}
+            transition={reduceMotion ? 0 : 240}
+          />
+          {index === undefined ? null : (
+            <View style={[styles.rank, { backgroundColor: colors.paper }]}>
+              <Txt aria-hidden mono tone="stamp" variant="number">
+                {index}
+              </Txt>
+            </View>
+          )}
         </View>
-        {index === undefined ? null : (
-          <Txt aria-hidden mono tone="stamp" variant="number">
-            {index}
-          </Txt>
-        )}
-      </View>
+      ) : (
+        <View style={styles.head}>
+          <View style={[styles.tile, { backgroundColor: colors.tone }]}>
+            <CategoryIcon size={26} slug={innovation.category.slug} />
+          </View>
+          {index === undefined ? null : (
+            <Txt aria-hidden mono tone="stamp" variant="number">
+              {index}
+            </Txt>
+          )}
+        </View>
+      )}
       <View style={styles.body}>
         <Link asChild href={innovationHref(innovation.slug, needId)}>
           <Pressable
@@ -178,7 +221,7 @@ export function InnovationCard({
           {reason ?? innovation.lead}
         </Txt>
         <Txt tone="soft" variant="small">
-          {metaLine(innovation)}
+          {[metaLine(innovation), picture?.label].filter(Boolean).join(" · ")}
         </Txt>
       </View>
       <View style={styles.foot}>
@@ -269,6 +312,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
+  image: {
+    height: "100%",
+    width: "100%",
+  },
   open: {
     alignItems: "center",
     borderRadius: radius.button,
@@ -276,6 +323,21 @@ const styles = StyleSheet.create({
     gap: space.sm,
     minHeight: minTarget + 4,
     paddingHorizontal: space.lg,
+  },
+  picture: {
+    aspectRatio: 16 / 9,
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  rank: {
+    alignItems: "center",
+    borderRadius: radius.pill,
+    height: 40,
+    justifyContent: "center",
+    position: "absolute",
+    right: space.sm + 2,
+    top: space.sm + 2,
+    width: 40,
   },
   stack: {
     gap: space.lg,

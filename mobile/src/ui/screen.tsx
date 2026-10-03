@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { A11yButton } from "@/features/a11y-controls";
+import { RopsFooter } from "@/features/rops-footer";
 import { useTheme } from "@/theme/settings";
 import {
   contentWidth,
@@ -128,7 +129,10 @@ export const Screen = function Screen({
             },
           ]}
         >
-          <View style={[styles.column, { maxWidth: width }]}>{children}</View>
+          <View style={[styles.column, { maxWidth: width }]}>
+            {children}
+            <RopsFooter />
+          </View>
         </View>
       </ScrollView>
       {hasBar ? (
