@@ -37,6 +37,8 @@
   let data = $state<AdminMap | null>(null);
   let failed = $state(false);
   let selected = $state<string | null>(null);
+  let hovered = $state<string | null>(null);
+  let focused = $state<string | null>(null);
 
   $effect(() => {
     api
@@ -94,19 +96,28 @@
     if (!project) {
       return [];
     }
-    return features.map((f) => ({
-      d: rings(f)
-        .map(
-          (ring) =>
-            `M${ring
-              .map((p) => project(p))
-              .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
-              .join("L")}Z`
-        )
-        .join(""),
-      name: f.properties.name,
-      slug: f.properties.slug,
-    }));
+    return features.map((f) => {
+      const outer = rings(f)
+        .map((ring) => ring.map((p) => project(p)))
+        .sort((a, b) => b.length - a.length)[0] ?? [[0, 0]];
+      const xs = outer.map(([x]) => x);
+      const ys = outer.map(([, y]) => y);
+      return {
+        cx: (Math.min(...xs) + Math.max(...xs)) / 2,
+        cy: (Math.min(...ys) + Math.max(...ys)) / 2,
+        d: rings(f)
+          .map(
+            (ring) =>
+              `M${ring
+                .map((p) => project(p))
+                .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
+                .join("L")}Z`
+          )
+          .join(""),
+        name: f.properties.name,
+        slug: f.properties.slug,
+      };
+    });
   });
 
   const bySlug = $derived(
@@ -131,11 +142,31 @@
     return steps[max <= 1 ? 4 : 1 + Math.round(((n - 1) / (max - 1)) * 3)];
   };
 
-  const current = $derived(selected ? (bySlug.get(selected) ?? null) : null);
+  const preview = $derived(focused ?? hovered);
+  const shapeOf = (slug: string | null) =>
+    slug ? (shapes.find((x) => x.slug === slug) ?? null) : null;
+  const selectedShape = $derived(shapeOf(selected));
+  const previewShape = $derived(preview === selected ? null : shapeOf(preview));
+  const labelShape = $derived(previewShape ?? selectedShape);
+  const current = $derived(
+    preview || selected ? (bySlug.get(preview ?? selected ?? "") ?? null) : null
+  );
   const busiest = $derived(
     [...(data?.powiats ?? [])].sort((a, b) => b.needs_count - a.needs_count)[0]
   );
-  const shown = $derived(current ?? busiest ?? null);
+  const shownSlug = $derived(preview ?? selected);
+  const shown = $derived(
+    current ??
+      (shownSlug
+        ? {
+            name: shapeOf(shownSlug)?.name ?? "",
+            needs_count: 0,
+            needs_recent: 0,
+            slug: shownSlug,
+            top_clusters: [],
+          }
+        : (busiest ?? null))
+  );
 
   function keydown(event: KeyboardEvent, slug: string) {
     if (event.key === "Enter" || event.key === " ") {
@@ -165,16 +196,49 @@
           class={[selected === s.slug && "on"]}
           d={s.d}
           fill={fill(s.slug)}
+          onblur={() => {
+            if (focused === s.slug) {
+              focused = null;
+            }
+          }}
           onclick={() => {
-            selected = s.slug;
+            selected = selected === s.slug ? null : s.slug;
+          }}
+          onfocus={(event) => {
+            if (event.currentTarget.matches(":focus-visible")) {
+              focused = s.slug;
+            }
           }}
           onkeydown={(event) => keydown(event, s.slug)}
+          onpointerenter={() => {
+            hovered = s.slug;
+          }}
+          onpointerleave={() => {
+            if (hovered === s.slug) {
+              hovered = null;
+            }
+          }}
           role="button"
           tabindex="0"
         >
           <title>{s.name}</title>
         </path>
       {/each}
+      <g aria-hidden="true" class="marks">
+        {#if selectedShape}
+          <path class="halo sel" d={selectedShape.d} />
+          <path class="line sel" d={selectedShape.d} />
+        {/if}
+        {#if previewShape}
+          <path class="halo" d={previewShape.d} />
+          <path class={["line", focused && "ring"]} d={previewShape.d} />
+        {/if}
+        {#if labelShape}
+          <text class="name" x={labelShape.cx} y={labelShape.cy}>
+            {labelShape.name}
+          </text>
+        {/if}
+      </g>
     </svg>
     <div class="side">
       {#if shown}
@@ -233,14 +297,46 @@
     transition: fill 150ms ease;
   }
 
-  path:hover {
-    filter: brightness(0.94);
+  .marks path {
+    pointer-events: none;
+    fill: none;
+    stroke-linejoin: round;
   }
 
-  path:focus-visible,
-  path.on {
+  .marks .halo {
+    stroke: var(--hm-paper);
+    stroke-width: 5;
+  }
+
+  .marks .line {
     stroke: var(--hm-ink);
-    stroke-width: 2;
+    stroke-width: 1.75;
+  }
+
+  .marks .halo.sel {
+    stroke-width: 6.5;
+  }
+
+  .marks .line.sel {
+    stroke-width: 3;
+  }
+
+  .marks .line.ring {
+    stroke: var(--hm-ring);
+    stroke-width: 2.5;
+  }
+
+  .name {
+    font-size: 13px;
+    font-weight: 650;
+    dominant-baseline: middle;
+    pointer-events: none;
+    text-anchor: middle;
+    fill: var(--hm-ink);
+    stroke: var(--hm-paper);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+    paint-order: stroke;
   }
 
   .side {

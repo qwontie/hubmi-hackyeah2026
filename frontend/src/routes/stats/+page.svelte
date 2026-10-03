@@ -1,8 +1,10 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
+  import { type AdminNeed, listAllNeeds, listCategories } from "$lib/api/admin";
   import { api } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
+  import DayChart from "$lib/components/hub/day-chart.svelte";
   import NeedsMap from "$lib/components/hub/needs-map.svelte";
   import { nbsp, plural } from "$lib/format";
   import { live } from "$lib/live/stream.svelte";
@@ -77,6 +79,21 @@
 
   let stats = $state<Stats | null>(null);
   let loadError = $state<Error | null>(null);
+  let allNeeds = $state<AdminNeed[] | null>(null);
+  let categoryNames = $state<Map<string, string>>(new Map());
+
+  async function loadBreakdown() {
+    try {
+      const [needs, cats] = await Promise.all([
+        listAllNeeds(),
+        listCategories(),
+      ]);
+      allNeeds = needs;
+      categoryNames = new Map(cats.map((c) => [c.slug, c.name]));
+    } catch {
+      allNeeds = null;
+    }
+  }
 
   const period = $derived(page.url.searchParams.get("period") ?? "30d");
 
@@ -91,6 +108,7 @@
 
   $effect(() => {
     load(period);
+    loadBreakdown();
   });
 
   $effect(() => {
@@ -99,7 +117,10 @@
       if (timer) {
         clearTimeout(timer);
       }
-      timer = setTimeout(() => load(period), 1500);
+      timer = setTimeout(() => {
+        load(period);
+        loadBreakdown();
+      }, 1500);
     };
     const offs = [
       live.on("need.created", again),
@@ -136,12 +157,6 @@
   });
 
   const days = $derived(stats?.per_day ?? []);
-  const maxDay = $derived(Math.max(1, ...days.map((d) => d.needs)));
-  const dayLabel = (iso: string) =>
-    new Date(`${iso}T12:00:00`).toLocaleDateString("pl-PL", {
-      day: "numeric",
-      month: "short",
-    });
 
   const topOf = (list: Ranked[]) => list.slice(0, 8);
   const maxOf = (list: Ranked[]) => Math.max(1, ...list.map((r) => r.count));
@@ -227,28 +242,7 @@
 
     <section aria-labelledby="chart-h" class="panel">
       <h2 class="h" id="chart-h">Nowe potrzeby dzień po dniu</h2>
-      <div
-        aria-label="Wykres: liczba nowych potrzeb w kolejnych dniach, najwięcej {maxDay} dziennie"
-        class="chart"
-        role="img"
-      >
-        {#each days as d (d.start)}
-          <div class="col" title="{dayLabel(d.start)}: {d.needs}">
-            <i style:height="{(d.needs / maxDay) * 100}%">
-              {#if d.nothing_fits > 0}
-                <b
-                  style:height="{(d.nothing_fits / Math.max(1, d.needs)) * 100}%"
-                ></b>
-              {/if}
-            </i>
-          </div>
-        {/each}
-      </div>
-      <div aria-hidden="true" class="axis">
-        <span>{days[0] ? dayLabel(days[0].start) : ""}</span>
-        <span>najwięcej {maxDay} dziennie</span>
-        <span>{days.at(-1) ? dayLabel(days.at(-1)?.start ?? "") : ""}</span>
-      </div>
+      <DayChart {days} names={categoryNames} needs={allNeeds} />
     </section>
 
     <section aria-labelledby="map-h" class="panel">
@@ -459,45 +453,6 @@
     font-weight: 650;
   }
 
-  .chart {
-    display: flex;
-    gap: 3px;
-    align-items: flex-end;
-    height: 160px;
-  }
-
-  .col {
-    display: flex;
-    flex: 1;
-    align-items: flex-end;
-    height: 100%;
-  }
-
-  .col i {
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    width: 100%;
-    min-height: 2px;
-    overflow: hidden;
-    background: var(--hm-stamp);
-    border-radius: 4px 4px 1px 1px;
-  }
-
-  .col b {
-    display: block;
-    width: 100%;
-    background: var(--hm-tab);
-  }
-
-  .axis {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--hm-ink-soft);
-  }
-
   .grid3 {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -608,11 +563,6 @@
     .grid3,
     .grid2 {
       grid-template-columns: minmax(0, 1fr);
-    }
-
-    .chart {
-      gap: 1px;
-      height: 120px;
     }
   }
 </style>
