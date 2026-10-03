@@ -140,12 +140,15 @@ class PublicIdea(BaseModel):
     canvas: Canvas
     powiat: str | None
     problem_id: uuid.UUID | None
+    visualisation_url: str | None = None
+    visualisation_alt: str | None = None
     created_at: datetime
 
 
 class AuthorIdea(PublicIdea):
     status: IdeaStatus
     has_contact: bool
+    visualisations_left: int = 0
     updated_at: datetime
 
 
@@ -162,6 +165,7 @@ class AdminIdea(AuthorIdea):
 class AdminIdeaDetail(AdminIdea):
     similar_ideas: list[SimilarIdea]
     similar_innovations: list[SimilarInnovation]
+    visualisation_prompt: str | None = None
 
 
 class IdeaStatusPatch(Strict):

@@ -99,6 +99,15 @@ class Idea(SQLModel, table=True):
         ),
     )
     edit_token_hash: str = Field(sa_column=Column(Text, nullable=False))
+    visualisation_count: int = Field(
+        default=0, sa_column=Column(Integer, nullable=False, server_default=text("0"))
+    )
+    visualisation_version: int | None = Field(
+        default=None, sa_column=Column(Integer, nullable=True)
+    )
+    visualisation_alt: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
     embedding: list[float] | None = Field(
         default=None, sa_column=Column(Vector(EMBEDDING_DIMENSIONS), nullable=True)
     )

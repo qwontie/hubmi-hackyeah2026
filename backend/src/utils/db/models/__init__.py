@@ -7,6 +7,7 @@ from .challenge import Challenge
 from .demo_record import DemoRecord
 from .feedback import Feedback, FeedbackKind
 from .idea import Idea, IdeaStage, IdeaStatus
+from .idea_visualisation import IdeaVisualisation
 from .import_run import ImportRun, ImportStatus, ImportTrigger
 from .innovation import EMBEDDING_DIMENSIONS, Innovation, InnovationStatus
 from .knowledge_run import KnowledgeRun
@@ -32,6 +33,7 @@ __all__ = [
     "Idea",
     "IdeaStage",
     "IdeaStatus",
+    "IdeaVisualisation",
     "ImportRun",
     "ImportStatus",
     "ImportTrigger",

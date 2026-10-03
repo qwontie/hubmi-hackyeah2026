@@ -12,7 +12,9 @@ from services.ai.costs import AiBudgetExceededError
 from services.modules import Page, offset
 from services.search import nearest_innovations
 from services.search.vector import cosine_distance
+from services.visual import MAX_GENERATIONS, generations_left, image_url
 from utils.db.models.idea import Idea, IdeaStage, IdeaStatus
+from utils.db.models.idea_visualisation import IdeaVisualisation
 from utils.db.models.need import NeedCluster
 from utils.logging import logger
 
@@ -32,6 +34,15 @@ SIMILAR_IDEA_MIN = 0.86
 SIMILAR_INNOVATION_MIN = 0.80
 PUBLIC_STATUSES = (IdeaStatus.ACCEPTED,)
 EDITABLE_STATUSES = (IdeaStatus.NEW, IdeaStatus.IN_REVIEW)
+MAX_VISUALISATIONS = MAX_GENERATIONS
+
+
+async def stored_prompt(session: AsyncSession, idea_id: uuid.UUID) -> str | None:
+    return await session.scalar(
+        select(IdeaVisualisation.prompt).where(
+            col(IdeaVisualisation.idea_id) == idea_id
+        )
+    )
 
 
 def embedding_text(idea: Idea) -> str:
@@ -148,6 +159,8 @@ def public_view(idea: Idea) -> PublicIdea:
         canvas=Canvas.model_validate(idea.canvas),
         powiat=idea.powiat,
         problem_id=idea.problem_id,
+        visualisation_url=image_url(idea.id, idea.visualisation_version),
+        visualisation_alt=idea.visualisation_alt,
         created_at=idea.created_at,
     )
 
@@ -157,6 +170,7 @@ def author_view(idea: Idea) -> AuthorIdea:
         **public_view(idea).model_dump(),
         status=idea.status,
         has_contact=idea.contact_email is not None,
+        visualisations_left=generations_left(idea.visualisation_count),
         updated_at=idea.updated_at,
     )
 
@@ -198,6 +212,7 @@ async def admin_detail(session: AsyncSession, idea: Idea) -> AdminIdeaDetail:
         **(await admin_out(session, idea)).model_dump(),
         similar_ideas=ideas,
         similar_innovations=innovations,
+        visualisation_prompt=await stored_prompt(session, idea.id),
     )
 
 
