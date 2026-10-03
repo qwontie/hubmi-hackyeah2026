@@ -8,6 +8,9 @@ RUN bun install --frozen-lockfile
 
 COPY . .
 
+ENV EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH=1
+ENV EXPO_UNSTABLE_TREE_SHAKING=1
+
 RUN bun run export
 
 FROM oven/bun:alpine

@@ -27,7 +27,7 @@ dev:
 	bun run web
 
 export:
-	bun run export
+	EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH=1 EXPO_UNSTABLE_TREE_SHAKING=1 bun run export
 
 serve: export
 	bun run serve
