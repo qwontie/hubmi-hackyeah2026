@@ -13,6 +13,7 @@ import type {
   IdeaCreated,
   IdeaDraft,
   IdeaOptions,
+  IdeaThread,
   InnovationDetail,
   InnovationSummary,
   InstitutionType,
@@ -218,6 +219,11 @@ export const api = {
     ),
   ideaOptions: (signal?: AbortSignal) =>
     request<IdeaOptions>("/api/ideas/options", { signal }),
+  ideaThread: (id: string, token: string, signal?: AbortSignal) =>
+    request<IdeaThread>(`/api/ideas/${encodeURIComponent(id)}/thread`, {
+      headers: { "x-idea-token": token },
+      signal,
+    }),
   improve: (slug: string, text: string) =>
     request<{ id: string }>(
       `/api/innovations/${encodeURIComponent(slug)}/improvements`,
@@ -246,6 +252,12 @@ export const api = {
     }),
   powiats: (signal?: AbortSignal) =>
     request<Powiat[]>("/api/powiats", { signal }),
+  sendIdeaMessage: (id: string, token: string, body: string) =>
+    request<ThreadMessage>(`/api/ideas/${encodeURIComponent(id)}/messages`, {
+      body: { body },
+      headers: { "x-idea-token": token },
+      method: "POST",
+    }),
   sendMessage: (id: string, token: string, body: string) =>
     request<ThreadMessage>(`/api/needs/${encodeURIComponent(id)}/messages`, {
       body: { body },

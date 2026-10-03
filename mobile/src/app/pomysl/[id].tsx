@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
 import { ThreadScreen } from "@/features/thread-screen";
 
-export default function SubmissionScreen() {
+export default function IdeaThreadScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  return <ThreadScreen id={id} kind="need" />;
+  return <ThreadScreen id={id} kind="idea" />;
 }

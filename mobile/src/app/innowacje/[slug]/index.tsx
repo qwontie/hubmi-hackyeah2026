@@ -8,19 +8,22 @@ import {
   FileText,
   Landmark,
 } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
-import { Platform, StyleSheet, type Text, View } from "react-native";
-import { ApiError, api, errorMessage } from "@/api/client";
-import type { InnovationDetail } from "@/api/types";
+import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
 import { ReadAloudButton } from "@/features/read-aloud-button";
-import { plainText, RichText } from "@/features/rich-text";
+import { RichText } from "@/features/rich-text";
 import {
   ImprovementBlock,
   TestSignupBlock,
   VoteBlock,
 } from "@/features/tester";
 import { Video } from "@/features/video";
+import {
+  innovationMeta,
+  innovationSections,
+  innovationSpeech,
+  useInnovation,
+} from "@/hooks/use-innovation";
 import { formatDate } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
@@ -30,21 +33,6 @@ import { Notice } from "@/ui/notice";
 import { Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
-import { focusElement } from "@/ui/web-globals";
-
-type State =
-  | { kind: "loading" }
-  | { kind: "done"; innovation: InnovationDetail }
-  | { kind: "error"; message: string; missing: boolean };
-
-const sectionsOf = (innovation: InnovationDetail) =>
-  [
-    { body: innovation.what_it_is, title: "Na czym polega rozwiązanie?" },
-    { body: innovation.problems, title: "Jakich problemów dotyczy?" },
-    { body: innovation.target_group, title: "Dla kogo jest to rozwiązanie?" },
-    { body: innovation.who_can_use, title: "Kto może z niego skorzystać?" },
-    { body: innovation.effectiveness ?? "", title: "Czy to działa?" },
-  ].filter((section) => section.body.trim().length > 0);
 
 const goBack = () => {
   if (router.canGoBack()) {
@@ -60,37 +48,7 @@ export default function InnovationScreen() {
     potrzeba?: string;
   }>();
   const { colors, wide } = useTheme();
-  const [state, setState] = useState<State>({ kind: "loading" });
-  const [attempt, setAttempt] = useState(0);
-  const titleRef = useRef<Text>(null);
-
-  useEffect(() => {
-    if (!slug || attempt < 0) {
-      return;
-    }
-    const abort = new AbortController();
-    setState({ kind: "loading" });
-    api
-      .innovation(slug, abort.signal)
-      .then((innovation) => setState({ innovation, kind: "done" }))
-      .catch((caught: unknown) => {
-        if (caught instanceof Error && caught.name === "AbortError") {
-          return;
-        }
-        setState({
-          kind: "error",
-          message: errorMessage(caught),
-          missing: caught instanceof ApiError && caught.code === "not_found",
-        });
-      });
-    return () => abort.abort();
-  }, [slug, attempt]);
-
-  useEffect(() => {
-    if (state.kind === "done" && Platform.OS === "web") {
-      focusElement(titleRef.current);
-    }
-  }, [state.kind]);
+  const { state, retry, titleRef } = useInnovation(slug);
 
   return (
     <Screen>
@@ -131,10 +89,7 @@ export default function InnovationScreen() {
                 onPress={() => router.replace("/biblioteka")}
               />
             ) : (
-              <Button
-                label="Spróbuj ponownie"
-                onPress={() => setAttempt((value) => value + 1)}
-              />
+              <Button label="Spróbuj ponownie" onPress={retry} />
             )}
           </View>
         </Notice>
@@ -143,51 +98,33 @@ export default function InnovationScreen() {
       {state.kind === "done" ? (
         <>
           <Head>
-            <title>{`${state.innovation.title} · ${APP_NAME}`}</title>
-            <meta content={state.innovation.lead} name="description" />
+            <title>{`${state.data.title} · ${APP_NAME}`}</title>
+            <meta content={state.data.lead} name="description" />
           </Head>
           <Sheet raised>
             <View style={styles.header}>
               <Heading level={1} ref={titleRef}>
-                {state.innovation.title}
+                {state.data.title}
               </Heading>
               <Txt tone="soft" variant="lead">
-                {state.innovation.lead}
+                {state.data.lead}
               </Txt>
               <Txt tone="soft" variant="detail">
-                {[
-                  state.innovation.category.name,
-                  state.innovation.authors.length > 0
-                    ? `Autorzy: ${state.innovation.authors.join(", ")}`
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
+                {innovationMeta(state.data)}
               </Txt>
             </View>
-            <ReadAloudButton
-              text={[
-                state.innovation.title,
-                state.innovation.lead,
-                ...sectionsOf(state.innovation).map(
-                  (section) => `${section.title} ${plainText(section.body)}`
-                ),
-              ].join(". ")}
-            />
+            <ReadAloudButton text={innovationSpeech(state.data)} />
           </Sheet>
 
-          {state.innovation.video_url ? (
+          {state.data.video_url ? (
             <Sheet>
               <Heading level={2}>Film</Heading>
-              <Video
-                title={state.innovation.title}
-                url={state.innovation.video_url}
-              />
+              <Video title={state.data.title} url={state.data.video_url} />
             </Sheet>
           ) : null}
 
           <Sheet>
-            {sectionsOf(state.innovation).map((section, index) => (
+            {innovationSections(state.data).map((section, index) => (
               <View
                 key={section.title}
                 style={[
@@ -206,7 +143,7 @@ export default function InnovationScreen() {
           </Sheet>
 
           <Sheet>
-            <VoteBlock needId={potrzeba} slug={state.innovation.slug} />
+            <VoteBlock needId={potrzeba} slug={state.data.slug} />
           </Sheet>
 
           <Sheet>
@@ -220,7 +157,7 @@ export default function InnovationScreen() {
               label="Dostosuj dla mojej instytucji"
               onPress={() =>
                 router.push({
-                  params: { slug: state.innovation.slug },
+                  params: { slug: state.data.slug },
                   pathname: "/innowacje/[slug]/dostosuj",
                 })
               }
@@ -229,50 +166,48 @@ export default function InnovationScreen() {
           </Sheet>
 
           <Sheet>
-            <TestSignupBlock slug={state.innovation.slug} />
+            <TestSignupBlock slug={state.data.slug} />
             <View style={[styles.divider, { backgroundColor: colors.rule }]} />
-            <ImprovementBlock slug={state.innovation.slug} />
+            <ImprovementBlock slug={state.data.slug} />
           </Sheet>
 
           <Sheet>
             <Heading level={2}>Materiały i źródło</Heading>
             <View style={styles.links}>
-              {state.innovation.materials_url ? (
+              {state.data.materials_url ? (
                 <ExternalLink
                   description="(plik do pobrania)"
-                  href={state.innovation.materials_url}
+                  href={state.data.materials_url}
                   icon={Download}
                   label="Pobierz materiały"
                 />
               ) : null}
-              {state.innovation.brochure_url ? (
+              {state.data.brochure_url ? (
                 <ExternalLink
                   description="(PDF)"
-                  href={state.innovation.brochure_url}
+                  href={state.data.brochure_url}
                   icon={FileText}
                   label="Folder z opisem"
                 />
               ) : null}
-              {state.innovation.terms_url ? (
+              {state.data.terms_url ? (
                 <ExternalLink
                   description="(PDF)"
-                  href={state.innovation.terms_url}
+                  href={state.data.terms_url}
                   icon={FileText}
                   label="Zasady korzystania z innowacji"
                 />
               ) : null}
               <ExternalLink
-                href={state.innovation.source_url}
+                href={state.data.source_url}
                 icon={Landmark}
                 label="Zobacz na stronie ROPS w Krakowie"
               />
             </View>
             <Txt tone="soft" variant="detail">
               {[
-                state.innovation.license
-                  ? `Licencja: ${state.innovation.license}`
-                  : null,
-                `Aktualizacja: ${formatDate(state.innovation.updated_at)}`,
+                state.data.license ? `Licencja: ${state.data.license}` : null,
+                `Aktualizacja: ${formatDate(state.data.updated_at)}`,
               ]
                 .filter(Boolean)
                 .join(" · ")}

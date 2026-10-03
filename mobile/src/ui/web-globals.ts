@@ -34,19 +34,3 @@ a:hover { text-decoration-thickness: 2px; }
 ${reduceMotion ? "*, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }" : "@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }"}
 `;
 };
-
-export const focusElement = (node: unknown) => {
-  if (Platform.OS !== "web" || !node) {
-    return false;
-  }
-  const element = node as HTMLElement;
-  if (typeof element.focus !== "function") {
-    return false;
-  }
-  if (!element.hasAttribute("tabindex")) {
-    element.setAttribute("tabindex", "-1");
-  }
-  element.focus({ preventScroll: false });
-  element.scrollIntoView?.({ behavior: "auto", block: "start" });
-  return true;
-};

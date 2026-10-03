@@ -6,52 +6,13 @@ import { ContactForm } from "@/features/contact-form";
 import { InnovationRow } from "@/features/innovation-row";
 import { ReadAloudButton } from "@/features/read-aloud-button";
 import { Stamp } from "@/features/stamp";
-import { pluralPl } from "@/lib/plural";
+import { matchSpeech, resultsTitle, similarSentence } from "@/hooks/use-match";
 import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { Notice } from "@/ui/notice";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
-
-export const resultsTitle = (count: number) => {
-  if (count === 0) {
-    return "Nie znaleźliśmy gotowego rozwiązania";
-  }
-  return `Znaleźliśmy ${count} ${pluralPl(
-    count,
-    "gotowe rozwiązanie",
-    "gotowe rozwiązania",
-    "gotowych rozwiązań"
-  )}`;
-};
-
-const similarSentence = (count: number) => {
-  if (count === 0) {
-    return "Jesteś pierwszą osobą, która opisała taki problem. Twoje zgłoszenie już trafiło do ROPS.";
-  }
-  return `${pluralPl(count, "osoba", "osoby", "osób")} z Małopolski ${pluralPl(
-    count,
-    "zgłosiła",
-    "zgłosiły",
-    "zgłosiło"
-  )} podobny problem. Twoje zgłoszenie trafiło do ROPS.`;
-};
-
-const speechText = (response: MatchResponse) => {
-  const parts = [
-    `${resultsTitle(response.results.length)}.`,
-    response.similar_count > 0
-      ? `${response.similar_count} ${similarSentence(response.similar_count)}`
-      : similarSentence(0),
-  ];
-  response.results.forEach((result, index) => {
-    parts.push(
-      `Propozycja ${index + 1}: ${result.innovation.title}. ${result.reason}`
-    );
-  });
-  return parts.join(" ");
-};
 
 function NothingFits({
   response,
@@ -148,7 +109,7 @@ export function MatchResults({ response, at, titleRef }: MatchResultsProps) {
         <Stamp at={at} number={response.need.number} word="PRZYJĘTO" />
       </View>
 
-      {empty ? null : <ReadAloudButton text={speechText(response)} />}
+      {empty ? null : <ReadAloudButton text={matchSpeech(response)} />}
 
       {response.degraded ? (
         <Txt tone="soft" variant="detail">

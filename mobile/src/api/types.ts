@@ -248,3 +248,15 @@ export interface IdeaCreated {
     similarity: number;
   }[];
 }
+
+export interface IdeaThread {
+  can_email: boolean;
+  idea: {
+    id: string;
+    number: number | null;
+    title: string;
+    status: "new" | "in_review" | "accepted" | "rejected";
+    created_at: string;
+  };
+  messages: ThreadMessage[];
+}
