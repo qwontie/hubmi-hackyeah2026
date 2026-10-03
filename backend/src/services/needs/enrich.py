@@ -1,7 +1,6 @@
 import asyncio
 import contextlib
 import uuid
-from collections import Counter
 from datetime import UTC, datetime, timedelta
 
 from pydantic import BaseModel, Field
@@ -17,7 +16,7 @@ from services.ai import (
     run_agent,
 )
 from services.bus import bus
-from services.search import hybrid_search
+from services.search import category_for
 from utils.db import session_scope
 from utils.db.models.innovation import Innovation
 from utils.db.models.match_result import MatchResult
@@ -32,7 +31,6 @@ SWEEP_SECONDS = 300
 SWEEP_BATCH = 20
 SWEEP_MIN_AGE = timedelta(minutes=2)
 SWEEP_MAX_AGE = timedelta(days=14)
-CANDIDATES = 12
 SCORE_SQL = text(
     "UPDATE match_result m SET score = round((1 - (i.embedding <=> n.embedding))"
     "::numeric, 4) FROM innovation i, need n "
@@ -59,13 +57,6 @@ title_agent: Agent[None, NeedTitle] = Agent(
 
 _tasks: set[asyncio.Task[None]] = set()
 _running: set[uuid.UUID] = set()
-
-
-def _category(slugs: list[str]) -> str | None:
-    counts = Counter[str]()
-    for rank, slug in enumerate(slugs):
-        counts[slug] += len(slugs) - rank
-    return counts.most_common(1)[0][0] if counts else None
 
 
 async def _matches(need_id: uuid.UUID) -> list[dict[str, object]]:
@@ -97,10 +88,7 @@ async def _attach(
     session: AsyncSession, need: Need, vector: list[float]
 ) -> NeedCluster:
     need.embedding = vector
-    hits = await hybrid_search(session, need.text, vector, limit=CANDIDATES)
-    need.category_slug = need.category_slug or _category(
-        [hit.innovation.category_slug for hit in hits]
-    )
+    need.category_slug = need.category_slug or await category_for(session, vector)
     session.add(need)
     await session.flush()
     cluster = await assign_cluster(session, need, title=need.title or "")

@@ -31,16 +31,16 @@ class Hit:
 _query_cache: OrderedDict[str, list[float]] = OrderedDict()
 
 
-def _cache_key(text: str) -> str:
+def cache_key(text: str) -> str:
     return " ".join(text.lower().split())
 
 
 def peek_query_embedding(text: str) -> list[float] | None:
-    return _query_cache.get(_cache_key(text))
+    return _query_cache.get(cache_key(text))
 
 
 async def cached_query_embedding(text: str, *, kind: str) -> list[float]:
-    key = _cache_key(text)
+    key = cache_key(text)
     if key in _query_cache:
         _query_cache.move_to_end(key)
         return _query_cache[key]

@@ -1,5 +1,4 @@
 import uuid
-from collections import Counter
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
@@ -15,6 +14,7 @@ from services.search import (
     Reasoned,
     apply_decision,
     cached_query_embedding,
+    category_for,
     decide,
     fallback,
     fallback_reason,
@@ -96,13 +96,6 @@ class FormOutcome:
     duplicate: bool = False
 
 
-def _category(results: list[Hit]) -> str | None:
-    counts = Counter[str]()
-    for rank, hit in enumerate(results):
-        counts[hit.innovation.category_slug] += len(results) - rank
-    return counts.most_common(1)[0][0] if counts else None
-
-
 def match_refs(results: list[Reasoned]) -> list[dict[str, Any]]:
     return [
         {
@@ -170,7 +163,7 @@ async def match_need(
         title=title,
         origin=NeedOrigin.MATCH,
         powiat=powiat,
-        category_slug=_category([r.hit for r in results] or hits[:3]),
+        category_slug=await category_for(session, vector),
         edit_token_hash=token_hash,
         embedding=vector,
     )
@@ -349,7 +342,7 @@ async def create_need(  # noqa: PLR0913
     similar = 0
     if vector is not None:
         hits = await hybrid_search(session, text, vector, limit=CANDIDATES)
-        need.category_slug = _category(hits)
+        need.category_slug = await category_for(session, vector)
         similar = await similar_count(session, vector, exclude=need.id)
         cluster = await assign_cluster(session, need, title=need.title or "")
     await _store_shown(session, need, shown, hits)

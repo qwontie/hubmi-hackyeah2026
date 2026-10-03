@@ -1,3 +1,4 @@
+from .category import category_for
 from .hybrid import (
     Hit,
     cached_query_embedding,
@@ -22,6 +23,7 @@ __all__ = [
     "Reasoned",
     "apply_decision",
     "cached_query_embedding",
+    "category_for",
     "decide",
     "fallback",
     "fallback_reason",
