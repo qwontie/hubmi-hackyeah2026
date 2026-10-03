@@ -2,7 +2,9 @@ import Head from "expo-router/head";
 import { Search, X } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
+import { CategoryFilter } from "@/features/category-filter";
 import { MaterialRow } from "@/features/knowledge";
+import { TopicFilter } from "@/features/topic-filter";
 import { useMaterials } from "@/hooks/use-knowledge";
 import { pluralPl } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
@@ -11,7 +13,6 @@ import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
 import { PageHead, Screen } from "@/ui/screen";
-import { Select } from "@/ui/select";
 import { Sheet } from "@/ui/sheet";
 import { Txt } from "@/ui/text";
 
@@ -78,30 +79,19 @@ export default function MaterialsScreen() {
             ) : null}
           </View>
         </View>
-        {kinds.length > 0 ? (
-          <View aria-label="Rodzaj materiału" role="group" style={styles.chips}>
-            {kinds.map((item) => (
-              <Button
-                key={item.slug}
-                label={`${item.name} (${item.count})`}
-                onPress={() => selectKind(item.slug)}
-                pressed={item.slug === kind}
-              />
-            ))}
-          </View>
-        ) : null}
-        {topics.length > 0 ? (
-          <Select
-            emptyLabel="Wszystkie tematy"
-            label="Temat"
-            onChange={selectTopic}
-            options={topics.map((item) => ({
-              label: `${item.name} (${item.count})`,
-              value: item.slug,
-            }))}
-            value={topic}
-          />
-        ) : null}
+        <CategoryFilter
+          items={kinds}
+          label="Rodzaj materiału"
+          onSelect={selectKind}
+          value={kind}
+        />
+        <TopicFilter
+          emptyLabel="Wszystkie tematy"
+          items={topics}
+          label="Temat"
+          onSelect={selectTopic}
+          value={topic}
+        />
       </PageHead>
 
       <Sheet>
@@ -148,11 +138,6 @@ export default function MaterialsScreen() {
 const styles = StyleSheet.create({
   buttons: {
     flexDirection: "row",
-    gap: space.sm,
-  },
-  chips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
     gap: space.sm,
   },
   flex: {
