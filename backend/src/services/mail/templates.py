@@ -23,6 +23,7 @@ class StaffItemKind(StrEnum):
     IDEA = "idea"
     AUTHOR_MESSAGE = "author_message"
     IDEA_MESSAGE = "idea_message"
+    APPLICATION = "application"
 
 
 STAFF_ITEM_LABELS = {
@@ -31,6 +32,7 @@ STAFF_ITEM_LABELS = {
     StaffItemKind.IDEA: "Nowy pomysł",
     StaffItemKind.AUTHOR_MESSAGE: "Nowa wiadomość od autora zgłoszenia",
     StaffItemKind.IDEA_MESSAGE: "Nowa wiadomość od autora pomysłu",
+    StaffItemKind.APPLICATION: "Nowy wniosek złożony w naborze",
 }
 
 

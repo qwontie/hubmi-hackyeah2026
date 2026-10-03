@@ -5,12 +5,18 @@ from pydantic import BaseModel
 
 from services.bus import Message, bus
 from services.dialogue.links import admin_idea_url, admin_need_url
+from utils.env import env
 from utils.logging import logger
 
 from .staff import StaffNotifier
 from .templates import StaffItem, StaffItemKind
 
 NEED_TOPICS = frozenset({"need.created", "need.updated"})
+
+
+def admin_application_url(application_id: str) -> str:
+    base = env.mailer.public_url.rstrip("/")
+    return f"{base}/admin/applications/{application_id}"
 
 
 def payload(data: object) -> Mapping[str, Any]:
@@ -42,6 +48,14 @@ def staff_item(message: Message) -> StaffItem | None:
             key=f"idea:{data['id']}",
             text=str(data.get("title") or data.get("essence") or ""),
             url=admin_idea_url(data["id"]),
+        )
+    if message.topic == "application.submitted" and "id" in data:
+        idea = data.get("idea") or {}
+        return StaffItem(
+            kind=StaffItemKind.APPLICATION,
+            key=f"application:{data['id']}",
+            text=f"Wniosek nr {data.get('number')}: {idea.get('title', '')}",
+            url=admin_application_url(data["id"]),
         )
     if message.topic == "message.created" and data.get("direction") == "from_author":
         idea_id = data.get("idea_id")

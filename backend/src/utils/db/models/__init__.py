@@ -7,6 +7,13 @@ from .category import Category
 from .challenge import Challenge
 from .demo_record import DemoRecord
 from .feedback import Feedback, FeedbackKind
+from .grant import (
+    ApplicationStatus,
+    GrantApplication,
+    GrantCall,
+    GrantCallStatus,
+    GrantSubscriber,
+)
 from .idea import Idea, IdeaStage, IdeaStatus
 from .idea_visualisation import IdeaVisualisation
 from .import_run import ImportRun, ImportStatus, ImportTrigger
@@ -27,6 +34,7 @@ __all__ = [
     "AdminRole",
     "AdminUser",
     "AiCall",
+    "ApplicationStatus",
     "Assignment",
     "AssignmentStatus",
     "Category",
@@ -35,6 +43,10 @@ __all__ = [
     "ExpertNote",
     "Feedback",
     "FeedbackKind",
+    "GrantApplication",
+    "GrantCall",
+    "GrantCallStatus",
+    "GrantSubscriber",
     "Idea",
     "IdeaStage",
     "IdeaStatus",

@@ -7,6 +7,7 @@ from dishka import Provider, Scope, provide
 
 from services.dialogue.links import inbox_url
 from services.dialogue.service import resume_pending
+from services.grants.notify import watch_calls
 from services.mail import Mailer, StaffNotifier
 from services.mail.watch import watch
 from utils.env import env
@@ -28,6 +29,7 @@ class MailProvider(Provider):
         tasks = [
             asyncio.create_task(watch(notifier)),
             asyncio.create_task(resume_pending(mailer)),
+            asyncio.create_task(watch_calls(mailer)),
         ]
         try:
             yield notifier

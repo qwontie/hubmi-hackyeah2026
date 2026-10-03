@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from . import admin, auth, dialogue, expert, health, knowledge, public, stream
+from . import admin, auth, dialogue, expert, grants, health, knowledge, public, stream
 
 router = APIRouter()
 router.include_router(health.router, prefix="/health")
@@ -13,3 +13,4 @@ router.include_router(dialogue.router, prefix="/needs")
 router.include_router(dialogue.ideas, prefix="/ideas")
 router.include_router(public.router)
 router.include_router(knowledge.router)
+router.include_router(grants.router)

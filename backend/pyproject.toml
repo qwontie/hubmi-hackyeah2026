@@ -19,6 +19,7 @@ dependencies = [
     "pydantic-settings>=2.14.2",
     "pyjwt>=2.15.1",
     "pypdf>=6.19.0",
+    "reportlab>=5.0.1",
     "rich>=15.0.0",
     "selectolax>=0.4.13",
     "sqlmodel>=0.0.39",
