@@ -20,6 +20,7 @@ import type {
   InnovationDetail,
   InnovationSummary,
   InstitutionType,
+  MapData,
   MatchRequest,
   MatchResponse,
   MaterialDetail,
@@ -30,6 +31,7 @@ import type {
   NeedThread,
   Page,
   Powiat,
+  PowiatGeo,
   TestSignup,
   ThreadMessage,
 } from "./types";
@@ -261,6 +263,9 @@ export const api = {
     }),
   institutionTypes: (signal?: AbortSignal) =>
     request<InstitutionType[]>("/api/institution-types", { signal }),
+  map: (signal?: AbortSignal) => request<MapData>("/api/map", { signal }),
+  mapGeo: (url: string, signal?: AbortSignal) =>
+    request<PowiatGeo>(url, { signal }),
   match: (body: MatchRequest, signal?: AbortSignal) =>
     request<MatchResponse>("/api/match", { body, method: "POST", signal }),
   material: (id: string, signal?: AbortSignal) =>

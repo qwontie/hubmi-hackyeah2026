@@ -331,3 +331,67 @@ export interface MaterialFilters {
   kinds: CountedRef[];
   topics: CountedRef[];
 }
+
+export interface PowiatFigure {
+  key: string;
+  label: string;
+  page: number;
+  source_title: string;
+  source_url: string;
+  unit: string | null;
+  value: number;
+  year: number | null;
+}
+
+export interface MapIndicator {
+  key: string;
+  label: string;
+  max: number;
+  min: number;
+  page: number;
+  regional: number | null;
+  source_title: string;
+  source_url: string;
+  unit: string | null;
+  year: number | null;
+}
+
+export interface MapProblem {
+  answered: number;
+  open: number;
+  title: string;
+}
+
+export interface MapPowiat {
+  figures: PowiatFigure[];
+  name: string;
+  needs_answered?: number;
+  needs_open?: number;
+  other_answered?: number;
+  other_open?: number;
+  problems?: MapProblem[];
+  slug: string;
+}
+
+export interface MapData {
+  geojson_url: string;
+  indicators: MapIndicator[];
+  needs_without_powiat?: number;
+  powiats: MapPowiat[];
+  totals?: { needs_open: number; needs_answered: number };
+}
+
+export interface PowiatFeature {
+  geometry: {
+    type: "Polygon" | "MultiPolygon";
+    coordinates: number[][][] | number[][][][];
+  };
+  id: string;
+  properties: { slug: string; name: string };
+  type: "Feature";
+}
+
+export interface PowiatGeo {
+  features: PowiatFeature[];
+  type: "FeatureCollection";
+}

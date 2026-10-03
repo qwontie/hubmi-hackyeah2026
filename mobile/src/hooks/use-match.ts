@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Text, TextInput } from "react-native";
 import { ApiError, api, errorMessage } from "@/api/client";
@@ -97,8 +98,15 @@ export const charactersLeft = (length: number) => {
 };
 
 export const useMatch = () => {
+  const params = useLocalSearchParams<{ powiat?: string }>();
   const [text, setTextState] = useState("");
-  const [powiat, setPowiat] = useState("");
+  const [powiat, setPowiat] = useState(params.powiat ?? "");
+
+  useEffect(() => {
+    if (params.powiat) {
+      setPowiat(params.powiat);
+    }
+  }, [params.powiat]);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [state, setState] = useState<MatchState>({ kind: "idle" });
   const [blockedUntil, setBlockedUntil] = useState(0);
