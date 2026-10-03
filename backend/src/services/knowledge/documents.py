@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import io
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,6 +13,7 @@ from services.ingest.fetch import RETRIES, PageFetcher
 from utils.logging import logger
 
 MAX_BYTES = 60 * 1024 * 1024
+logging.getLogger("pypdf").setLevel(logging.ERROR)
 HYPHEN_BREAK = re.compile(r"(\w)-\n(\w)")
 SPACES = re.compile(r"[ \t ]+")
 BLANK_LINES = re.compile(r"\n{3,}")

@@ -4,13 +4,15 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
-from sqlalchemy import Float, func
+from sqlalchemy import ColumnElement, Float, func
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from services.ai import AiBudgetExceededError, AiUnavailableError, embed_documents
 from services.ingest.fetch import PageFetcher
+from services.search.text import keyword_terms
 from services.search.vector import cosine_distance
 from utils.db.models.material import (
     KnowledgeStatus,
@@ -251,8 +253,11 @@ def _conditions(filters: MaterialFilters) -> list:
     return conditions
 
 
-def _ts_query(q: str):  # noqa: ANN202
-    return func.websearch_to_tsquery("simple", func.hubmi_unaccent(q))
+def ts_query(q: str) -> ColumnElement[Any] | None:
+    terms = keyword_terms(q)
+    if not terms:
+        return None
+    return func.to_tsquery("simple", " & ".join(terms))
 
 
 async def list_materials(
@@ -261,8 +266,8 @@ async def list_materials(
     conditions = _conditions(filters)
     statement = select(Material).where(*conditions)
     count_statement = select(func.count()).select_from(Material).where(*conditions)
-    if filters.q:
-        query = _ts_query(filters.q)
+    query = ts_query(filters.q) if filters.q else None
+    if query is not None:
         matches = col(Material.search).op("@@")(query)
         statement = statement.where(matches).order_by(
             func.ts_rank_cd(col(Material.search), query).desc(),

@@ -12,7 +12,7 @@ from utils.db.models.category import Category
 from utils.db.models.challenge import Challenge
 from utils.db.models.material import KnowledgeStatus, Material
 
-from .materials import related_materials
+from .materials import related_materials, ts_query
 from .schemas import (
     ChallengeDetail,
     ChallengeSummary,
@@ -37,10 +37,6 @@ class ChallengeFilters:
     verified: bool | None = None
 
 
-def _ts_query(q: str):  # noqa: ANN202
-    return func.websearch_to_tsquery("simple", func.hubmi_unaccent(q))
-
-
 async def list_challenges(
     session: AsyncSession, filters: ChallengeFilters, *, page: int, per_page: int
 ) -> tuple[list[Challenge], int]:
@@ -55,8 +51,8 @@ async def list_challenges(
         conditions.append(col(Challenge.verified_at).is_(None))
     statement = select(Challenge).where(*conditions)
     count_statement = select(func.count()).select_from(Challenge).where(*conditions)
-    if filters.q:
-        query = _ts_query(filters.q)
+    query = ts_query(filters.q) if filters.q else None
+    if query is not None:
         matches = col(Challenge.search).op("@@")(query)
         statement = statement.where(matches).order_by(
             func.ts_rank_cd(col(Challenge.search), query).desc()
