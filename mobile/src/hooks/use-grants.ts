@@ -203,10 +203,13 @@ export const useApplicationCreate = (callId?: string, ideaId?: string) => {
   return { create, retry: begin, state };
 };
 
+export const sameText = (left: string, right: string) =>
+  left.trim() === right.trim();
+
 export const isPlaceholder = (section: ApplicationSection, draft: string) =>
   section.source === "ai" &&
   section.missing.length > 0 &&
-  draft === section.text;
+  sameText(draft, section.text);
 
 const draftsOf = (application: GrantApplication) =>
   Object.fromEntries(
@@ -272,7 +275,7 @@ export const useGrantApplication = (id?: string, legacyIdeaId?: string) => {
   const editable = application?.status === "draft";
   const changedSections = Object.fromEntries(
     sections
-      .filter((section) => (drafts[section.key] ?? "") !== section.text)
+      .filter((section) => !sameText(drafts[section.key] ?? "", section.text))
       .map((section) => [section.key, drafts[section.key] ?? ""])
   );
   const dirty = Object.keys(changedSections).length > 0;

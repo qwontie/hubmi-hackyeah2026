@@ -20,7 +20,11 @@ import type { ApplicationSection, GrantApplication } from "@/api/types";
 import { API_BASE, APP_NAME } from "@/config";
 import { applicationState } from "@/features/grant-application";
 import { Stamp } from "@/features/stamp";
-import { isPlaceholder, useGrantApplication } from "@/hooks/use-grants";
+import {
+  isPlaceholder,
+  sameText,
+  useGrantApplication,
+} from "@/hooks/use-grants";
 import { focusAndAnnounce } from "@/lib/a11y";
 import { pluralPl } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
@@ -42,7 +46,7 @@ const originLabel = (section: ApplicationSection, draft: string) => {
   if (draft.length === 0) {
     return "";
   }
-  if (draft !== section.text) {
+  if (!sameText(draft, section.text)) {
     return "Twoja odpowiedź";
   }
   return {

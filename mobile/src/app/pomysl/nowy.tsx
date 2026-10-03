@@ -53,6 +53,19 @@ function Created({
         </View>
         <Stamp at={new Date()} number={created.number} word="PRZYJĘTO" />
       </View>
+      {created.similar_ideas.length > 0 ? (
+        <View style={styles.block}>
+          <Heading level={2} size="h3">
+            Podobne pomysły innych osób
+          </Heading>
+          {created.similar_ideas.map((idea) => (
+            <View key={idea.id} style={styles.small}>
+              <Txt weight="600">{idea.title}</Txt>
+              <Txt tone="soft">{idea.essence}</Txt>
+            </View>
+          ))}
+        </View>
+      ) : null}
       {created.similar_innovations.length > 0 ? (
         <View style={styles.block}>
           <Heading level={2} size="h3">
@@ -290,5 +303,8 @@ const styles = StyleSheet.create({
   },
   sentWide: {
     flexDirection: "row",
+  },
+  small: {
+    gap: space.xs,
   },
 });
