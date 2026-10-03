@@ -21,6 +21,8 @@ Zasady:
   z dużym napisem, wykres, tabela, mapa, schemat, zrzut ekranu dokumentu,
   pusty lub prawie jednolity obraz, obraz bardzo złej jakości albo coś, co nie
   ma związku z innowacją.
+- usable = false także wtedy, gdy na obrazie widać napis z imieniem
+  i nazwiskiem albo inne dane osobowe.
 - alt: po polsku, jedno zdanie do 200 znaków dla osoby niewidomej: co widać
   na obrazie. Bez imion i nazwisk, nie zgaduj, kim są ludzie, nie oceniaj
   wyglądu. Nie zaczynaj od "Zdjęcie" ani "Obraz".

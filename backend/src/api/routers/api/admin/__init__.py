@@ -12,6 +12,7 @@ from . import (
     imports,
     innovations,
     needs,
+    replies,
     stats,
 )
 
@@ -25,6 +26,7 @@ async def limit_writes(request: Request) -> None:
 
 router = APIRouter(dependencies=[Depends(current_admin), Depends(limit_writes)])
 router.include_router(needs.router, prefix="/needs", tags=["admin"])
+router.include_router(replies.router, prefix="/needs", tags=["admin"])
 router.include_router(innovations.router, prefix="/innovations", tags=["admin"])
 router.include_router(imports.router, prefix="/import", tags=["admin"])
 router.include_router(stats.router, prefix="/stats", tags=["admin"])
