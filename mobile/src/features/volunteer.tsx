@@ -1,6 +1,12 @@
 import { Check, HandHeart, Send } from "lucide-react-native";
-import { useId } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useId, useRef } from "react";
+import {
+  AccessibilityInfo,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { PowiatField } from "@/features/powiat-field";
 import { Trap } from "@/features/trap";
 import { TESTER_ROLES } from "@/hooks/use-tester";
@@ -12,6 +18,43 @@ import { Button } from "@/ui/button";
 import { Checkbox, TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
 import { Heading, Txt } from "@/ui/text";
+
+const STEPS: Record<string, number> = {
+  ArrowDown: 1,
+  ArrowLeft: -1,
+  ArrowRight: 1,
+  ArrowUp: -1,
+};
+
+const radioKeys = (move: (step: number) => void): Record<string, unknown> =>
+  Platform.OS === "web"
+    ? {
+        onKeyDown: (event: {
+          currentTarget: HTMLElement;
+          key: string;
+          preventDefault: () => void;
+        }) => {
+          if (event.key === " ") {
+            event.preventDefault();
+            event.currentTarget.click();
+            return;
+          }
+          const step = STEPS[event.key];
+          if (!step) {
+            return;
+          }
+          event.preventDefault();
+          const radios = [
+            ...(event.currentTarget.parentElement?.querySelectorAll<HTMLElement>(
+              '[role="radio"]'
+            ) ?? []),
+          ];
+          const here = radios.indexOf(event.currentTarget);
+          radios.at((here + step) % radios.length)?.focus();
+          move(step);
+        },
+      }
+    : {};
 
 export function ChoiceGrid({
   error,
@@ -39,14 +82,22 @@ export function ChoiceGrid({
         role="radiogroup"
         style={styles.choices}
       >
-        {options.map((option) => {
+        {options.map((option, index) => {
           const checked = option.value === value;
+          const tabStop = checked || (value === null && index === 0);
           return (
             <Pressable
               aria-checked={checked}
               key={option.value}
               onPress={() => onChange(option.value)}
               role="radio"
+              tabIndex={tabStop ? 0 : -1}
+              {...radioKeys((step) => {
+                const next = options.at((index + step) % options.length);
+                if (next) {
+                  onChange(next.value);
+                }
+              })}
               style={[
                 styles.choice,
                 wide && styles.choiceWide,
@@ -165,17 +216,28 @@ const PROMISE =
   "Pracownik ROPS czyta każde zgłoszenie i odpisuje na podany adres.";
 
 function Sent({ done }: { done: { duplicate: boolean; email: string } }) {
+  const box = useRef<View>(null);
+  const title = done.duplicate
+    ? "Masz już zgłoszenie do tego rozwiązania"
+    : "Zgłoszenie trafiło do ROPS";
+  useEffect(() => {
+    if (Platform.OS !== "web") {
+      AccessibilityInfo.announceForAccessibility(title);
+      return;
+    }
+    const element = box.current as unknown as HTMLElement | null;
+    if (element) {
+      element.setAttribute("tabindex", "-1");
+      element.focus({ preventScroll: true });
+      element.scrollIntoView({ block: "center" });
+    }
+  }, [title]);
   return (
-    <Notice
-      title={
-        done.duplicate
-          ? "Masz już zgłoszenie do tego rozwiązania"
-          : "Zgłoszenie trafiło do ROPS"
-      }
-      tone="success"
-    >
-      {`Pracownik ROPS przeczyta je i odpisze na adres ${done.email}. Potwierdzenie wysłaliśmy e-mailem.`}
-    </Notice>
+    <View ref={box}>
+      <Notice title={title} tone="success">
+        {`Pracownik ROPS przeczyta je i odpisze na adres ${done.email}.`}
+      </Notice>
+    </View>
   );
 }
 

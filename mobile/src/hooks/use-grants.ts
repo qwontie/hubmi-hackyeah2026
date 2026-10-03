@@ -123,6 +123,14 @@ type CreateState =
 export const useApplicationCreate = (callId?: string, ideaId?: string) => {
   const [state, setState] = useState<CreateState>({ kind: "working" });
   const started = useRef<boolean>(false);
+  const alive = useRef<boolean>(true);
+
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
 
   const open = useCallback((id: string) => {
     router.replace({ params: { id }, pathname: "/nabory/wniosek/[id]" });
@@ -148,7 +156,9 @@ export const useApplicationCreate = (callId?: string, ideaId?: string) => {
           token: created.edit_token ?? "",
           ...stateOf(created),
         });
-        open(created.id);
+        if (alive.current) {
+          open(created.id);
+        }
       } catch (caught) {
         setState({ kind: "error", message: errorMessage(caught) });
       }
@@ -229,7 +239,7 @@ export const useGrantApplication = (id?: string, legacyIdeaId?: string) => {
   const [attempted, setAttempted] = useState(false);
   const [suggested, setSuggested] = useState(false);
   const [justSent, setJustSent] = useState(false);
-  const inflight = useRef<Promise<GrantApplication> | null>(null);
+  const queue = useRef<Promise<void>>(Promise.resolve());
 
   const accept = useCallback((next: GrantApplication) => {
     setApplication(next);
@@ -278,7 +288,6 @@ export const useGrantApplication = (id?: string, legacyIdeaId?: string) => {
       .filter((section) => !sameText(drafts[section.key] ?? "", section.text))
       .map((section) => [section.key, drafts[section.key] ?? ""])
   );
-  const dirty = Object.keys(changedSections).length > 0;
   const address = email.trim();
   const contactChanged =
     address !== (application?.contact_email ?? "") ||
@@ -301,10 +310,16 @@ export const useGrantApplication = (id?: string, legacyIdeaId?: string) => {
     )
     .map((section) => section.key);
 
-  const patch = useCallback((): ApplicationPatch | null => {
+  const patch = (): ApplicationPatch | null => {
+    if (!editable) {
+      return null;
+    }
     const body: ApplicationPatch = {};
-    if (dirty) {
-      body.sections = changedSections;
+    const fitting = Object.fromEntries(
+      Object.entries(changedSections).filter(([key]) => !tooLong.includes(key))
+    );
+    if (Object.keys(fitting).length > 0) {
+      body.sections = fitting;
     }
     if (contactChanged && contactValid) {
       if (address) {
@@ -315,32 +330,32 @@ export const useGrantApplication = (id?: string, legacyIdeaId?: string) => {
       }
     }
     return Object.keys(body).length > 0 ? body : null;
-  }, [address, changedSections, contactChanged, contactValid, dirty]);
+  };
+  const patchRef = useRef(patch);
+  patchRef.current = patch;
+  const pending = patch();
+  const patchKey = pending ? JSON.stringify(pending) : "";
 
-  const save = useCallback(async () => {
-    if (inflight.current) {
-      await inflight.current.catch(() => undefined);
-    }
-    const body = patch();
-    if (!(id && auth && editable && body)) {
-      return;
-    }
-    const request = api.updateGrantApplication(id, auth, body);
-    inflight.current = request;
-    try {
-      accept(await request);
-      setSavedAt(new Date());
-    } finally {
-      inflight.current = null;
-    }
-  }, [accept, auth, editable, id, patch]);
+  const save = useCallback(() => {
+    const next = queue.current
+      .catch(() => undefined)
+      .then(async () => {
+        const body = patchRef.current();
+        if (!(id && auth && body)) {
+          return;
+        }
+        accept(await api.updateGrantApplication(id, auth, body));
+        setSavedAt(new Date());
+      });
+    queue.current = next;
+    return next;
+  }, [accept, auth, id]);
 
   const saveRef = useRef(save);
   saveRef.current = save;
-  const changeKey = JSON.stringify(changedSections);
 
   useEffect(() => {
-    if (!editable || busy || changeKey === "{}") {
+    if (busy || patchKey === "") {
       return;
     }
     const timer = setTimeout(() => {
@@ -349,7 +364,14 @@ export const useGrantApplication = (id?: string, legacyIdeaId?: string) => {
       });
     }, AUTOSAVE_MS);
     return () => clearTimeout(timer);
-  }, [busy, changeKey, editable]);
+  }, [busy, patchKey]);
+
+  useEffect(
+    () => () => {
+      saveRef.current().catch(() => undefined);
+    },
+    []
+  );
 
   const run = async (
     kind: "submit" | "suggest",
@@ -437,6 +459,6 @@ export const useGrantApplication = (id?: string, legacyIdeaId?: string) => {
     suggest,
     suggested,
     tooLong,
-    unsaved: dirty,
+    unsaved: patchKey !== "",
   };
 };

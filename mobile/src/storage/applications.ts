@@ -35,37 +35,50 @@ const write = async (applications: StoredApplication[]) => {
   }
 };
 
-export const saveApplication = async (application: StoredApplication) => {
-  const applications = await read();
-  await write([
+let queue: Promise<void> = Promise.resolve();
+
+const mutate = (
+  change: (applications: StoredApplication[]) => StoredApplication[] | null
+) => {
+  const next = queue
+    .catch(() => undefined)
+    .then(async () => {
+      const changed = change(await read());
+      if (changed) {
+        await write(changed);
+      }
+    });
+  queue = next;
+  return next;
+};
+
+export const saveApplication = (application: StoredApplication) =>
+  mutate((applications) => [
     application,
     ...applications.filter((item) => item.id !== application.id),
   ]);
-};
 
-export const updateApplication = async (
+export const updateApplication = (
   id: string,
   patch: Partial<StoredApplication>
-) => {
-  const applications = await read();
-  const current = applications.find((item) => item.id === id);
-  if (
-    !current ||
-    Object.entries(patch).every(
-      ([key, value]) => current[key as keyof StoredApplication] === value
-    )
-  ) {
-    return;
-  }
-  await write(
-    applications.map((item) => (item.id === id ? { ...item, ...patch } : item))
-  );
-};
+) =>
+  mutate((applications) => {
+    const current = applications.find((item) => item.id === id);
+    if (
+      !current ||
+      Object.entries(patch).every(
+        ([key, value]) => current[key as keyof StoredApplication] === value
+      )
+    ) {
+      return null;
+    }
+    return applications.map((item) =>
+      item.id === id ? { ...item, ...patch } : item
+    );
+  });
 
-export const forgetApplication = async (id: string) => {
-  const applications = await read();
-  await write(applications.filter((item) => item.id !== id));
-};
+export const forgetApplication = (id: string) =>
+  mutate((applications) => applications.filter((item) => item.id !== id));
 
 export const getApplication = async (id: string) =>
   (await read()).find((item) => item.id === id) ?? null;

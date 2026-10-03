@@ -445,6 +445,12 @@ export default function GrantApplicationScreen() {
               ? "Odpowiedzi skopiowaliśmy z Twojego pomysłu. Popraw je i dopisz to, czego brakuje. Na końcu jest jeden przycisk: wyślij."
               : "Odpowiedz na pytania naboru. Na końcu jest jeden przycisk: wyślij."}
           </Txt>
+          {application.call.phase === "open" ? null : (
+            <Notice live={false} tone="info">
+              Ten nabór nie przyjmuje teraz wniosków. Wersję roboczą możesz
+              czytać i poprawiać, ale nie da się jej wysłać.
+            </Notice>
+          )}
           <Helper form={form} />
           {application.sections.map((section, index) => (
             <Question

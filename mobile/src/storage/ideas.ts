@@ -30,20 +30,26 @@ const write = async (ideas: StoredIdea[]) => {
   }
 };
 
-export const saveIdea = async (idea: StoredIdea) => {
-  const ideas = await read();
-  await write([idea, ...ideas.filter((item) => item.id !== idea.id)]);
+let queue: Promise<void> = Promise.resolve();
+
+const mutate = (change: (ideas: StoredIdea[]) => StoredIdea[]) => {
+  const next = queue
+    .catch(() => undefined)
+    .then(async () => write(change(await read())));
+  queue = next;
+  return next;
 };
+
+export const saveIdea = (idea: StoredIdea) =>
+  mutate((ideas) => [idea, ...ideas.filter((item) => item.id !== idea.id)]);
 
 export const getIdea = async (id: string) =>
   (await read()).find((item) => item.id === id) ?? null;
 
-export const updateIdea = async (id: string, patch: Partial<StoredIdea>) => {
-  const ideas = await read();
-  await write(
+export const updateIdea = (id: string, patch: Partial<StoredIdea>) =>
+  mutate((ideas) =>
     ideas.map((item) => (item.id === id ? { ...item, ...patch } : item))
   );
-};
 
 export const listIdeas = read;
 
