@@ -183,11 +183,35 @@ export interface AdaptationRequest {
   powiat?: string;
 }
 
+export interface LocalFact {
+  label: string;
+  page: number | null;
+  region_value: number | null;
+  source_title: string;
+  source_url: string;
+  unit: string;
+  value: number;
+  year: number;
+}
+
+export interface LocalChallenge {
+  area: string;
+  pages: number[];
+  slug: string;
+  source_title: string;
+  source_url: string;
+  summary: string;
+  title: string;
+}
+
 export interface AdaptationPlan {
   combine: { slug: string; title: string; lead: string; why: string }[];
   cost_drivers: string[];
+  local_context?: string;
+  local_facts?: LocalFact[];
   measures: string[];
   partners: string[];
+  regional_challenges?: LocalChallenge[];
   risks: { risk: string; mitigation: string }[];
   service_name: string;
   staff: string[];
