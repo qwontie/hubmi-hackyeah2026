@@ -2,6 +2,9 @@ import { API_BASE } from "@/config";
 import type {
   Adaptation,
   AdaptationRequest,
+  ApplicationAuth,
+  ApplicationCreate,
+  ApplicationPatch,
   AssistAnswer,
   AssistOut,
   AuthorIdea,
@@ -44,7 +47,6 @@ import type {
   PowiatGeo,
   Problem,
   ProblemDetail,
-  TestSignup,
   ThreadMessage,
   VolunteerReport,
   VolunteerRequest,
@@ -62,6 +64,8 @@ const FALLBACK_MESSAGES: Record<ErrorCode, string> = {
   network:
     "Nie możemy połączyć się z serwerem. Sprawdź internet i spróbuj ponownie.",
   not_found: "Nie znaleźliśmy tej strony.",
+  nothing_to_draft:
+    "Najpierw odpowiedz na co najmniej jedno pytanie. Podpowiedź powstaje z tego, co napiszesz.",
   rate_limited: "Za dużo zapytań w krótkim czasie. Spróbuj za chwilę.",
   report_locked: "Tego raportu nie można już zmienić.",
   spam_rejected:
@@ -205,6 +209,13 @@ const request = async <T>(
   return (await response.json()) as T;
 };
 
+const applicationHeaders = (auth: ApplicationAuth) => ({
+  ...(auth.applicationToken
+    ? { "x-application-token": auth.applicationToken }
+    : {}),
+  ...(auth.ideaToken ? { "x-idea-token": auth.ideaToken } : {}),
+});
+
 const query = (params: Record<string, string | number | undefined>) => {
   const entries = Object.entries(params).filter(
     (entry): entry is [string, string | number] =>
@@ -258,6 +269,19 @@ export const api = {
       body: { token },
       method: "POST",
     }),
+  createGrantApplication: (
+    callId: string,
+    body: ApplicationCreate,
+    ideaToken?: string
+  ) =>
+    request<GrantApplication>(
+      `/api/grant-calls/${encodeURIComponent(callId)}/applications`,
+      {
+        body,
+        headers: ideaToken ? { "x-idea-token": ideaToken } : {},
+        method: "POST",
+      }
+    ),
   createIdea: (body: IdeaCreate) =>
     request<IdeaCreated>("/api/ideas", { body, method: "POST" }),
   createNeed: (body: NeedCreate) =>
@@ -282,9 +306,9 @@ export const api = {
       `/api/innovations/${encodeURIComponent(slug)}/feedback`,
       { signal }
     ),
-  grantApplication: (id: string, token: string, signal?: AbortSignal) =>
+  grantApplication: (id: string, auth: ApplicationAuth, signal?: AbortSignal) =>
     request<GrantApplication>(`/api/applications/${encodeURIComponent(id)}`, {
-      headers: { "x-idea-token": token },
+      headers: applicationHeaders(auth),
       signal,
     }),
   grantCall: (id: string, signal?: AbortSignal) =>
@@ -379,15 +403,6 @@ export const api = {
     },
     signal?: AbortSignal
   ) => request<Page<Problem>>(`/api/problems${query(params)}`, { signal }),
-  redraftGrantApplication: (id: string, token: string, keys?: string[]) =>
-    request<GrantApplication>(
-      `/api/applications/${encodeURIComponent(id)}/redraft`,
-      {
-        body: keys ? { keys } : {},
-        headers: { "x-idea-token": token },
-        method: "POST",
-      }
-    ),
   sendExpertAnswer: (
     id: string,
     token: string,
@@ -410,33 +425,20 @@ export const api = {
       headers: { "x-need-token": token },
       method: "POST",
     }),
-  startGrantApplication: (callId: string, ideaId: string, token: string) =>
-    request<GrantApplication>(
-      `/api/grant-calls/${encodeURIComponent(callId)}/applications`,
-      {
-        body: { idea_id: ideaId },
-        headers: { "x-idea-token": token },
-        method: "POST",
-      }
-    ),
-  submitGrantApplication: (id: string, token: string) =>
+  submitGrantApplication: (id: string, auth: ApplicationAuth) =>
     request<GrantApplication>(
       `/api/applications/${encodeURIComponent(id)}/submit`,
-      {
-        body: {},
-        headers: { "x-idea-token": token },
-        method: "POST",
-      }
+      { body: {}, headers: applicationHeaders(auth), method: "POST" }
     ),
   subscribeGrantCalls: (email: string) =>
     request<{ status: "pending" }>("/api/grant-calls/subscribe", {
       body: { consent: true, email },
       method: "POST",
     }),
-  testSignup: (slug: string, body: TestSignup) =>
-    request<{ id: string }>(
-      `/api/innovations/${encodeURIComponent(slug)}/test-signup`,
-      { body, method: "POST" }
+  suggestGrantApplication: (id: string, auth: ApplicationAuth) =>
+    request<GrantApplication>(
+      `/api/applications/${encodeURIComponent(id)}/suggest`,
+      { body: {}, headers: applicationHeaders(auth), method: "POST" }
     ),
   thread: (id: string, token: string, signal?: AbortSignal) =>
     request<NeedThread>(`/api/needs/${encodeURIComponent(id)}/thread`, {
@@ -455,12 +457,12 @@ export const api = {
     ),
   updateGrantApplication: (
     id: string,
-    token: string,
-    sections: Record<string, string>
+    auth: ApplicationAuth,
+    body: ApplicationPatch
   ) =>
     request<GrantApplication>(`/api/applications/${encodeURIComponent(id)}`, {
-      body: { sections },
-      headers: { "x-idea-token": token },
+      body,
+      headers: applicationHeaders(auth),
       method: "PATCH",
     }),
   volunteer: (slug: string, body: VolunteerRequest) =>

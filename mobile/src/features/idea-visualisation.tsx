@@ -1,9 +1,13 @@
 import { Image } from "expo-image";
-import { router } from "expo-router";
-import { FileText, Sparkles } from "lucide-react-native";
+import { Sparkles } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { API_BASE } from "@/config";
-import { useGrantCalls } from "@/hooks/use-grants";
+import { CallAction, longDate } from "@/features/grant-application";
+import {
+  applicationsOfCall,
+  useGrantCalls,
+  useMyApplications,
+} from "@/hooks/use-grants";
 import { useIdeaVisualisation } from "@/hooks/use-idea-visualisation";
 import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
@@ -16,29 +20,25 @@ const absolute = (url: string) =>
 
 export function IdeaGrantAction({ id }: { id: string | undefined }) {
   const { calls } = useGrantCalls();
+  const applications = useMyApplications();
   const open = calls.find((call) => call.phase === "open");
-  if (!(id && open)) {
+  if (!(id && open && applications)) {
     return null;
   }
+  const mine = applicationsOfCall(applications, open.id).filter(
+    (item) => item.ideaId === id
+  );
   return (
-    <Sheet>
-      <View style={styles.group}>
-        <Heading level={2}>Trwa nabór</Heading>
-        <Txt tone="soft">{open.title}</Txt>
-      </View>
-      <View>
-        <Button
-          icon={FileText}
-          label="Złóż wniosek w naborze"
-          onPress={() =>
-            router.push({
-              params: { id: open.id, pomysl: id },
-              pathname: "/nabory/[id]",
-            })
-          }
-          variant="primary"
-        />
-      </View>
+    <Sheet raised>
+      {mine.length === 0 ? (
+        <View style={styles.group}>
+          <Heading level={2}>Jest otwarty nabór</Heading>
+          <Txt>
+            {`${open.title}. Wnioski do ${longDate(open.closes_at)}. Możesz złożyć wniosek z tym pomysłem: skopiujemy z niego odpowiedzi.`}
+          </Txt>
+        </View>
+      ) : null}
+      <CallAction applications={mine} call={open} ideaId={id} />
     </Sheet>
   );
 }
@@ -103,7 +103,7 @@ const pickLabel = (generating: boolean, exists: boolean) => {
   if (generating) {
     return "Rysuję ilustrację";
   }
-  return exists ? "Narysuj inną" : "Narysuj ilustrację";
+  return exists ? "Narysuj inną (AI)" : "Narysuj ilustrację (AI)";
 };
 
 const styles = StyleSheet.create({

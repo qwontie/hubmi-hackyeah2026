@@ -6,6 +6,7 @@ import { type ScrollView, StyleSheet, type Text, View } from "react-native";
 import type { IdeaCreated } from "@/api/types";
 import { APP_NAME } from "@/config";
 import { IdeaAssistant } from "@/features/idea-assistant";
+import { IdeaGrantAction } from "@/features/idea-visualisation";
 import { InnovationRow } from "@/features/innovation-row";
 import { Stamp } from "@/features/stamp";
 import { useIdeaForm } from "@/hooks/use-idea";
@@ -25,9 +26,11 @@ const SENT = "Pomysł trafił do ROPS";
 
 function Created({
   created,
+  hasEmail,
   onReset,
 }: {
   created: IdeaCreated;
+  hasEmail: boolean;
   onReset: () => void;
 }) {
   const { wide } = useTheme();
@@ -43,25 +46,13 @@ function Created({
             {SENT}
           </Heading>
           <Txt>
-            Pracownicy ROPS przeczytają pomysł. Po akceptacji będzie widoczny
-            dla innych.
+            {hasEmail
+              ? "Pracownik ROPS przeczyta pomysł i odpisze: w rozmowie na tej stronie i na Twój adres e-mail."
+              : "Pracownik ROPS przeczyta pomysł i odpisze w rozmowie na tej stronie. Otworzysz ją z menu Działaj, w części „Moje pomysły”, na tym urządzeniu."}
           </Txt>
         </View>
         <Stamp at={new Date()} number={created.number} word="PRZYJĘTO" />
       </View>
-      {created.similar_ideas.length > 0 ? (
-        <View style={styles.block}>
-          <Heading level={2} size="h3">
-            Podobne pomysły innych osób
-          </Heading>
-          {created.similar_ideas.map((idea) => (
-            <View key={idea.id} style={styles.small}>
-              <Txt weight="600">{idea.title}</Txt>
-              <Txt tone="soft">{idea.essence}</Txt>
-            </View>
-          ))}
-        </View>
-      ) : null}
       {created.similar_innovations.length > 0 ? (
         <View style={styles.block}>
           <Heading level={2} size="h3">
@@ -85,22 +76,24 @@ function Created({
           </View>
         </View>
       ) : null}
-      <Button
-        icon={MessageSquareText}
-        label="Rozmowa z ROPS o tym pomyśle"
-        onPress={() =>
-          router.push({
-            params: { id: created.id },
-            pathname: "/pomysl/[id]",
-          })
-        }
-      />
-      <Button
-        icon={RotateCcw}
-        label="Zgłoś kolejny pomysł"
-        onPress={onReset}
-        variant="quiet"
-      />
+      <View style={styles.row}>
+        <Button
+          icon={MessageSquareText}
+          label="Rozmowa z ROPS o tym pomyśle"
+          onPress={() =>
+            router.push({
+              params: { id: created.id },
+              pathname: "/pomysl/[id]",
+            })
+          }
+        />
+        <Button
+          icon={RotateCcw}
+          label="Zgłoś kolejny pomysł"
+          onPress={onReset}
+          variant="quiet"
+        />
+      </View>
     </Sheet>
   );
 }
@@ -137,12 +130,19 @@ export default function IdeaScreen() {
   }, [sent]);
 
   return (
-    <Screen back="Pomysły" backFallback="/pomysl" ref={scroll}>
+    <Screen back="Działaj" backFallback="/dzialaj" ref={scroll}>
       <Head>
         <title>{`Zgłoś pomysł · ${APP_NAME}`}</title>
       </Head>
       {created ? (
-        <Created created={created} onReset={reset} />
+        <>
+          <Created
+            created={created}
+            hasEmail={form.email.trim().length > 0}
+            onReset={reset}
+          />
+          <IdeaGrantAction id={created.id} />
+        </>
       ) : (
         <>
           <PageHead>
@@ -278,14 +278,17 @@ const styles = StyleSheet.create({
     paddingRight: space.sm,
     paddingVertical: space.sm,
   },
+  row: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space.sm,
+  },
   sent: {
     alignItems: "flex-start",
     gap: space.xl,
   },
   sentWide: {
     flexDirection: "row",
-  },
-  small: {
-    gap: space.xs,
   },
 });

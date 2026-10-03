@@ -177,7 +177,9 @@ export function DoorRow({
           </Txt>
           <Txt tone="soft">{text}</Txt>
         </View>
-        <ArrowRight aria-hidden color={colors.stamp} size={26} />
+        <View style={styles.fixed}>
+          <ArrowRight aria-hidden color={colors.stamp} size={26} />
+        </View>
       </Pressable>
     </Link>
   );
@@ -299,6 +301,9 @@ const styles = StyleSheet.create({
   },
   first: {
     borderTopWidth: 0,
+  },
+  fixed: {
+    flexShrink: 0,
   },
   listHead: {
     gap: space.xs,

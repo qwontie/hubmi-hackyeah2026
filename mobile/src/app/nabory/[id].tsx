@@ -1,10 +1,14 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
-import { FileText, Pencil } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import type { GrantCall, GrantSection } from "@/api/types";
 import { APP_NAME } from "@/config";
-import { useApplicationStart, useGrantCall } from "@/hooks/use-grants";
+import { CallAction } from "@/features/grant-application";
+import {
+  applicationsOfCall,
+  useGrantCall,
+  useMyApplications,
+} from "@/hooks/use-grants";
 import { pluralPl } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
@@ -40,52 +44,23 @@ const phaseLabel = {
 } as const;
 
 function Start({ call, ideaId }: { call: GrantCall; ideaId?: string }) {
-  const start = useApplicationStart(call.id, ideaId);
-  const open = call.phase === "open";
+  const applications = useMyApplications();
+  const mine = applicationsOfCall(applications, call.id);
+  const fresh = !mine.some((item) => !ideaId || item.ideaId === ideaId);
+  if (applications === null) {
+    return null;
+  }
   return (
-    <Sheet raised={open}>
-      <View style={styles.group}>
-        <Heading level={2}>Przygotuj wniosek na podstawie pomysłu</Heading>
-        {open ? (
+    <Sheet raised={call.phase === "open"}>
+      {fresh && call.phase === "open" ? (
+        <View style={styles.group}>
+          <Heading level={2}>Złóż wniosek</Heading>
           <Txt tone="soft">
-            Sztuczna inteligencja ułoży szkic odpowiedzi z Twojego pomysłu.
-            Potem przeczytasz go i poprawisz.
+            {`Odpowiesz na ${call.sections.length} ${pluralPl(call.sections.length, "pytanie", "pytania", "pytań")}. Wersja robocza zapisuje się sama, więc możesz przerwać i wrócić. Jeśli masz zapisany pomysł, skopiujemy z niego odpowiedzi.`}
           </Txt>
-        ) : (
-          <Txt tone="soft">
-            Wniosek można utworzyć tylko podczas otwartego naboru.
-          </Txt>
-        )}
-        {open && start.ideas.length === 0 ? (
-          <View style={styles.group}>
-            <Txt>Na tym urządzeniu nie ma jeszcze zapisanego pomysłu.</Txt>
-            <View style={styles.actions}>
-              <Button
-                icon={Pencil}
-                label="Opisz pomysł"
-                onPress={() => router.push("/pomysl/nowy")}
-                variant="primary"
-              />
-            </View>
-          </View>
-        ) : null}
-        {open ? (
-          <View style={styles.actions}>
-            {start.ideas.map((idea) => (
-              <Button
-                busy={start.busyId === idea.id}
-                disabled={start.busyId !== null}
-                icon={FileText}
-                key={idea.id}
-                label={`Przygotuj wniosek: ${idea.title}`}
-                onPress={() => start.start(idea)}
-                variant="primary"
-              />
-            ))}
-          </View>
-        ) : null}
-        {start.error ? <Notice tone="error">{start.error}</Notice> : null}
-      </View>
+        </View>
+      ) : null}
+      <CallAction applications={mine} call={call} ideaId={ideaId} />
     </Sheet>
   );
 }
@@ -142,14 +117,14 @@ export default function GrantCallScreen() {
   const { state, retry } = useGrantCall(id);
   if (state.kind === "loading") {
     return (
-      <Screen back="Nabory">
+      <Screen back="Nabory" backFallback="/nabory">
         <Txt aria-live="polite">Wczytuję nabór.</Txt>
       </Screen>
     );
   }
   if (state.kind === "error") {
     return (
-      <Screen back="Nabory">
+      <Screen back="Nabory" backFallback="/nabory">
         <Notice title="Nie udało się wczytać naboru" tone="error">
           <View style={styles.group}>
             <Txt>{state.message}</Txt>

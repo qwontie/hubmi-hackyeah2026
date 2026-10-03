@@ -130,7 +130,7 @@ export function IdeaAssistant({
           }
           return result
             ? "Wyślij odpowiedzi asystentowi"
-            : "Rozwiń pomysł z asystentem";
+            : "Rozwiń pomysł z asystentem AI";
         })()}
         onPress={run}
       />

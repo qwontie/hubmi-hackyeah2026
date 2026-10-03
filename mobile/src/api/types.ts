@@ -124,6 +124,7 @@ export type ErrorCode =
   | "too_few_words"
   | "too_many_links"
   | "spam_rejected"
+  | "nothing_to_draft"
   | "report_locked"
   | "rate_limited"
   | "ai_unavailable"
@@ -168,15 +169,6 @@ export interface FeedbackSummary {
 export type FeedbackKind = "fits" | "does_not_fit";
 
 export type TesterRole = "resident" | "ngo" | "local_government" | "expert";
-
-export interface TestSignup {
-  contact_consent: true;
-  contact_email: string;
-  note?: string;
-  organization?: string;
-  powiat?: string;
-  who: TesterRole;
-}
 
 export interface InstitutionType {
   name: string;
@@ -523,8 +515,32 @@ export interface GrantCall {
 
 export interface ApplicationSection extends GrantSection {
   missing: string[];
-  source: "ai" | "author";
+  source: "empty" | "idea" | "ai" | "author";
   text: string;
+}
+
+export type ApplicationStatus =
+  | "draft"
+  | "submitted"
+  | "in_review"
+  | "accepted"
+  | "rejected";
+
+export interface ApplicationCreate {
+  contact_consent?: boolean;
+  contact_email?: string;
+  idea_id: string | null;
+}
+
+export interface ApplicationPatch {
+  contact_consent?: boolean;
+  contact_email?: string;
+  sections?: Record<string, string>;
+}
+
+export interface ApplicationAuth {
+  applicationToken?: string;
+  ideaToken?: string;
 }
 
 export interface GrantApplication {
@@ -532,14 +548,17 @@ export interface GrantApplication {
     GrantCall,
     "id" | "title" | "opens_at" | "closes_at" | "phase" | "demo"
   >;
+  contact_consent: boolean;
+  contact_email: string | null;
   created_at: string;
+  edit_token?: string;
   id: string;
-  idea: { id: string; number: number; title: string };
+  idea: { id: string; number: number | null; title: string } | null;
   missing_required: string[];
   number: number;
   pdf_url: string;
   sections: ApplicationSection[];
-  status: "draft" | "submitted" | "in_review" | "accepted" | "rejected";
+  status: ApplicationStatus;
   submitted_at: string | null;
   updated_at: string;
 }

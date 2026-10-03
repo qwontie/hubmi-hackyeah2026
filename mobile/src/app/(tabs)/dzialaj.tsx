@@ -2,6 +2,8 @@ import Head from "expo-router/head";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
 import { DoorRow, Doors, HUB_WIDTH, MyIdeas } from "@/features/contribute";
+import { MyApplications } from "@/features/grant-application";
+import { useMyApplications } from "@/hooks/use-grants";
 import { useStoredIdeas } from "@/storage/ideas";
 import { space } from "@/theme/tokens";
 import { PageHead, Screen } from "@/ui/screen";
@@ -9,6 +11,7 @@ import { Heading, Txt } from "@/ui/text";
 
 export default function ContributeScreen() {
   const ideas = useStoredIdeas();
+  const applications = useMyApplications();
   return (
     <Screen tabs width={HUB_WIDTH}>
       <Head>
@@ -54,6 +57,7 @@ export default function ContributeScreen() {
         text="Zobacz problemy, które zgłosili mieszkańcy, i zaproponuj rozwiązanie."
         title="Nie masz jeszcze pomysłu?"
       />
+      <MyApplications applications={applications ?? []} />
       <MyIdeas ideas={ideas ?? []} />
     </Screen>
   );

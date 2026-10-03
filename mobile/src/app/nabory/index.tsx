@@ -4,7 +4,17 @@ import { ArrowRight, Bell } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import type { GrantCall } from "@/api/types";
 import { APP_NAME } from "@/config";
-import { useGrantCalls } from "@/hooks/use-grants";
+import {
+  CallAction,
+  longDate,
+  MyApplications,
+} from "@/features/grant-application";
+import {
+  applicationsOfCall,
+  useGrantCalls,
+  useMyApplications,
+} from "@/hooks/use-grants";
+import type { StoredApplication } from "@/storage/applications";
 import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { Notice } from "@/ui/notice";
@@ -12,40 +22,40 @@ import { Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
-const NBSP = "\u00a0";
-
-const date = (value: string) =>
-  new Intl.DateTimeFormat("pl-PL", { dateStyle: "long" })
-    .format(new Date(value))
-    .replaceAll(" ", NBSP);
-
-function CallCard({ call }: { call: GrantCall }) {
+function CallCard({
+  applications,
+  call,
+}: {
+  applications: StoredApplication[];
+  call: GrantCall;
+}) {
   const open = call.phase === "open";
   return (
     <Sheet raised={open}>
       <View style={styles.group}>
         <Txt tone={open ? "stamp" : "soft"} variant="detail" weight="600">
           {open ? "Nabór otwarty" : "Nabór zapowiedziany"}
-          {call.demo ? " · Nabór pokazowy" : ""}
+          {call.demo ? " · Nabór pokazowy" : ""}
         </Txt>
         <Heading level={2}>{call.title}</Heading>
         <Txt tone="soft">
           {open
-            ? `Wnioski do ${date(call.closes_at)}`
-            : `Start ${date(call.opens_at)}`}
+            ? `Wnioski do ${longDate(call.closes_at)}`
+            : `Start ${longDate(call.opens_at)}`}
         </Txt>
       </View>
-      <View style={styles.actions}>
+      <CallAction applications={applications} call={call} />
+      <View style={styles.inset}>
         <Button
           icon={ArrowRight}
-          label="Zobacz nabór"
+          label="O naborze i pytania z wniosku"
           onPress={() =>
             router.push({
               params: { id: call.id },
               pathname: "/nabory/[id]",
             })
           }
-          variant={open ? "primary" : "secondary"}
+          variant="quiet"
         />
       </View>
     </Sheet>
@@ -54,25 +64,24 @@ function CallCard({ call }: { call: GrantCall }) {
 
 export default function GrantCallsScreen() {
   const { calls, error, loading, retry } = useGrantCalls();
+  const applications = useMyApplications();
+  const elsewhere = (applications ?? []).filter(
+    (item) => !calls.some((call) => call.id === item.callId)
+  );
   return (
-    <Screen back="Wróć" title="Nabory na innowacje" width={900}>
+    <Screen
+      back="Działaj"
+      backFallback="/dzialaj"
+      title="Nabory i wnioski"
+      width={900}
+    >
       <Head>
-        <title>{`Nabory · ${APP_NAME}`}</title>
+        <title>{`Nabory i wnioski · ${APP_NAME}`}</title>
       </Head>
-      <View style={styles.group}>
-        <Txt tone="soft" variant="lead">
-          Sprawdź otwarte i zapowiedziane nabory. Zapisany na tym urządzeniu
-          pomysł możesz zamienić w roboczy wniosek.
-        </Txt>
-        <View style={styles.actions}>
-          <Button
-            icon={Bell}
-            label="Powiadomienia o naborach"
-            onPress={() => router.push("/nabory/powiadomienia")}
-            variant="quiet"
-          />
-        </View>
-      </View>
+      <Txt variant="lead">
+        Nabór to konkurs, w którym ROPS daje granty na pomysły mieszkańców i
+        organizacji. Wniosek to Twoje odpowiedzi na pytania naboru.
+      </Txt>
       {loading ? <Txt aria-live="polite">Wczytuję nabory.</Txt> : null}
       {error ? (
         <Notice title="Nie udało się wczytać naborów" tone="error">
@@ -83,16 +92,28 @@ export default function GrantCallsScreen() {
         </Notice>
       ) : null}
       {!(loading || error) && calls.length === 0 ? (
-        <Notice title="Brak trwających naborów" tone="info">
-          Nowe i zapowiedziane nabory pokażą się tutaj.
+        <Notice title="Teraz nie ma naboru" tone="info">
+          Nowe i zapowiedziane nabory pokażą się tutaj. Możesz zapisać się na
+          powiadomienie e-mailem.
         </Notice>
       ) : null}
       <View role="list" style={styles.list}>
         {calls.map((call) => (
           <View key={call.id} role="listitem">
-            <CallCard call={call} />
+            <CallCard
+              applications={applicationsOfCall(applications, call.id)}
+              call={call}
+            />
           </View>
         ))}
+      </View>
+      {loading ? null : <MyApplications applications={elsewhere} />}
+      <View style={styles.actions}>
+        <Button
+          icon={Bell}
+          label="Powiadom mnie e-mailem o nowych naborach"
+          onPress={() => router.push("/nabory/powiadomienia")}
+        />
       </View>
     </Screen>
   );
@@ -101,5 +122,6 @@ export default function GrantCallsScreen() {
 const styles = StyleSheet.create({
   actions: { alignItems: "flex-start" },
   group: { gap: space.md },
+  inset: { alignItems: "flex-start", marginLeft: -space.xl },
   list: { gap: space.lg },
 });
