@@ -214,10 +214,10 @@ export function EntryChoice({
       />
       <Panel
         night={false}
-        onPress={() => router.navigate("/pomysl")}
+        onPress={() => router.navigate("/dzialaj")}
         role="button"
-        text="Zobacz, z czym mierzą się mieszkańcy, i zaproponuj rozwiązanie."
-        title="Mam pomysł"
+        text="Zgłoś pomysł, złóż wniosek o grant albo zostań wolontariuszem."
+        title="Chcę działać"
       />
     </View>
   );

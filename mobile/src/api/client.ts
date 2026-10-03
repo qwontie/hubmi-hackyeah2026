@@ -12,6 +12,7 @@ import type {
   DemandRequest,
   DemandResult,
   ErrorCode,
+  ExpertAnswerView,
   FeedbackKind,
   FeedbackSummary,
   FieldError,
@@ -271,6 +272,11 @@ export const api = {
       `/api/innovations/${encodeURIComponent(slug)}/demand`,
       { signal }
     ),
+  expertAnswers: (id: string, token: string, signal?: AbortSignal) =>
+    request<ExpertAnswerView>(`/api/expert-answers/${encodeURIComponent(id)}`, {
+      headers: { "x-expert-token": token },
+      signal,
+    }),
   feedbackSummary: (slug: string, signal?: AbortSignal) =>
     request<FeedbackSummary>(
       `/api/innovations/${encodeURIComponent(slug)}/feedback`,
@@ -382,6 +388,16 @@ export const api = {
         method: "POST",
       }
     ),
+  sendExpertAnswer: (
+    id: string,
+    token: string,
+    body: { body: string; website?: string }
+  ) =>
+    request<ExpertAnswerView>(`/api/expert-answers/${encodeURIComponent(id)}`, {
+      body,
+      headers: { "x-expert-token": token },
+      method: "POST",
+    }),
   sendIdeaMessage: (id: string, token: string, body: string) =>
     request<ThreadMessage>(`/api/ideas/${encodeURIComponent(id)}/messages`, {
       body: { body },

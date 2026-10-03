@@ -602,3 +602,29 @@ export interface VolunteerView {
   report: VolunteerReport | null;
   status: "new" | "accepted" | "rejected" | "reported" | "closed";
 }
+
+export interface ExpertNeedItem {
+  created_at: string;
+  id: string;
+  number: number | null;
+  powiat: string | null;
+  text: string;
+  title: string | null;
+}
+
+export interface ExpertAnswer {
+  body: string;
+  created_at: string;
+  id: string;
+}
+
+export interface ExpertAnswerView {
+  answers: ExpertAnswer[];
+  expert: { display_name: string | null; expertise: string | null };
+  id: string;
+  item: ExpertNeedItem | PublicIdea;
+  kind: "need" | "idea";
+  note: string | null;
+  status: "open" | "answered";
+  title: string;
+}
