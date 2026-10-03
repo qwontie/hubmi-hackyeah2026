@@ -4,6 +4,7 @@ import type {
   AdaptationRequest,
   AssistAnswer,
   AssistOut,
+  AuthorIdea,
   Category,
   ChallengeDetail,
   ChallengeSummary,
@@ -12,11 +13,14 @@ import type {
   FeedbackKind,
   FeedbackSummary,
   FieldError,
+  GrantApplication,
+  GrantCall,
   IdeaCreate,
   IdeaCreated,
   IdeaDraft,
   IdeaOptions,
   IdeaThread,
+  IdeaVisualisation,
   InnovationDetail,
   InnovationSummary,
   InstitutionType,
@@ -26,6 +30,7 @@ import type {
   MaterialDetail,
   MaterialFilters,
   MaterialSummary,
+  Meta,
   NeedCreate,
   NeedCreated,
   NeedPatch,
@@ -45,6 +50,7 @@ const FALLBACK_MESSAGES: Record<ErrorCode, string> = {
   ai_unavailable:
     "Wyszukiwanie jest chwilowo niedostępne. Spróbuj ponownie za kilka minut.",
   bad_request: "Nie udało się wysłać zapytania. Spróbuj ponownie.",
+  call_not_open: "Ten nabór nie przyjmuje teraz wniosków.",
   conflict: "Ta operacja właśnie trwa. Spróbuj za chwilę.",
   internal: "Coś poszło nie tak po naszej stronie. Spróbuj ponownie.",
   network:
@@ -59,6 +65,7 @@ const FALLBACK_MESSAGES: Record<ErrorCode, string> = {
   unclear_text:
     "Nie rozumiemy tego opisu. Napisz zwykłymi słowami, z jakim problemem przychodzisz.",
   validation_error: "Popraw zaznaczone pola.",
+  visualisation_limit: "Ten pomysł ma już 3 wizualizacje.",
 };
 
 interface ApiErrorOptions {
@@ -236,6 +243,11 @@ export const api = {
     request<Page<ChallengeSummary>>(`/api/challenges${query(params)}`, {
       signal,
     }),
+  confirmGrantSubscription: (token: string) =>
+    request<{ status: "confirmed" }>("/api/grant-calls/subscription/confirm", {
+      body: { token },
+      method: "POST",
+    }),
   createIdea: (body: IdeaCreate) =>
     request<IdeaCreated>("/api/ideas", { body, method: "POST" }),
   createNeed: (body: NeedCreate) =>
@@ -245,6 +257,22 @@ export const api = {
       `/api/innovations/${encodeURIComponent(slug)}/feedback`,
       { signal }
     ),
+  grantApplication: (id: string, token: string, signal?: AbortSignal) =>
+    request<GrantApplication>(`/api/applications/${encodeURIComponent(id)}`, {
+      headers: { "x-idea-token": token },
+      signal,
+    }),
+  grantCall: (id: string, signal?: AbortSignal) =>
+    request<GrantCall>(`/api/grant-calls/${encodeURIComponent(id)}`, {
+      signal,
+    }),
+  grantCalls: (phase: "open" | "upcoming", signal?: AbortSignal) =>
+    request<GrantCall[]>(`/api/grant-calls${query({ phase })}`, { signal }),
+  idea: (id: string, token: string, signal?: AbortSignal) =>
+    request<AuthorIdea>(`/api/ideas/${encodeURIComponent(id)}`, {
+      headers: { "x-idea-token": token },
+      signal,
+    }),
   ideaOptions: (signal?: AbortSignal) =>
     request<IdeaOptions>("/api/ideas/options", { signal }),
   ideaThread: (id: string, token: string, signal?: AbortSignal) =>
@@ -252,6 +280,15 @@ export const api = {
       headers: { "x-idea-token": token },
       signal,
     }),
+  ideaVisualisation: (id: string, token: string) =>
+    request<IdeaVisualisation>(
+      `/api/ideas/${encodeURIComponent(id)}/visualisation`,
+      {
+        body: {},
+        headers: { "x-idea-token": token },
+        method: "POST",
+      }
+    ),
   improve: (slug: string, text: string) =>
     request<{ id: string }>(
       `/api/innovations/${encodeURIComponent(slug)}/improvements`,
@@ -294,6 +331,7 @@ export const api = {
     request<Page<MaterialSummary>>(`/api/materials${query(params)}`, {
       signal,
     }),
+  meta: (signal?: AbortSignal) => request<Meta>("/api/meta", { signal }),
   patchNeed: (id: string, token: string, body: NeedPatch) =>
     request<NeedPatchResponse>(`/api/needs/${encodeURIComponent(id)}`, {
       body,
@@ -316,6 +354,15 @@ export const api = {
     },
     signal?: AbortSignal
   ) => request<Page<Problem>>(`/api/problems${query(params)}`, { signal }),
+  redraftGrantApplication: (id: string, token: string, keys?: string[]) =>
+    request<GrantApplication>(
+      `/api/applications/${encodeURIComponent(id)}/redraft`,
+      {
+        body: keys ? { keys } : {},
+        headers: { "x-idea-token": token },
+        method: "POST",
+      }
+    ),
   sendIdeaMessage: (id: string, token: string, body: string) =>
     request<ThreadMessage>(`/api/ideas/${encodeURIComponent(id)}/messages`, {
       body: { body },
@@ -328,6 +375,29 @@ export const api = {
       headers: { "x-need-token": token },
       method: "POST",
     }),
+  startGrantApplication: (callId: string, ideaId: string, token: string) =>
+    request<GrantApplication>(
+      `/api/grant-calls/${encodeURIComponent(callId)}/applications`,
+      {
+        body: { idea_id: ideaId },
+        headers: { "x-idea-token": token },
+        method: "POST",
+      }
+    ),
+  submitGrantApplication: (id: string, token: string) =>
+    request<GrantApplication>(
+      `/api/applications/${encodeURIComponent(id)}/submit`,
+      {
+        body: {},
+        headers: { "x-idea-token": token },
+        method: "POST",
+      }
+    ),
+  subscribeGrantCalls: (email: string) =>
+    request<{ status: "pending" }>("/api/grant-calls/subscribe", {
+      body: { consent: true, email },
+      method: "POST",
+    }),
   testSignup: (slug: string, body: TestSignup) =>
     request<{ id: string }>(
       `/api/innovations/${encodeURIComponent(slug)}/test-signup`,
@@ -338,11 +408,26 @@ export const api = {
       headers: { "x-need-token": token },
       signal,
     }),
+  unsubscribeGrantCalls: (token: string) =>
+    request<{ status: "unsubscribed" }>(
+      "/api/grant-calls/subscription/unsubscribe",
+      { body: { token }, method: "POST" }
+    ),
   unvote: (slug: string, voter: string) =>
     request<VoteResponse>(
       `/api/innovations/${encodeURIComponent(slug)}/feedback`,
       { headers: { "x-voter-id": voter }, method: "DELETE" }
     ),
+  updateGrantApplication: (
+    id: string,
+    token: string,
+    sections: Record<string, string>
+  ) =>
+    request<GrantApplication>(`/api/applications/${encodeURIComponent(id)}`, {
+      body: { sections },
+      headers: { "x-idea-token": token },
+      method: "PATCH",
+    }),
   vote: (
     slug: string,
     kind: FeedbackKind,

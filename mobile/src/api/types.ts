@@ -22,6 +22,11 @@ export interface InnovationSummary {
   category: CategoryRef;
   has_materials: boolean;
   has_video: boolean;
+  image_alt?: string | null;
+  image_card_url?: string | null;
+  image_label?: string | null;
+  image_source?: "rops" | "youtube" | "generated" | null;
+  image_url?: string | null;
   lead: string;
   slug: string;
   title: string;
@@ -108,6 +113,7 @@ export type ErrorCode =
   | "unauthorized"
   | "not_found"
   | "conflict"
+  | "call_not_open"
   | "validation_error"
   | "text_too_short"
   | "text_too_long"
@@ -116,6 +122,7 @@ export type ErrorCode =
   | "ai_unavailable"
   | "internal"
   | "too_many_messages"
+  | "visualisation_limit"
   | "network";
 
 export interface FieldError {
@@ -124,8 +131,10 @@ export interface FieldError {
 }
 
 export interface ThreadMessage {
+  author?: "rops" | "expert" | "author";
   body: string;
   direction: "to_author" | "from_author";
+  expert?: { display_name: string; expertise: string | null } | null;
   id: string;
   sent_at: string;
 }
@@ -441,6 +450,71 @@ export interface PublicIdea {
   problem_id?: string | null;
   stage: string;
   title: string;
+  visualisation_alt: string | null;
+  visualisation_url: string | null;
+}
+
+export interface AuthorIdea extends PublicIdea {
+  has_contact: boolean;
+  status: "new" | "in_review" | "accepted" | "rejected";
+  updated_at: string;
+  visualisations_left: number;
+}
+
+export interface IdeaVisualisation {
+  alt: string;
+  created_at: string;
+  generations_left: number;
+  generations_used: number;
+  url: string;
+}
+
+export interface GrantSection {
+  hint: string;
+  key: string;
+  label: string;
+  max_length: number;
+  required: boolean;
+}
+
+export interface GrantCall {
+  closes_at: string;
+  demo: boolean;
+  description: string;
+  id: string;
+  opens_at: string;
+  phase: "upcoming" | "open" | "closed";
+  sections: GrantSection[];
+  source_url: string | null;
+  title: string;
+  updated_at: string;
+}
+
+export interface ApplicationSection extends GrantSection {
+  missing: string[];
+  source: "ai" | "author";
+  text: string;
+}
+
+export interface GrantApplication {
+  call: Pick<
+    GrantCall,
+    "id" | "title" | "opens_at" | "closes_at" | "phase" | "demo"
+  >;
+  created_at: string;
+  id: string;
+  idea: { id: string; number: number; title: string };
+  missing_required: string[];
+  number: number;
+  pdf_url: string;
+  sections: ApplicationSection[];
+  status: "draft" | "submitted" | "in_review" | "accepted" | "rejected";
+  submitted_at: string | null;
+  updated_at: string;
+}
+
+export interface Meta {
+  demo: boolean;
 }
 
 export interface ProblemDetail extends Problem {
