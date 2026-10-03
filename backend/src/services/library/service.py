@@ -244,7 +244,8 @@ async def update(
         if getattr(innovation, name) != value
     }
     if not changed:
-        return await announce(session, slug)
+        innovation, category = await find(session, slug)
+        return detail(innovation, category)
     before = {name: getattr(innovation, name) for name in changed}
     for name, value in changed.items():
         setattr(innovation, name, value)

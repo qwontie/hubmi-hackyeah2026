@@ -1,4 +1,5 @@
 import asyncio
+import re
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -8,6 +9,7 @@ from utils.env import MailSettings
 from utils.logging import logger
 
 RESEND_URL = "https://api.resend.com/emails"
+TOKEN_IN_LINK = re.compile(r"#token=\S+")
 RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
 ATTEMPTS = 3
 
@@ -56,7 +58,7 @@ class Mailer:
                 "mail skipped, no RESEND key: to=%s subject=%r\n%s",
                 mask_address(email.to),
                 email.subject,
-                email.text,
+                TOKEN_IN_LINK.sub("#token=***", email.text),
             )
             return Delivery(DeliveryStatus.SKIPPED)
         payload: dict[str, object] = {

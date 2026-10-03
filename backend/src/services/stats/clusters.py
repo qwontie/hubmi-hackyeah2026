@@ -1,6 +1,6 @@
 import uuid
 from collections import defaultdict
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
@@ -83,7 +83,11 @@ async def fetch(session: AsyncSession, statement: Any) -> list[Any]:  # noqa: AN
 
 
 def recent_count() -> Any:  # noqa: ANN401
-    since = datetime.now(UTC) - timedelta(days=RECENT_DAYS)
+    since = datetime.combine(
+        first_day() + timedelta(days=DAYS - RECENT_DAYS),
+        time.min,
+        tzinfo=ZoneInfo(TIMEZONE),
+    )
     return (
         select(func.count())
         .where(

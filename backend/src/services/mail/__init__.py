@@ -1,6 +1,6 @@
 from .sender import Delivery, DeliveryStatus, Email, Mailer
 from .staff import StaffNotifier
-from .templates import StaffItem, StaffItemKind, author_reply
+from .templates import StaffItem, StaffItemKind, author_reply, idea_reply
 
 __all__ = [
     "Delivery",
@@ -11,4 +11,5 @@ __all__ = [
     "StaffItemKind",
     "StaffNotifier",
     "author_reply",
+    "idea_reply",
 ]

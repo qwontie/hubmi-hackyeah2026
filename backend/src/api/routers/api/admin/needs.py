@@ -77,8 +77,7 @@ async def update_need(
 
 @router.post("/{need_id}/read", status_code=status.HTTP_204_NO_CONTENT)
 async def mark_read(need_id: uuid.UUID, session: FromDishka[AsyncSession]) -> None:
-    await existing(session, need_id)
-    await service.mark_read(session, need_id)
+    await service.mark_read(session, await existing(session, need_id))
 
 
 @router.post(

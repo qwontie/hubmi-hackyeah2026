@@ -1,20 +1,30 @@
 import asyncio
-import hashlib
 import hmac
 import uuid
+from collections.abc import Coroutine
 from datetime import UTC, datetime
+from typing import Any
 
-from sqlalchemy import Update, func, select, update
+from sqlalchemy import ColumnElement, Update, func, select, update
 from sqlmodel import col
 from sqlmodel import select as entity_select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import ApiError
 from services.bus import bus
-from services.mail import Delivery, DeliveryStatus, Mailer, author_reply
+from services.mail import (
+    Delivery,
+    DeliveryStatus,
+    Email,
+    Mailer,
+    author_reply,
+    idea_reply,
+)
+from services.needs import hash_token
 from utils.db import session_scope
 from utils.db.models import (
     AdminUser,
+    Idea,
     Message,
     MessageDelivery,
     MessageDirection,
@@ -24,39 +34,60 @@ from utils.db.models import (
 from utils.logging import logger
 
 from .audit import record
-from .inbox import admin_message, build
-from .links import link_token_matches, thread_url
+from .inbox import admin_message, admin_messages, build
+from .links import IDEA_CONTEXT, NEED_CONTEXT, idea_thread_url, link_token_matches
+from .links import thread_url as need_thread_url
 from .schemas import AdminMessage, PublicMessage
 
 UNANSWERED_LIMIT = 10
 DELIVERY_ERROR_LIMIT = 500
+TOO_MANY = (
+    "Wysłano już kilka wiadomości bez odpowiedzi. "
+    "Poczekaj, aż ROPS odpowie, zanim napiszesz ponownie."
+)
 
-pending_deliveries: set[asyncio.Task[None]] = set()
+type Owner = Need | Idea
+
+background: set[asyncio.Task[Any]] = set()
 
 
-def token_hash(token: str) -> str:
-    return hashlib.sha256(token.encode()).hexdigest()
+def spawn(job: Coroutine[Any, Any, Any]) -> None:
+    task = asyncio.create_task(job)
+    background.add(task)
+    task.add_done_callback(background.discard)
 
 
-def token_opens(need: Need, token: str | None) -> bool:
+def owned_by(owner: Owner) -> ColumnElement[bool]:
+    if isinstance(owner, Idea):
+        return col(Message.idea_id) == owner.id
+    return col(Message.need_id) == owner.id
+
+
+def token_opens(owner: Owner, token: str | None) -> bool:
     if not token:
         return False
-    if hmac.compare_digest(token_hash(token), need.edit_token_hash):
+    if hmac.compare_digest(hash_token(token), owner.edit_token_hash):
         return True
-    return link_token_matches(need.id, token)
+    context = IDEA_CONTEXT if isinstance(owner, Idea) else NEED_CONTEXT
+    return link_token_matches(owner.id, token, context)
 
 
 async def need_for_token(
     session: AsyncSession, need_id: uuid.UUID, token: str | None
 ) -> Need | None:
     need = await session.get(Need, need_id)
-    if need is None or not token_opens(need, token):
-        return None
-    return need
+    return need if need is not None and token_opens(need, token) else None
 
 
-def can_email(need: Need) -> bool:
-    return bool(need.contact_email and need.contact_consent)
+async def idea_for_token(
+    session: AsyncSession, idea_id: uuid.UUID, token: str | None
+) -> Idea | None:
+    idea = await session.get(Idea, idea_id)
+    return idea if idea is not None and token_opens(idea, token) else None
+
+
+def can_email(owner: Owner) -> bool:
+    return bool(owner.contact_email and owner.contact_consent)
 
 
 async def publish_need(session: AsyncSession, need: Need) -> None:
@@ -68,23 +99,26 @@ def publish_message(topic: str, message: AdminMessage) -> None:
     bus.publish(topic, message.model_dump(mode="json"))
 
 
-async def public_messages(
-    session: AsyncSession, need_id: uuid.UUID
-) -> list[PublicMessage]:
+def public_message(message: Message) -> PublicMessage:
+    return PublicMessage(
+        id=message.id,
+        direction=message.direction,
+        body=message.body,
+        sent_at=message.sent_at,
+    )
+
+
+async def public_messages(session: AsyncSession, owner: Owner) -> list[PublicMessage]:
     result = await session.exec(
         entity_select(Message)
-        .where(col(Message.need_id) == need_id)
+        .where(owned_by(owner))
         .order_by(col(Message.sent_at), col(Message.created_at))
     )
-    return [
-        PublicMessage(
-            id=message.id,
-            direction=message.direction,
-            body=message.body,
-            sent_at=message.sent_at,
-        )
-        for message in result.all()
-    ]
+    return [public_message(message) for message in result.all()]
+
+
+async def thread_for_admin(session: AsyncSession, owner: Owner) -> list[AdminMessage]:
+    return await admin_messages(session, owned_by(owner))
 
 
 async def set_status(
@@ -108,11 +142,11 @@ async def set_status(
     return need
 
 
-def read_all(need_id: uuid.UUID) -> Update:
+def read_all(owner: Owner) -> Update:
     return (
         update(Message)
         .where(
-            col(Message.need_id) == need_id,
+            owned_by(owner),
             col(Message.direction) == MessageDirection.FROM_AUTHOR,
             col(Message.read_at).is_(None),
         )
@@ -120,73 +154,90 @@ def read_all(need_id: uuid.UUID) -> Update:
     )
 
 
-async def mark_read(session: AsyncSession, need_id: uuid.UUID) -> None:
-    result = await session.exec(read_all(need_id))
+async def mark_read(session: AsyncSession, owner: Owner) -> None:
+    result = await session.exec(read_all(owner))
     if result.rowcount:
         await session.commit()
 
 
 async def reply(
-    session: AsyncSession, need: Need, admin: AdminUser, body: str, mailer: Mailer
+    session: AsyncSession, owner: Owner, admin: AdminUser, body: str, mailer: Mailer
 ) -> AdminMessage:
-    emailed = can_email(need)
+    emailed = can_email(owner)
+    is_idea = isinstance(owner, Idea)
     message = Message(
-        need_id=need.id,
+        need_id=None if is_idea else owner.id,
+        idea_id=owner.id if is_idea else None,
         direction=MessageDirection.TO_AUTHOR,
         body=body,
         admin_id=admin.id,
         delivery_status=MessageDelivery.PENDING if emailed else None,
     )
     session.add(message)
-    previous = need.status
-    need.status = NeedStatus.ANSWERED
-    session.add(need)
+    details: dict[str, Any] = {"emailed": emailed}
+    if isinstance(owner, Need):
+        details["from"] = owner.status.value
+        owner.status = NeedStatus.ANSWERED
+        session.add(owner)
     await session.flush()
+    details["message_id"] = str(message.id)
     record(
         session,
         admin,
-        "need.reply",
-        target=("need", need.id),
-        details={
-            "message_id": str(message.id),
-            "emailed": emailed,
-            "from": previous.value,
-        },
+        "idea.reply" if is_idea else "need.reply",
+        target=("idea" if is_idea else "need", owner.id),
+        details=details,
     )
-    await session.exec(read_all(need.id))
+    await session.exec(read_all(owner))
     await session.commit()
     await session.refresh(message)
-    await session.refresh(need)
     result = admin_message(message, admin.login)
     publish_message("message.created", result)
-    await publish_need(session, need)
+    if isinstance(owner, Need):
+        await session.refresh(owner)
+        await publish_need(session, owner)
     if emailed:
-        task = asyncio.create_task(deliver(message.id, mailer))
-        pending_deliveries.add(task)
-        task.add_done_callback(pending_deliveries.discard)
+        spawn(deliver(message.id, mailer))
     return result
+
+
+def reply_email(owner: Owner, message: Message) -> Email:
+    key = f"message-{message.id}"
+    if isinstance(owner, Idea):
+        return idea_reply(
+            to=str(owner.contact_email),
+            idea_title=owner.title,
+            body=message.body,
+            thread_url=idea_thread_url(owner.id),
+            idempotency_key=key,
+        )
+    return author_reply(
+        to=str(owner.contact_email),
+        need_text=owner.text,
+        body=message.body,
+        thread_url=need_thread_url(owner.id),
+        idempotency_key=key,
+    )
+
+
+async def owner_of(session: AsyncSession, message: Message) -> Owner | None:
+    if message.idea_id is not None:
+        return await session.get(Idea, message.idea_id)
+    if message.need_id is not None:
+        return await session.get(Need, message.need_id)
+    return None
 
 
 async def deliver(message_id: uuid.UUID, mailer: Mailer) -> None:
     try:
         async with session_scope() as session:
             message = await session.get(Message, message_id)
-            if message is None or message.need_id is None:
-                return
-            need = await session.get(Need, message.need_id)
-            if need is None:
+            owner = None if message is None else await owner_of(session, message)
+            if message is None or owner is None:
                 return
             delivery = (
-                await mailer.send(
-                    author_reply(
-                        to=str(need.contact_email),
-                        need_text=need.text,
-                        body=message.body,
-                        thread_url=thread_url(need.id),
-                        idempotency_key=f"message-{message.id}",
-                    )
-                )
-                if can_email(need)
+                await mailer.send(reply_email(owner, message))
+                if can_email(owner)
                 else Delivery(DeliveryStatus.SKIPPED, error="no contact consent")
             )
             message.delivery_status = MessageDelivery(delivery.status.value)
@@ -221,28 +272,23 @@ async def resume_pending(mailer: Mailer) -> int:
         logger.exception("cannot resume pending reply emails")
         return 0
     for message_id in pending:
-        task = asyncio.create_task(deliver(message_id, mailer))
-        pending_deliveries.add(task)
-        task.add_done_callback(pending_deliveries.discard)
+        spawn(deliver(message_id, mailer))
     if pending:
         logger.info("resuming %d pending reply emails", len(pending))
     return len(pending)
 
 
-async def unanswered_count(session: AsyncSession, need_id: uuid.UUID) -> int:
+async def unanswered_count(session: AsyncSession, owner: Owner) -> int:
     last_reply = (
         select(func.max(col(Message.sent_at)))
-        .where(
-            col(Message.need_id) == need_id,
-            col(Message.direction) == MessageDirection.TO_AUTHOR,
-        )
+        .where(owned_by(owner), col(Message.direction) == MessageDirection.TO_AUTHOR)
         .scalar_subquery()
     )
     total = await session.scalar(
         select(func.count())
         .select_from(Message)
         .where(
-            col(Message.need_id) == need_id,
+            owned_by(owner),
             col(Message.direction) == MessageDirection.FROM_AUTHOR,
             col(Message.sent_at)
             > func.coalesce(last_reply, datetime(1970, 1, 1, tzinfo=UTC)),
@@ -251,29 +297,26 @@ async def unanswered_count(session: AsyncSession, need_id: uuid.UUID) -> int:
     return int(total or 0)
 
 
-async def author_message(session: AsyncSession, need: Need, body: str) -> PublicMessage:
-    if await unanswered_count(session, need.id) >= UNANSWERED_LIMIT:
-        raise ApiError(
-            429,
-            "too_many_messages",
-            "Wysłano już kilka wiadomości bez odpowiedzi. "
-            "Poczekaj, aż ROPS odpowie, zanim napiszesz ponownie.",
-        )
+async def author_message(
+    session: AsyncSession, owner: Owner, body: str
+) -> PublicMessage:
+    if await unanswered_count(session, owner) >= UNANSWERED_LIMIT:
+        raise ApiError(429, "too_many_messages", TOO_MANY)
+    is_idea = isinstance(owner, Idea)
     message = Message(
-        need_id=need.id, direction=MessageDirection.FROM_AUTHOR, body=body
+        need_id=None if is_idea else owner.id,
+        idea_id=owner.id if is_idea else None,
+        direction=MessageDirection.FROM_AUTHOR,
+        body=body,
     )
     session.add(message)
-    if need.status != NeedStatus.NEW:
-        need.status = NeedStatus.NEW
-        session.add(need)
+    if isinstance(owner, Need) and owner.status != NeedStatus.NEW:
+        owner.status = NeedStatus.NEW
+        session.add(owner)
     await session.commit()
     await session.refresh(message)
-    await session.refresh(need)
     publish_message("message.created", admin_message(message, None))
-    await publish_need(session, need)
-    return PublicMessage(
-        id=message.id,
-        direction=message.direction,
-        body=message.body,
-        sent_at=message.sent_at,
-    )
+    if isinstance(owner, Need):
+        await session.refresh(owner)
+        await publish_need(session, owner)
+    return public_message(message)

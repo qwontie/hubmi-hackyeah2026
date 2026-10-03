@@ -93,7 +93,9 @@ def conditions(filters: NeedFilters) -> list[ColumnElement[bool]]:
     if filters.nothing_fits is not None:
         found.append(col(Need.nothing_fits).is_(filters.nothing_fits))
     if filters.has_contact is not None:
-        contact = col(Need.contact_email).is_not(None)
+        contact = and_(
+            col(Need.contact_email).is_not(None), col(Need.contact_consent).is_(True)
+        )
         found.append(contact if filters.has_contact else ~contact)
     if filters.unread is not None:
         unread = col(Need.id).in_(unread_messages())
@@ -288,12 +290,12 @@ async def get_need(session: AsyncSession, need_id: uuid.UUID) -> Need | None:
 
 
 async def admin_messages(
-    session: AsyncSession, need_id: uuid.UUID
+    session: AsyncSession, owned: ColumnElement[bool]
 ) -> list[AdminMessage]:
     result = await session.exec(
         entity_select(Message, col(AdminUser.login))
         .outerjoin(AdminUser, col(AdminUser.id) == col(Message.admin_id))
-        .where(col(Message.need_id) == need_id)
+        .where(owned)
         .order_by(col(Message.sent_at), col(Message.created_at))
     )
     return [admin_message(message, login) for message, login in result.all()]
@@ -303,6 +305,7 @@ def admin_message(message: Message, login: str | None) -> AdminMessage:
     return AdminMessage(
         id=message.id,
         need_id=message.need_id,
+        idea_id=message.idea_id,
         direction=message.direction,
         body=message.body,
         sent_at=message.sent_at,
@@ -320,6 +323,6 @@ async def need_detail(session: AsyncSession, need: Need) -> AdminNeedDetail:
     return AdminNeedDetail(
         **summary.model_dump(),
         match_details=matches.get(need.id, []),
-        messages=await admin_messages(session, need.id),
+        messages=await admin_messages(session, col(Message.need_id) == need.id),
         can_email=bool(need.contact_email and need.contact_consent),
     )

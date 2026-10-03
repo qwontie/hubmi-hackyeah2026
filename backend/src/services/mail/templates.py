@@ -22,6 +22,7 @@ class StaffItemKind(StrEnum):
     FORM_NEED = "form_need"
     IDEA = "idea"
     AUTHOR_MESSAGE = "author_message"
+    IDEA_MESSAGE = "idea_message"
 
 
 STAFF_ITEM_LABELS = {
@@ -29,6 +30,7 @@ STAFF_ITEM_LABELS = {
     StaffItemKind.FORM_NEED: "Nowe zgłoszenie potrzeby z formularza",
     StaffItemKind.IDEA: "Nowy pomysł",
     StaffItemKind.AUTHOR_MESSAGE: "Nowa wiadomość od autora zgłoszenia",
+    StaffItemKind.IDEA_MESSAGE: "Nowa wiadomość od autora pomysłu",
 }
 
 
@@ -114,6 +116,40 @@ def author_reply(
         "odpowiedział na zgłoszenie przesłane przez HubMi.</p>"
         '<h2 style="font-size:16px;margin:0 0 8px">Zgłoszenie</h2>'
         f"{html_quote(quote)}"
+        '<h2 style="font-size:16px;margin:0 0 8px">Odpowiedź</h2>'
+        f"{html_paragraphs(body)}"
+        f"{html_button(thread_url, 'Zobacz rozmowę i odpowiedz')}"
+        f"{html_paragraphs(SIGNATURE)}"
+        '<p style="margin:24px 0 0;font-size:13px;color:#57534e">'
+        f"{CONSENT_NOTE}</p>",
+    )
+    return Email(
+        to=to, subject=subject, text=text, html=html, idempotency_key=idempotency_key
+    )
+
+
+def idea_reply(
+    *, to: str, idea_title: str, body: str, thread_url: str, idempotency_key: str
+) -> Email:
+    subject = "Odpowiedź ROPS na Twój pomysł w HubMi"
+    title = excerpt(idea_title, 200)
+    text = (
+        "Dzień dobry,\n\n"
+        "Regionalny Ośrodek Polityki Społecznej w Krakowie odpowiedział na pomysł "
+        "przesłany przez HubMi.\n\n"
+        f"Pomysł:\n„{title}”\n\n"
+        f"Odpowiedź:\n{body}\n\n"
+        f"Całą rozmowę zobaczysz i odpowiesz na nią tutaj:\n{thread_url}\n\n"
+        f"{SIGNATURE}\n\n"
+        f"{CONSENT_NOTE}"
+    )
+    html = html_document(
+        subject,
+        f"{H1}Odpowiedź na Twój pomysł</h1>"
+        '<p style="margin:0 0 16px">Regionalny Ośrodek Polityki Społecznej w Krakowie '
+        "odpowiedział na pomysł przesłany przez HubMi.</p>"
+        '<h2 style="font-size:16px;margin:0 0 8px">Pomysł</h2>'
+        f"{html_quote(title)}"
         '<h2 style="font-size:16px;margin:0 0 8px">Odpowiedź</h2>'
         f"{html_paragraphs(body)}"
         f"{html_button(thread_url, 'Zobacz rozmowę i odpowiedz')}"

@@ -34,7 +34,9 @@ SELECT
     count(*) FILTER (WHERE created_at >= :start AND status = 'new') AS waiting,
     count(*) FILTER (WHERE created_at >= :start AND status = 'answered') AS answered,
     count(*) FILTER (WHERE created_at >= :start AND status = 'closed') AS closed,
-    count(*) FILTER (WHERE created_at >= :start AND contact_email IS NOT NULL)
+    count(*) FILTER (
+        WHERE created_at >= :start AND contact_email IS NOT NULL AND contact_consent
+    )
         AS with_contact
 FROM need
 WHERE created_at >= :previous_start AND created_at < :end

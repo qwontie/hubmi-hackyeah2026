@@ -44,11 +44,14 @@ def staff_item(message: Message) -> StaffItem | None:
             url=admin_idea_url(data["id"]),
         )
     if message.topic == "message.created" and data.get("direction") == "from_author":
+        idea_id = data.get("idea_id")
         return StaffItem(
-            kind=StaffItemKind.AUTHOR_MESSAGE,
+            kind=StaffItemKind.IDEA_MESSAGE
+            if idea_id
+            else StaffItemKind.AUTHOR_MESSAGE,
             key=f"message:{data['id']}",
             text=str(data.get("body", "")),
-            url=admin_need_url(data["need_id"]),
+            url=admin_idea_url(idea_id) if idea_id else admin_need_url(data["need_id"]),
         )
     return None
 

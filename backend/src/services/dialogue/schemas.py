@@ -4,7 +4,13 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-from utils.db.models import MessageDelivery, MessageDirection, NeedOrigin, NeedStatus
+from utils.db.models import (
+    IdeaStatus,
+    MessageDelivery,
+    MessageDirection,
+    NeedOrigin,
+    NeedStatus,
+)
 
 REPLY_MAX = 5000
 AUTHOR_MESSAGE_MAX = 2000
@@ -28,6 +34,7 @@ class AdminRef(BaseModel):
 class AdminMessage(BaseModel):
     id: uuid.UUID
     need_id: uuid.UUID | None
+    idea_id: uuid.UUID | None
     direction: MessageDirection
     body: str
     sent_at: datetime
@@ -146,5 +153,19 @@ class PublicNeed(BaseModel):
 
 class PublicThread(BaseModel):
     need: PublicNeed
+    messages: list[PublicMessage]
+    can_email: bool
+
+
+class PublicIdea(BaseModel):
+    id: uuid.UUID
+    number: int | None
+    title: str
+    status: IdeaStatus
+    created_at: datetime
+
+
+class PublicIdeaThread(BaseModel):
+    idea: PublicIdea
     messages: list[PublicMessage]
     can_email: bool

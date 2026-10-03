@@ -2,7 +2,16 @@ import uuid
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Text, func
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Index,
+    Text,
+    func,
+)
 from sqlalchemy.dialects import postgresql
 from sqlmodel import Field, SQLModel
 
@@ -27,7 +36,13 @@ def _enum[T: StrEnum](enum: type[T], name: str) -> Enum:
 
 class Message(SQLModel, table=True):
     __tablename__ = "message"
-    __table_args__ = (Index("ix_message_need_sent", "need_id", "sent_at"),)
+    __table_args__ = (
+        Index("ix_message_need_sent", "need_id", "sent_at"),
+        Index("ix_message_idea_sent", "idea_id", "sent_at"),
+        CheckConstraint(
+            "num_nonnulls(need_id, idea_id) = 1", name="ck_message_one_owner"
+        ),
+    )
 
     id: uuid.UUID = uuid_pk()
     need_id: uuid.UUID | None = Field(
@@ -35,6 +50,14 @@ class Message(SQLModel, table=True):
         sa_column=Column(
             postgresql.UUID(as_uuid=True),
             ForeignKey("need.id", ondelete="CASCADE"),
+            nullable=True,
+        ),
+    )
+    idea_id: uuid.UUID | None = Field(
+        default=None,
+        sa_column=Column(
+            postgresql.UUID(as_uuid=True),
+            ForeignKey("idea.id", ondelete="CASCADE"),
             nullable=True,
         ),
     )

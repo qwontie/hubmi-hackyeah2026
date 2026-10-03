@@ -3,9 +3,11 @@ from typing import Annotated
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Query
+from sqlalchemy import func, select
+from sqlmodel import col
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.errors import conflict, invalid, not_found
+from api.errors import ApiError, conflict, invalid, not_found
 from api.security import AdminPerson
 from services.dialogue.audit import record
 from services.needs import merge_clusters, refresh_cluster_summary, split_cluster
@@ -19,12 +21,14 @@ from services.stats.clusters import (
     list_clusters,
     one,
 )
+from utils.db.models import Need
 
 router = APIRouter(route_class=DishkaRoute)
 
 MISSING = "Nie znaleziono grupy zgłoszeń."
 SELF_MERGE = "Nie można połączyć grupy z nią samą."
 BAD_SPLIT = "Wybierz część zgłoszeń z tej grupy, ale nie wszystkie."
+AI_DOWN = "Nie udało się teraz odświeżyć opisu grupy. Spróbuj za chwilę."
 
 
 async def existing(session: AsyncSession, cluster_id: uuid.UUID) -> AdminCluster:
@@ -81,6 +85,15 @@ async def split(
     session: FromDishka[AsyncSession],
 ) -> SplitResult:
     await existing(session, cluster_id)
+    wanted = set(body.need_ids)
+    inside = await session.scalar(
+        select(func.count())
+        .select_from(Need)
+        .where(col(Need.cluster_id) == cluster_id, col(Need.id).in_(wanted))
+    )
+    if inside != len(wanted):
+        field = "need_ids"
+        raise invalid(field, BAD_SPLIT)
     record(
         session,
         admin,
@@ -104,9 +117,12 @@ async def split(
 async def refresh(
     cluster_id: uuid.UUID, admin: AdminPerson, session: FromDishka[AsyncSession]
 ) -> AdminCluster:
-    await existing(session, cluster_id)
-    record(session, admin, "cluster.refresh", target=("need_cluster", cluster_id))
-    await session.commit()
+    before = await existing(session, cluster_id)
     await refresh_cluster_summary(cluster_id)
     session.expire_all()
-    return await existing(session, cluster_id)
+    after = await existing(session, cluster_id)
+    if after.updated_at == before.updated_at:
+        raise ApiError(503, "ai_unavailable", AI_DOWN)
+    record(session, admin, "cluster.refresh", target=("need_cluster", cluster_id))
+    await session.commit()
+    return after
