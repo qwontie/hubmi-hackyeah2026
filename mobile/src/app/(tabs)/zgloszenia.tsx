@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import Head from "expo-router/head";
-import { Mail, MessageSquareText, Search, Trash2 } from "lucide-react-native";
+import { Mail, MessageSquareText, PenLine, Trash2 } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
@@ -139,8 +139,8 @@ export default function SubmissionsScreen() {
             <View style={styles.empty}>
               <Txt>Nie masz jeszcze zgłoszeń na tym urządzeniu.</Txt>
               <Button
-                icon={Search}
-                label="Zgłoś problem"
+                icon={PenLine}
+                label="Opisz problem"
                 onPress={() => router.navigate("/")}
                 variant="primary"
               />
