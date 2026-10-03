@@ -1,3 +1,4 @@
+import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
 import {
@@ -8,8 +9,10 @@ import {
   FlaskConical,
   Landmark,
 } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
-import { APP_NAME } from "@/config";
+import type { Ref } from "react";
+import { StyleSheet, type Text, View } from "react-native";
+import type { InnovationDetail } from "@/api/types";
+import { API_BASE, APP_NAME } from "@/config";
 import { CategoryTile } from "@/features/category-icon";
 import { ReadAloudPill } from "@/features/read-aloud-button";
 import { RichText } from "@/features/rich-text";
@@ -31,6 +34,63 @@ import { Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
+const absolute = (url: string) =>
+  url.startsWith("/") ? `${API_BASE}${url}` : url;
+
+function Hero({
+  data,
+  titleRef,
+}: {
+  data: InnovationDetail;
+  titleRef: Ref<Text>;
+}) {
+  const { colors, reduceMotion, wide } = useTheme();
+  const picture = data.image_url
+    ? {
+        alt: data.image_alt ?? "",
+        label: data.image_label ?? null,
+        uri: absolute(data.image_url),
+      }
+    : null;
+  const beside = wide && picture !== null;
+  return (
+    <View style={[styles.hero, beside && styles.heroWide]}>
+      <View style={[styles.header, beside && styles.flex]}>
+        {picture ? null : <CategoryTile size={64} slug={data.category.slug} />}
+        <Heading level={1} ref={titleRef}>
+          {data.title}
+        </Heading>
+        <Txt tone="soft" variant="lead">
+          {data.lead}
+        </Txt>
+        <Txt tone="soft" variant="detail">
+          {[innovationMeta(data), picture?.label]
+            .filter(Boolean)
+            .join(" · ")
+            .replaceAll(" · ", "\u00a0· ")}
+        </Txt>
+      </View>
+      {picture ? (
+        <View
+          style={[
+            styles.picture,
+            wide ? styles.pictureWide : styles.pictureNarrow,
+            { backgroundColor: colors.paper },
+          ]}
+        >
+          <Image
+            accessibilityLabel={picture.alt}
+            contentFit="cover"
+            source={{ uri: picture.uri }}
+            style={styles.image}
+            transition={reduceMotion ? 0 : 240}
+          />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 export default function InnovationScreen() {
   const { slug, potrzeba } = useLocalSearchParams<{
     slug: string;
@@ -41,18 +101,7 @@ export default function InnovationScreen() {
 
   const hero =
     state.kind === "done" ? (
-      <View style={styles.header}>
-        <CategoryTile size={64} slug={state.data.category.slug} />
-        <Heading level={1} ref={titleRef}>
-          {state.data.title}
-        </Heading>
-        <Txt tone="soft" variant="lead">
-          {state.data.lead}
-        </Txt>
-        <Txt tone="soft" variant="detail">
-          {innovationMeta(state.data)}
-        </Txt>
-      </View>
+      <Hero data={state.data} titleRef={titleRef} />
     ) : undefined;
 
   return (
@@ -222,11 +271,36 @@ const styles = StyleSheet.create({
   errorBody: {
     gap: space.md,
   },
+  flex: {
+    flex: 1,
+  },
   header: {
     gap: space.md,
   },
+  hero: {
+    gap: space.xl,
+  },
+  heroWide: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+  },
+  image: {
+    height: "100%",
+    width: "100%",
+  },
   links: {
     gap: space.md,
+  },
+  picture: {
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  pictureNarrow: {
+    aspectRatio: 16 / 9,
+  },
+  pictureWide: {
+    aspectRatio: 4 / 3,
+    width: 300,
   },
   section: {
     gap: space.md,

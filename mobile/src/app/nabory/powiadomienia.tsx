@@ -1,7 +1,7 @@
 import { addEventListener, getInitialURL } from "expo-linking";
 import Head from "expo-router/head";
 import { useEffect, useRef, useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, type TextInput, View } from "react-native";
 import { api, errorMessage } from "@/api/client";
 import { APP_NAME } from "@/config";
 import { EMAIL_INVALID, isEmail } from "@/lib/validation";
@@ -16,6 +16,23 @@ interface Result {
   message: string;
   tone: "error" | "success" | "info";
 }
+
+interface Problems {
+  consent?: string | null;
+  email?: string | null;
+}
+
+const emailProblem = (value: string) => {
+  if (value.length === 0) {
+    return "Wpisz adres e-mail.";
+  }
+  return isEmail(value) ? null : EMAIL_INVALID;
+};
+
+const check = (value: string, consent: boolean): Problems => ({
+  consent: consent ? null : "Zaznacz zgodę na wiadomości o naborach.",
+  email: emailProblem(value),
+});
 
 const tokenFromUrl = (url: string) => {
   const fragment = url.split("#", 2)[1] ?? "";
@@ -35,6 +52,8 @@ export default function GrantNotificationsScreen() {
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [problems, setProblems] = useState<Problems>({});
+  const field = useRef<TextInput>(null);
   const handled = useRef(new Set<string>());
 
   useEffect(() => {
@@ -83,15 +102,13 @@ export default function GrantNotificationsScreen() {
 
   const subscribe = async () => {
     const value = email.trim();
-    if (!isEmail(value)) {
-      setResult({ message: EMAIL_INVALID, tone: "error" });
-      return;
-    }
-    if (!consent) {
-      setResult({
-        message: "Zaznacz zgodę na wiadomości o naborach.",
-        tone: "error",
-      });
+    const found = check(value, consent);
+    setProblems(found);
+    if (found.email || found.consent) {
+      setResult(null);
+      if (found.email) {
+        field.current?.focus();
+      }
       return;
     }
     setBusy(true);
@@ -128,14 +145,18 @@ export default function GrantNotificationsScreen() {
           </Notice>
         ) : null}
         <TextField
+          autoCapitalize="none"
           autoComplete="email"
+          error={problems.email}
           inputMode="email"
           label="Adres e-mail"
           onChangeText={setEmail}
+          ref={field}
           value={email}
         />
         <Checkbox
           checked={consent}
+          error={problems.consent}
           label="Zgadzam się na wiadomości o naborach. Zapis mogę wyłączyć linkiem w każdej wiadomości."
           onChange={setConsent}
         />

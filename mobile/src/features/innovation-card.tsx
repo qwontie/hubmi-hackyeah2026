@@ -151,7 +151,6 @@ const pictureOf = (innovation: InnovationSummary) => {
     ? `${API_BASE}${fields.image_card_url}`
     : fields.image_card_url;
   return {
-    alt: fields.image_alt ?? "",
     label: fields.image_label ?? null,
     uri,
   };
@@ -185,7 +184,9 @@ export function InnovationCard({
       {picture ? (
         <View style={[styles.picture, { backgroundColor: colors.tone }]}>
           <Image
-            accessibilityLabel={picture.alt}
+            accessible={false}
+            alt=""
+            aria-hidden
             contentFit="cover"
             source={{ uri: picture.uri }}
             style={styles.image}
@@ -235,7 +236,10 @@ export function InnovationCard({
           {reason ?? innovation.lead}
         </Txt>
         <Txt tone="soft" variant="small">
-          {[metaLine(innovation), picture?.label].filter(Boolean).join(" · ")}
+          {[metaLine(innovation), picture?.label]
+            .filter(Boolean)
+            .join(" · ")
+            .replaceAll(" · ", "\u00a0· ")}
         </Txt>
       </View>
       <View

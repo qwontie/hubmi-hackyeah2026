@@ -1,7 +1,15 @@
 import Head from "expo-router/head";
 import { Check, FlaskConical } from "lucide-react-native";
-import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  AccessibilityInfo,
+  findNodeHandle,
+  Platform,
+  Pressable,
+  StyleSheet,
+  type Text,
+  View,
+} from "react-native";
 import type { InnovationSummary } from "@/api/types";
 import { APP_NAME } from "@/config";
 import { TestSignupBlock } from "@/features/tester";
@@ -52,6 +60,40 @@ function Opportunity({
   );
 }
 
+function Signup({ innovation }: { innovation: InnovationSummary }) {
+  const title = useRef<Text>(null);
+  useEffect(() => {
+    const node = title.current;
+    if (!node) {
+      return;
+    }
+    if (Platform.OS === "web") {
+      const element = node as unknown as HTMLElement;
+      element.setAttribute("tabindex", "-1");
+      element.focus();
+      element.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    const handle = findNodeHandle(node);
+    if (handle) {
+      AccessibilityInfo.setAccessibilityFocus(handle);
+    }
+  }, []);
+  return (
+    <Sheet raised>
+      <View style={styles.group}>
+        <Txt tone="soft" variant="label">
+          Wybrane rozwiązanie
+        </Txt>
+        <Heading level={2} ref={title}>
+          {innovation.title}
+        </Heading>
+      </View>
+      <TestSignupBlock slug={innovation.slug} />
+    </Sheet>
+  );
+}
+
 export default function TestingScreen() {
   const { list, hasMore, loadMore, retry } = useTestOpportunities();
   const [selected, setSelected] = useState<InnovationSummary | null>(null);
@@ -91,12 +133,15 @@ export default function TestingScreen() {
       {list.items.length > 0 ? (
         <View role="list" style={styles.list}>
           {list.items.map((innovation) => (
-            <View key={innovation.slug} role="listitem">
+            <View key={innovation.slug} role="listitem" style={styles.list}>
               <Opportunity
                 innovation={innovation}
                 onSelect={() => setSelected(innovation)}
                 selected={selected?.slug === innovation.slug}
               />
+              {selected?.slug === innovation.slug ? (
+                <Signup innovation={innovation} />
+              ) : null}
             </View>
           ))}
         </View>
@@ -108,18 +153,6 @@ export default function TestingScreen() {
           label={list.loading ? "Wczytuję" : "Pokaż więcej"}
           onPress={loadMore}
         />
-      ) : null}
-
-      {selected ? (
-        <Sheet aria-live="polite" raised>
-          <View style={styles.group}>
-            <Txt tone="soft" variant="label">
-              Wybrane rozwiązanie
-            </Txt>
-            <Heading level={2}>{selected.title}</Heading>
-          </View>
-          <TestSignupBlock key={selected.slug} slug={selected.slug} />
-        </Sheet>
       ) : null}
     </Screen>
   );
