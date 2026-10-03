@@ -2,6 +2,7 @@ import { Link, usePathname } from "expo-router";
 import {
   Accessibility,
   Library,
+  Lightbulb,
   type LucideIcon,
   MessageSquareText,
   Search,
@@ -15,7 +16,7 @@ import { fonts, minTarget, radius, space } from "@/theme/tokens";
 import { Txt } from "./text";
 
 interface NavItem {
-  href: "/" | "/biblioteka" | "/zgloszenia" | "/dostepnosc";
+  href: "/" | "/biblioteka" | "/pomysl" | "/zgloszenia" | "/dostepnosc";
   icon: LucideIcon;
   label: string;
   short: string;
@@ -28,6 +29,12 @@ const NAV: NavItem[] = [
     icon: Library,
     label: "Biblioteka",
     short: "Biblioteka",
+  },
+  {
+    href: "/pomysl",
+    icon: Lightbulb,
+    label: "Zgłoś pomysł",
+    short: "Pomysł",
   },
   {
     href: "/zgloszenia",

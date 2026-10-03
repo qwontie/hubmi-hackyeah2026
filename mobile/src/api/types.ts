@@ -179,3 +179,72 @@ export interface Adaptation {
   powiat: string | null;
   share_path: string;
 }
+
+export type CanvasField =
+  | "problem"
+  | "users"
+  | "solution"
+  | "novelty"
+  | "resources"
+  | "partners"
+  | "micro_test"
+  | "measures";
+
+export type Canvas = Record<CanvasField, string | null>;
+
+export interface IdeaOptions {
+  canvas_fields: { field: CanvasField; name: string }[];
+  stages: { slug: string; name: string }[];
+}
+
+export interface IdeaDraft {
+  canvas?: Partial<Canvas>;
+  essence?: string;
+  for_whom?: string;
+  stage?: string;
+  title?: string;
+}
+
+export interface AssistAnswer {
+  answer: string;
+  question: string;
+}
+
+export interface AssistOut {
+  canvas: Canvas;
+  inspirations: { slug: string; title: string; lead: string; why: string }[];
+  missing: CanvasField[];
+  questions: { field: CanvasField; question: string }[];
+  suggestions: string[];
+}
+
+export interface IdeaCreate {
+  canvas?: Partial<Canvas>;
+  contact_consent?: boolean;
+  contact_email?: string;
+  essence: string;
+  for_whom: string;
+  powiat?: string;
+  stage: string;
+  title: string;
+}
+
+export interface IdeaCreated {
+  edit_token: string;
+  id: string;
+  number: number;
+  similar_ideas: {
+    id: string;
+    number: number;
+    title: string;
+    essence: string;
+    stage: string;
+    similarity: number;
+  }[];
+  similar_innovations: {
+    slug: string;
+    title: string;
+    lead: string;
+    similarity: number;
+  }[];
+}

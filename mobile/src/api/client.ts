@@ -2,11 +2,17 @@ import { API_BASE } from "@/config";
 import type {
   Adaptation,
   AdaptationRequest,
+  AssistAnswer,
+  AssistOut,
   Category,
   ErrorCode,
   FeedbackKind,
   FeedbackSummary,
   FieldError,
+  IdeaCreate,
+  IdeaCreated,
+  IdeaDraft,
+  IdeaOptions,
   InnovationDetail,
   InnovationSummary,
   InstitutionType,
@@ -195,13 +201,23 @@ export const api = {
     request<Adaptation>(`/api/adaptations/${encodeURIComponent(id)}`, {
       signal,
     }),
+  assist: (draft: IdeaDraft, answers: AssistAnswer[], signal?: AbortSignal) =>
+    request<AssistOut>("/api/ideas/assist", {
+      body: { ...draft, answers },
+      method: "POST",
+      signal,
+    }),
   categories: (signal?: AbortSignal) =>
     request<Category[]>("/api/categories", { signal }),
+  createIdea: (body: IdeaCreate) =>
+    request<IdeaCreated>("/api/ideas", { body, method: "POST" }),
   feedbackSummary: (slug: string, signal?: AbortSignal) =>
     request<FeedbackSummary>(
       `/api/innovations/${encodeURIComponent(slug)}/feedback`,
       { signal }
     ),
+  ideaOptions: (signal?: AbortSignal) =>
+    request<IdeaOptions>("/api/ideas/options", { signal }),
   improve: (slug: string, text: string) =>
     request<{ id: string }>(
       `/api/innovations/${encodeURIComponent(slug)}/improvements`,
