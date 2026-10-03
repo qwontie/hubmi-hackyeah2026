@@ -30,7 +30,10 @@ from utils.db.models.test_signup import SignupStatus, TesterRole
 from .common import (
     PageNumber,
     PerPage,
+    PowiatFilter,
     ReadLimited,
+    SearchFilter,
+    SlugFilter,
     consented_email,
     innovation_or_404,
     optional_text,
@@ -136,8 +139,8 @@ async def list_feedback(  # noqa: PLR0913
     _admin: AdminPerson,
     session: FromDishka[AsyncSession],
     kind: FeedbackKind | None = None,
-    innovation: Annotated[str | None, Query(max_length=200)] = None,
-    q: Annotated[str | None, Query(min_length=2, max_length=200)] = None,
+    innovation: SlugFilter = None,
+    q: SearchFilter = None,
     page: PageNumber = 1,
     per_page: PerPage = 20,
 ) -> Page[AdminFeedback]:
@@ -166,8 +169,8 @@ async def list_test_signups(  # noqa: PLR0913
     session: FromDishka[AsyncSession],
     who: TesterRole | None = None,
     status: SignupStatus | None = None,
-    powiat: Annotated[str | None, Query(max_length=60)] = None,
-    innovation: Annotated[str | None, Query(max_length=200)] = None,
+    powiat: PowiatFilter = None,
+    innovation: SlugFilter = None,
     page: PageNumber = 1,
     per_page: PerPage = 20,
 ) -> Page[AdminTestSignup]:

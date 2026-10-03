@@ -9,6 +9,7 @@ from services.modules.grounding import Sources
 from utils.db.models import Innovation
 
 from .schemas import (
+    CANVAS_FIELD_MAX,
     CANVAS_LABELS,
     STAGE_NAMES,
     AssistIn,
@@ -116,6 +117,14 @@ def draft_text(draft: AssistIn) -> str:
     return "\n".join(lines)
 
 
+def author_text(draft: AssistIn) -> str:
+    parts = [draft.title, draft.essence, draft.for_whom]
+    if draft.canvas:
+        parts += draft.canvas.model_dump().values()
+    parts += [item.answer for item in draft.answers]
+    return "\n".join(part for part in parts if part)
+
+
 def candidates_text(candidates: Sequence[Innovation]) -> str:
     if not candidates:
         return "(brak)"
@@ -131,7 +140,12 @@ def make_agent(sources: Sources, allowed: set[str]) -> Agent[None, AssistModel]:
     def grounded(ctx: RunContext[None], out: AssistModel) -> AssistModel:
         if out.unclear:
             return out
-        texts = out.suggestions + [i.why for i in out.inspirations]
+        texts = (
+            out.suggestions
+            + [i.why for i in out.inspirations]
+            + [q.question for q in out.questions]
+            + [v for v in out.canvas.model_dump().values() if v]
+        )
         invented = sorted(
             {item for t in texts for item in sources.invented(t, numbers=False)}
         )
@@ -148,8 +162,19 @@ def make_agent(sources: Sources, allowed: set[str]) -> Agent[None, AssistModel]:
                     f"Te slugi nie są na liście KANDYDACI: {', '.join(unknown)}."
                 )
             raise ModelRetry(" ".join(problems))
+        canvas = {
+            key: value
+            for key, value in out.canvas.model_dump().items()
+            if value and not sources.invented(value, numbers=False)
+        }
         return out.model_copy(
             update={
+                "canvas": ModelCanvas.model_validate(canvas),
+                "questions": [
+                    q
+                    for q in out.questions
+                    if not sources.invented(q.question, numbers=False)
+                ],
                 "suggestions": [
                     s for s in out.suggestions if not sources.invented(s, numbers=False)
                 ],
@@ -167,7 +192,8 @@ def make_agent(sources: Sources, allowed: set[str]) -> Agent[None, AssistModel]:
 def merge_canvas(author: Canvas | None, model: ModelCanvas) -> Canvas:
     given = author.model_dump(exclude_none=True) if author else {}
     merged = {
-        key: given.get(key) or (value.strip() if value and value.strip() else None)
+        key: given.get(key)
+        or (value.strip()[:CANVAS_FIELD_MAX] or None if value else None)
         for key, value in model.model_dump().items()
     }
     return Canvas.model_validate(merged)

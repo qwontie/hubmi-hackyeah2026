@@ -33,6 +33,12 @@ read_limit = rate_limit("modules_read", per_minute=120)
 PageNumber = Annotated[int, Query(ge=1, le=10_000)]
 PerPage = Annotated[int, Query(ge=1, le=MAX_PER_PAGE)]
 ReadLimited = Annotated[None, Depends(read_limit)]
+NO_NUL = r"^[^\x00]*$"
+SlugFilter = Annotated[str | None, Query(max_length=200, pattern=NO_NUL)]
+PowiatFilter = Annotated[str | None, Query(max_length=60, pattern=NO_NUL)]
+SearchFilter = Annotated[
+    str | None, Query(min_length=2, max_length=200, pattern=NO_NUL)
+]
 
 
 def unclear(field: str, message: str = NOISE_MESSAGE) -> ApiError:

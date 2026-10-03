@@ -126,7 +126,7 @@ async def get(session: AsyncSession, idea_id: uuid.UUID) -> Idea | None:
 
 async def save(session: AsyncSession, idea: Idea, *, reembed: bool) -> Idea:
     if reembed:
-        idea.embedding = await embed(idea)
+        idea.embedding = await embed(idea) or idea.embedding
     session.add(idea)
     await session.commit()
     await session.refresh(idea)

@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from pydantic_ai import Agent, ModelRetry, RunContext
 
-from services.ai import run_agent
+from services.ai import AiUnavailableError, run_agent
 from services.modules.grounding import Sources
 from utils.db.models import Innovation
 
@@ -106,6 +106,7 @@ def plan_texts(plan: ServicePlan) -> list[str]:
 def sanitize(plan: ServicePlan, sources: Sources) -> ServicePlan:
     return plan.model_copy(
         update={
+            "service_name": sources.clean_text(plan.service_name),
             "summary": sources.clean_text(plan.summary),
             "target_group": sources.clean_text(plan.target_group),
             "steps": [
@@ -219,4 +220,7 @@ async def generate_plan(  # noqa: PLR0913
     result = await run_agent(agent, prompt, kind="adaptation")
     if result.unclear:
         raise UnclearRequestError
-    return to_plan(result, candidates)
+    plan = to_plan(result, candidates)
+    if not (plan.service_name and plan.summary and plan.steps):
+        raise AiUnavailableError
+    return plan

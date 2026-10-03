@@ -1,5 +1,5 @@
 from . import repository
-from .assistant import UnclearDraftError, assist, draft_text
+from .assistant import UnclearDraftError, assist, author_text, draft_text
 from .schemas import (
     CANVAS_LABELS,
     STAGE_NAMES,
@@ -36,6 +36,7 @@ __all__ = [
     "StageOption",
     "UnclearDraftError",
     "assist",
+    "author_text",
     "draft_text",
     "repository",
 ]

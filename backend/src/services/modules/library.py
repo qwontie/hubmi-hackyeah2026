@@ -18,6 +18,8 @@ class InnovationRef(BaseModel):
 
 
 async def published_innovation(session: AsyncSession, slug: str) -> Innovation | None:
+    if "\x00" in slug:
+        return None
     return (
         await session.exec(
             select(Innovation).where(

@@ -3,7 +3,9 @@ import unicodedata
 
 SPACES = re.compile(r"[^\S\n]+")
 BLANK_LINES = re.compile(r"\n{3,}")
-EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s.]+(\.[^@\s.]+)+$")
+EMAIL = re.compile(
+    r"^[^@\s\x00-\x1f\x7f]{1,64}@[^@\s.\x00-\x1f\x7f]+(\.[^@\s.\x00-\x1f\x7f]+)+$"
+)
 INVISIBLE = {"Cc", "Cf", "Co", "Cs"}
 MIN_LETTERS = 3
 MIN_DISTINCT_LETTERS = 3

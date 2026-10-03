@@ -37,14 +37,21 @@ SELECT
     count(*) FILTER (WHERE a.kind = 'does_not_fit') AS does_not_fit,
     count(*) FILTER (WHERE a.kind = 'improvement') AS improvements,
     count(*) FILTER (WHERE a.kind = 'tester') AS testers,
-    max(a.created_at) AS last_at,
-    count(*) OVER () AS total
+    max(a.created_at) AS last_at
 FROM activity a
 JOIN innovation i ON i.id = a.innovation_id
 GROUP BY i.id, i.slug, i.title
 ORDER BY {order}
 LIMIT :limit OFFSET :offset
 """
+
+ACTIVE_INNOVATIONS_SQL = text("""
+SELECT count(*) FROM (
+    SELECT innovation_id FROM feedback
+    UNION
+    SELECT innovation_id FROM test_signup
+) active
+""")
 
 ORDERS = {
     "recent": "last_at DESC",
@@ -297,7 +304,7 @@ async def feedback_by_innovation(
             )
             for row in rows
         ],
-        total=rows[0].total if rows else 0,
+        total=(await run(session, ACTIVE_INNOVATIONS_SQL)).scalar_one(),
         page=page,
         per_page=per_page,
     )

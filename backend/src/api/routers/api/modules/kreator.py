@@ -3,11 +3,11 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Header, Query, Request, status
+from fastapi import APIRouter, Header, Request, status
 from pydantic import BaseModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.errors import conflict, not_found
+from api.errors import conflict, invalid, not_found
 from api.limits import client_ip, rate_limit
 from api.security import AdminPerson
 from services.ai import AiUnavailableError, embed_query
@@ -31,10 +31,10 @@ from services.kreator import (
     StageOption,
     UnclearDraftError,
     assist,
-    draft_text,
+    author_text,
     repository,
 )
-from services.modules import Page, is_meaningful
+from services.modules import Page, clean, clean_line, is_meaningful
 from services.needs.tokens import new_token, token_matches
 from services.search import nearest_innovations
 from utils.db.models.idea import Idea, IdeaStage, IdeaStatus
@@ -42,10 +42,11 @@ from utils.db.models.idea import Idea, IdeaStage, IdeaStatus
 from .common import (
     PageNumber,
     PerPage,
+    PowiatFilter,
     ReadLimited,
+    SearchFilter,
     ai_guard,
     optional_email,
-    optional_text,
     powiat_name,
     required_text,
     text_too_short,
@@ -64,6 +65,7 @@ FOR_WHOM_MIN = 3
 DRAFT_MIN = 20
 ASSIST_CANDIDATES = 5
 OFF_TOPIC = "Opisz pomysł, który pomoże ludziom albo społeczności."
+EMAIL_NEEDED = "Podaj adres e-mail, abyśmy mogli odpisać."
 IDEA_MISSING = "Nie znaleziono tego pomysłu."
 LOCKED = "Ten pomysł jest już rozpatrzony. Napisz do nas, jeśli chcesz coś zmienić."
 
@@ -79,11 +81,37 @@ def clean_canvas(canvas: Canvas | None) -> Canvas:
     if canvas is None:
         return Canvas()
     return Canvas.model_validate(
-        {
-            key: optional_text(f"canvas.{key}", value)
-            for key, value in canvas.model_dump().items()
-        }
+        {key: loose(value) for key, value in canvas.model_dump().items()}
     )
+
+
+def loose(value: str | None, *, line: bool = False) -> str | None:
+    if value is None:
+        return None
+    text = clean_line(value) if line else clean(value)
+    return text or None
+
+
+def set_contact(idea: Idea, body: IdeaPatch) -> None:
+    fields = body.model_fields_set
+    if "contact_consent" in fields and not body.contact_consent:
+        email = None
+    elif "contact_email" in fields:
+        consent = (
+            bool(body.contact_consent)
+            if "contact_consent" in fields
+            else idea.contact_consent
+        )
+        email = optional_email(body.contact_email, consent)
+    else:
+        email = idea.contact_email
+        if email is None:
+            error = invalid("contact_email", EMAIL_NEEDED)
+            raise error
+    if email != idea.contact_email:
+        idea.consent_at = datetime.now(UTC) if email else None
+    idea.contact_email = email
+    idea.contact_consent = email is not None
 
 
 async def owned_idea(
@@ -154,30 +182,30 @@ async def assist_idea(
 ) -> AssistOut:
     draft = AssistIn.model_validate(
         {
-            "title": optional_text("title", body.title, line=True),
-            "essence": optional_text("essence", body.essence),
-            "for_whom": optional_text("for_whom", body.for_whom),
+            "title": loose(body.title, line=True),
+            "essence": loose(body.essence),
+            "for_whom": loose(body.for_whom),
             "stage": body.stage,
             "canvas": clean_canvas(body.canvas),
             "answers": [
-                {"question": a.question, "answer": text}
-                for i, a in enumerate(body.answers)
-                if (text := optional_text(f"answers.{i}.answer", a.answer))
+                {"question": clean_line(a.question), "answer": text}
+                for a in body.answers
+                if (text := loose(a.answer))
             ],
         }
     )
-    text = draft_text(draft)
+    own = author_text(draft)
     error = None
-    if len(text) < DRAFT_MIN:
+    if len(own) < DRAFT_MIN:
         error = text_too_short("essence", DRAFT_MIN)
-    elif not is_meaningful(text):
+    elif not is_meaningful(own):
         error = unclear("essence")
     if error is not None:
         raise error
     assist_limit.check(client_ip(request))
     candidates = []
     try:
-        vector = await embed_query(text, kind="idea_assist_embed")
+        vector = await embed_query(own, kind="idea_assist_embed")
         candidates = [
             row
             for row, _similarity in await nearest_innovations(
@@ -186,6 +214,7 @@ async def assist_idea(
         ]
     except (AiUnavailableError, AiBudgetExceededError):
         candidates = []
+    await session.commit()
     async with ai_guard():
         try:
             return await assist(draft, candidates)
@@ -239,7 +268,9 @@ async def patch_idea(
     fields = body.model_fields_set
     reembed = False
     if "title" in fields and body.title is not None:
-        idea.title = required_text("title", body.title, minimum=TITLE_MIN)
+        idea.title = required_text("title", body.title, minimum=TITLE_MIN).replace(
+            "\n", " "
+        )
         reembed = True
     if "essence" in fields and body.essence is not None:
         idea.essence = required_text("essence", body.essence, minimum=ESSENCE_MIN)
@@ -254,11 +285,8 @@ async def patch_idea(
     if "powiat" in fields:
         powiat_name("powiat", body.powiat)
         idea.powiat = body.powiat
-    if "contact_email" in fields:
-        email = optional_email(body.contact_email, bool(body.contact_consent))
-        idea.contact_email = email
-        idea.contact_consent = email is not None
-        idea.consent_at = datetime.now(UTC) if email else None
+    if "contact_email" in fields or "contact_consent" in fields:
+        set_contact(idea, body)
     idea = await repository.save(session, idea, reembed=reembed)
     bus.publish("idea.updated", repository.admin_view(idea))
     return repository.author_view(idea)
@@ -271,8 +299,8 @@ async def admin_list_ideas(  # noqa: PLR0913
     session: FromDishka[AsyncSession],
     status: IdeaStatus | None = None,
     stage: IdeaStage | None = None,
-    powiat: Annotated[str | None, Query(max_length=60)] = None,
-    q: Annotated[str | None, Query(min_length=2, max_length=200)] = None,
+    powiat: PowiatFilter = None,
+    q: SearchFilter = None,
     page: PageNumber = 1,
     per_page: PerPage = 20,
 ) -> Page[AdminIdea]:

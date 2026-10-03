@@ -1,8 +1,7 @@
 import uuid
-from typing import Annotated
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Query, Request, status
+from fastapi import APIRouter, Request, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import not_found
@@ -26,7 +25,9 @@ from services.modules import Page
 from .common import (
     PageNumber,
     PerPage,
+    PowiatFilter,
     ReadLimited,
+    SlugFilter,
     ai_guard,
     innovation_or_404,
     powiat_name,
@@ -65,6 +66,7 @@ async def adapt(
     powiat = powiat_name("powiat", body.powiat)
     adapt_limit.check(client_ip(request))
     candidates = await repository.candidates(session, innovation)
+    await session.commit()
     async with ai_guard():
         try:
             plan = await generate_plan(
@@ -107,9 +109,9 @@ async def list_adaptations(  # noqa: PLR0913
     *,
     _admin: AdminPerson,
     session: FromDishka[AsyncSession],
-    innovation: Annotated[str | None, Query(max_length=200)] = None,
+    innovation: SlugFilter = None,
     institution_type: InstitutionType | None = None,
-    powiat: Annotated[str | None, Query(max_length=60)] = None,
+    powiat: PowiatFilter = None,
     page: PageNumber = 1,
     per_page: PerPage = 20,
 ) -> Page[AdminAdaptation]:
