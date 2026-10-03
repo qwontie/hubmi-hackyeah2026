@@ -249,7 +249,7 @@
         </p>
         {#if progress && progress.total > 0}
           <div aria-hidden="true" class="bar">
-            <i style:width="{(progress.done / progress.total) * 100}%"></i>
+            <i style:transform="scaleX({progress.done / progress.total})"></i>
           </div>
         {/if}
       </div>
@@ -398,7 +398,8 @@
     display: block;
     height: 100%;
     background: var(--hm-stamp);
-    transition: width 500ms ease;
+    transform-origin: left;
+    transition: transform 500ms ease;
   }
 
   .ghost {
