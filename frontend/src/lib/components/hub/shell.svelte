@@ -6,6 +6,7 @@
   import { logout } from "$lib/api/auth";
   import { api } from "$lib/api/client";
   import { session } from "$lib/auth/session.svelte";
+  import RopsColophon from "$lib/components/hub/rops-colophon.svelte";
   import { inbox } from "$lib/live/inbox.svelte";
   import { powiats } from "$lib/live/powiats.svelte";
   import { live } from "$lib/live/stream.svelte";
@@ -95,7 +96,7 @@
 </script>
 
 <div
-  class="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] bg-hm-desk text-hm-ink max-[899px]:h-auto max-[899px]:min-h-dvh"
+  class="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto] bg-hm-desk text-hm-ink max-[899px]:h-auto max-[899px]:min-h-dvh"
 >
   <a class="skip" href="#main" onclick={skip}>Przejdź do treści</a>
   <header
@@ -173,6 +174,7 @@
     </div>
   </header>
   {@render children()}
+  <RopsColophon />
 </div>
 
 <style>

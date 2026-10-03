@@ -5,6 +5,7 @@
   import { login } from "$lib/api/auth";
   import { ApiError } from "$lib/api/client";
   import { session } from "$lib/auth/session.svelte";
+  import RopsColophon from "$lib/components/hub/rops-colophon.svelte";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
 
@@ -48,7 +49,9 @@
   <title>Logowanie · HubMi</title>
 </svelte:head>
 
-<main class="flex min-h-dvh items-center justify-center bg-hm-desk px-4 py-10">
+<main
+  class="flex min-h-dvh flex-col items-center justify-center bg-hm-desk px-4 py-10"
+>
   <form
     aria-describedby={failure ? "login-error" : undefined}
     class="sheet flex w-full max-w-[24rem] flex-col gap-5"
@@ -100,6 +103,7 @@
       {/if}
     </div>
   </form>
+  <RopsColophon variant="stack" />
 </main>
 
 <style>
