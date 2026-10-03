@@ -27,6 +27,8 @@
   } = $props();
 
   const today = new Date().toDateString();
+  const folderTitle = (ref: { id: string; title: string }) =>
+    inbox.clusters.find((c) => c.id === ref.id)?.title ?? ref.title;
   const stamp = (iso: string) =>
     new Date(iso).toDateString() === today ? clock(iso) : when(iso);
 </script>
@@ -47,7 +49,7 @@
         <span class="grid min-w-0 gap-[3px]">
           <span class="tx">{nbsp(need.title || need.text)}</span>
           <span class="text-hm-ink-soft text-xs tabular">
-            {stamp(need.created_at)}{need.powiat ? ` · ${powiatName(need.powiat, powiats.names)}` : ""}{showFolder && need.cluster ? ` · ${need.cluster.title}` : ""}{(need.unread ?? 0) > 0 ? ` · ${need.unread} ${plural(need.unread ?? 0, "nowa wiadomość", "nowe wiadomości", "nowych wiadomości")}` : ""}
+            {stamp(need.created_at)}{need.powiat ? ` · ${powiatName(need.powiat, powiats.names)}` : ""}{showFolder && need.cluster ? ` · ${folderTitle(need.cluster)}` : ""}{(need.unread ?? 0) > 0 ? ` · ${need.unread} ${plural(need.unread ?? 0, "nowa wiadomość", "nowe wiadomości", "nowych wiadomości")}` : ""}
           </span>
         </span>
         <span class="st">{statusLabel[need.status]}</span>

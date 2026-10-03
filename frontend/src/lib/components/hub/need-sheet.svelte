@@ -240,7 +240,10 @@
       detail?.can_email ?? need.has_contact ?? Boolean(need.contact_email);
     parts.push(contact ? "autor podał e-mail" : "autor bez e-maila");
     if (need.cluster && need.cluster.id !== folder) {
-      parts.push(need.cluster.title);
+      parts.push(
+        inbox.clusters.find((c) => c.id === need.cluster?.id)?.title ??
+          need.cluster.title
+      );
     }
     if (need.nothing_fits) {
       parts.push("nic nie pasowało");

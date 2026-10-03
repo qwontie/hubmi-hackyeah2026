@@ -5,6 +5,7 @@ export interface FolderTab {
   fresh: number;
   href: string;
   id: string;
+  note?: string;
   size: number;
   title: string;
   week: number;

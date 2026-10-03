@@ -13,7 +13,7 @@
   } = $props();
 
   const height = (tab: FolderTab) =>
-    tab.cluster ? Math.min(64 + tab.size * 3, 140) : 84;
+    tab.id === "all" ? 84 : Math.min(64 + tab.size * 3, 140);
 </script>
 
 <ul class="tabs">
@@ -30,7 +30,9 @@
       >
         <span class="tt">{tab.title}</span>
         <span class="tn">
-          {#if tab.fresh > 0}
+          {#if tab.note}
+            <span class="tabular">{tab.note}</span>
+          {:else if tab.fresh > 0}
             <span class="fresh tabular"
               >{tab.fresh} {plural(tab.fresh, "nowa", "nowe", "nowych")}</span
             >

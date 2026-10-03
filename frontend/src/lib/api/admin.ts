@@ -72,6 +72,7 @@ export interface AdminNeedDetail extends AdminNeed {
 }
 
 export interface AdminCluster {
+  category_name?: string | null;
   category_slug: string | null;
   created_at: string;
   daily?: number[];
@@ -81,7 +82,9 @@ export interface AdminCluster {
   powiats?: { count: number; name: string; slug: string }[];
   size: number;
   summary: string;
+  summary_stale?: boolean;
   title: string;
+  waiting?: number;
 }
 
 export interface Powiat {
@@ -124,3 +127,123 @@ export const listClusters = (signal?: AbortSignal) =>
   );
 
 export const listPowiats = () => api.get<Powiat[]>("/powiats");
+
+export const mergeCluster = (id: string, intoId: string) =>
+  api.post<AdminCluster>(`/admin/clusters/${id}/merge`, { into_id: intoId });
+
+export const splitCluster = (id: string, needIds: string[]) =>
+  api.post<{ created: AdminCluster; source: AdminCluster }>(
+    `/admin/clusters/${id}/split`,
+    { need_ids: needIds }
+  );
+
+export const refreshCluster = (id: string) =>
+  api.post<AdminCluster>(`/admin/clusters/${id}/refresh`);
+
+export interface Category {
+  count: number;
+  icon_url: string | null;
+  name: string;
+  slug: string;
+}
+
+export interface AdminInnovation {
+  category: { name: string; slug: string };
+  edited_at: string | null;
+  edited_fields: string[];
+  has_materials: boolean;
+  has_video: boolean;
+  imported_at: string | null;
+  lead: string | null;
+  slug: string;
+  source_url: string | null;
+  status: "draft" | "published";
+  title: string;
+  updated_at: string;
+}
+
+export interface AdminInnovationDetail extends AdminInnovation {
+  authors: string[];
+  brochure_url: string | null;
+  created_at: string;
+  effectiveness: string | null;
+  license: string | null;
+  materials_url: string | null;
+  problems: string | null;
+  qr_url: string | null;
+  target_group: string | null;
+  video_url: string | null;
+  what_it_is: string | null;
+  who_can_use: string | null;
+}
+
+export interface ImportRun {
+  created: number;
+  error: string | null;
+  failed: number;
+  finished_at: string | null;
+  id: string;
+  skipped_edited: number;
+  started_at: string;
+  status: "running" | "done" | "failed";
+  total: number;
+  trigger: "script" | "admin";
+  unchanged: number;
+  updated: number;
+}
+
+export interface ImportProgress {
+  created: number;
+  current: string | null;
+  done: number;
+  failed: number;
+  run_id: string;
+  skipped_edited: number;
+  total: number;
+  unchanged: number;
+  updated: number;
+}
+
+export const listCategories = () => api.get<Category[]>("/categories");
+
+export async function listAllInnovations(): Promise<AdminInnovation[]> {
+  const first = await api.get<Page<AdminInnovation>>("/admin/innovations", {
+    page: 1,
+    per_page: 100,
+    sort: "title",
+  });
+  const pages = Math.ceil(first.total / 100);
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, pages - 1) }, (_, n) =>
+      api.get<Page<AdminInnovation>>("/admin/innovations", {
+        page: n + 2,
+        per_page: 100,
+        sort: "title",
+      })
+    )
+  );
+  return [first, ...rest].flatMap((p) => p.items);
+}
+
+export const getInnovation = (slug: string, signal?: AbortSignal) =>
+  api.get<AdminInnovationDetail>(
+    `/admin/innovations/${slug}`,
+    undefined,
+    signal
+  );
+
+export const patchInnovation = (
+  slug: string,
+  body: Partial<AdminInnovationDetail>
+) => api.patch<AdminInnovationDetail>(`/admin/innovations/${slug}`, body);
+
+export const publishInnovation = (slug: string, publish: boolean) =>
+  api.post<AdminInnovationDetail>(
+    `/admin/innovations/${slug}/${publish ? "publish" : "unpublish"}`
+  );
+
+export const runImport = () =>
+  api.post<{ run_id: string }>("/admin/import/run");
+
+export const listImportRuns = () =>
+  api.get<ImportRun[]>("/admin/import/runs", { limit: 5 });

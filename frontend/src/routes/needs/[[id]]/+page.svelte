@@ -4,8 +4,11 @@
   import { page } from "$app/state";
   import {
     type AdminNeed,
+    mergeCluster,
     type NeedStatus,
+    refreshCluster,
     setNeedStatus,
+    splitCluster,
   } from "$lib/api/admin";
   import { ApiError } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
@@ -257,6 +260,22 @@
                 run: () => quickStatus(need, "closed", anchor),
               },
             ]),
+        ...(need.cluster && need.cluster.size > 1
+          ? [
+              {
+                label: "Wydziel do nowej teczki",
+                run: () =>
+                  clusterAction(async () => {
+                    const { cluster } = need;
+                    if (!cluster) {
+                      return null;
+                    }
+                    const result = await splitCluster(cluster.id, [need.id]);
+                    return result.created.id;
+                  }, anchor),
+              },
+            ]
+          : []),
         "-",
         {
           label: "Kopiuj link",
@@ -268,6 +287,66 @@
               ).toString()
             ),
         },
+      ],
+      anchor
+    );
+  }
+
+  async function clusterAction(
+    run: () => Promise<string | null>,
+    anchor: HTMLElement | null
+  ) {
+    const { showTip } = await import("$lib/tip");
+    try {
+      const target = await run();
+      await inbox.refresh();
+      if (target) {
+        await goto(href(null, { folder: target }), {
+          noScroll: true,
+          replaceState: true,
+        });
+      }
+    } catch (e) {
+      showTip(
+        anchor,
+        e instanceof ApiError ? e.message : "Nie udało się.",
+        "bad"
+      );
+    }
+  }
+
+  function folderMenu(tab: FolderTab, event: MouseEvent) {
+    if (!tab.cluster && tab.id === "all") {
+      return;
+    }
+    const anchor = event.currentTarget as HTMLElement;
+    const others = tabs
+      .filter((t) => t.id !== "all" && t.id !== tab.id)
+      .slice(0, 8);
+    menu?.show(
+      event,
+      [
+        {
+          label: "Otwórz",
+          run: () => goto(tab.href, { noScroll: true, replaceState: true }),
+        },
+        {
+          label: "Odśwież opis",
+          run: () =>
+            clusterAction(async () => {
+              await refreshCluster(tab.id);
+              return null;
+            }, anchor),
+        },
+        ...(others.length > 0 ? ["-" as const] : []),
+        ...others.map((o) => ({
+          label: `Scal z: ${o.title}`,
+          run: () =>
+            clusterAction(async () => {
+              const into = await mergeCluster(tab.id, o.id);
+              return into.id;
+            }, anchor),
+        })),
       ],
       anchor
     );
@@ -302,7 +381,7 @@
 
 <div class={["binder", id && "has-need"]}>
   <nav aria-label="Teczki" class="rail">
-    <FolderTabs current={folder} {tabs} />
+    <FolderTabs current={folder} oncontext={folderMenu} {tabs} />
   </nav>
 
   <main class={["board", folder === "all" && "first"]}>
@@ -316,6 +395,12 @@
         <p class="mt-1.5 max-w-[70ch] text-pretty text-hm-ink-soft text-sm">
           {#if currentFolder?.cluster?.summary}
             {currentFolder.cluster.summary}
+            {#if currentFolder.cluster.powiats && currentFolder.cluster.powiats.length > 0}
+              <span class="mt-1 block text-[13px]">
+                Najczęściej:
+                {currentFolder.cluster.powiats.map((p) => `${p.name} (${p.count})`).join(", ")}
+              </span>
+            {/if}
           {:else if !currentFolder}
             {counts.fresh}
             {plural(counts.fresh, "czeka", "czekają", "czeka")}
