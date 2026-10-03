@@ -27,7 +27,13 @@ def upgrade() -> None:
             SELECT id FROM (
                 SELECT id, row_number() OVER (
                     PARTITION BY innovation_id, lower(contact_email)
-                    ORDER BY created_at DESC
+                    ORDER BY
+                        CASE status::text
+                            WHEN 'reported' THEN 0
+                            WHEN 'accepted' THEN 1
+                            ELSE 2
+                        END,
+                        created_at DESC
                 ) AS n
                 FROM test_signup WHERE {OPEN}
             ) ranked WHERE n > 1
