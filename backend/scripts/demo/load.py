@@ -466,7 +466,9 @@ async def load_improvements(run: Run, entries: list[dict[str, Any]]) -> None:
 
 async def load_signups(run: Run, entries: list[dict[str, Any]]) -> None:
     for entry in entries:
-        if await registry.lookup(run.session, registry.SIGNUP, entry["key"]):
+        known = await registry.lookup(run.session, registry.SIGNUP, entry["key"])
+        existing = await run.session.get(TestSignup, known) if known else None
+        if known and existing is None:
             continue
         target = await innovation(run, entry["slug"])
         if target is None:
@@ -474,25 +476,33 @@ async def load_signups(run: Run, entries: list[dict[str, Any]]) -> None:
         moment = timeline.days_ago(entry["key"], entry["days_ago"], now=run.now)
         status = SignupStatus(entry["status"])
         decided = moment + timedelta(days=1) if status != SignupStatus.NEW else None
-        signup = TestSignup(
+        signup = existing or TestSignup(
             innovation_id=target.id,
             who=TesterRole(entry["who"]),
             organization=entry["organization"],
             powiat=entry["powiat"],
             contact_email=entry["email"],
             consent_at=moment,
-            note=entry["proposal"],
-            status=status,
-            decision_reason=entry.get("decision_reason"),
-            decided_at=decided,
             created_at=moment,
-            updated_at=decided or moment,
         )
+        signup.note = entry["proposal"]
+        signup.status = status
+        signup.decision_reason = entry.get("decision_reason")
+        signup.decided_at = decided
+        signup.updated_at = decided or moment
         run.session.add(signup)
         await run.session.commit()
-        await registry.register(run.session, registry.SIGNUP, entry["key"], signup.id)
+        if existing is None:
+            await registry.register(
+                run.session, registry.SIGNUP, entry["key"], signup.id
+            )
         report = entry.get("report")
-        if report and decided is not None:
+        reported_before = await run.session.scalar(
+            select(func.count())
+            .select_from(VolunteerReport)
+            .where(col(VolunteerReport.signup_id) == signup.id)
+        )
+        if report and decided is not None and not reported_before:
             reported = decided + timedelta(days=2)
             run.session.add(
                 VolunteerReport(
