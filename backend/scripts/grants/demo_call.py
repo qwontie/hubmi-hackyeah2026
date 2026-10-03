@@ -72,6 +72,7 @@ async def create(days: int) -> None:
             sections=[s.model_dump() for s in ROPS_INNOVATION.sections],
             template=ROPS_INNOVATION.slug,
             demo=True,
+            notified_open_at=now,
         )
         session.add(call)
         await session.commit()

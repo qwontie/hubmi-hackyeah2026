@@ -298,6 +298,8 @@ async def notify(call_id: uuid.UUID, mailer: Mailer, *, opened: bool) -> int:
         call = await session.get(GrantCall, call_id)
         if call is None:
             return 0
+        if call.demo:
+            return 0
         rows = await session.exec(
             entity_select(GrantSubscriber).where(
                 col(GrantSubscriber.confirmed_at).is_not(None),

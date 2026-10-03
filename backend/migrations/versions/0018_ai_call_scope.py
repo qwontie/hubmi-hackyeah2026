@@ -17,12 +17,10 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 BATCH_KINDS = (
-    "adaptation",
     "challenge_extract",
     "challenge_figures",
     "embed_challenge",
     "embed_innovation",
-    "innovation",
     "innovation_image",
     "innovation_image_judge",
     "innovation_image_prompt",

@@ -160,6 +160,7 @@ async def due_for_open_notice(session: AsyncSession) -> list[GrantCall]:
     rows = await session.exec(
         entity_select(GrantCall).where(
             col(GrantCall.status) == GrantCallStatus.PUBLISHED,
+            col(GrantCall.demo).is_(False),
             col(GrantCall.opens_at) <= moment,
             col(GrantCall.closes_at) > moment,
             or_(col(GrantCall.notified_open_at).is_(None)),
