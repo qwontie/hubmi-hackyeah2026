@@ -159,9 +159,6 @@
       >
         {groups.find((g) => g.id === group)?.title ?? "Pomysły mieszkańców"}
       </h1>
-      <p class="mt-1.5 text-hm-ink-soft text-sm">
-        Przyjęte pomysły widzą wszyscy w&nbsp;aplikacji.
-      </p>
     </header>
 
     <div class="work">

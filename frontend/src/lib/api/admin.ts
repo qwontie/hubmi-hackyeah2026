@@ -308,3 +308,51 @@ export const replyToIdea = (id: string, body: string) =>
 
 export const markIdeaRead = (id: string) =>
   api.post<void>(`/admin/ideas/${id}/read`);
+
+export interface FeedbackByInnovation {
+  does_not_fit: number;
+  fits: number;
+  improvements: number;
+  innovation: { slug: string; title: string };
+  last_at: string | null;
+  testers: number;
+}
+
+export interface AdminFeedback {
+  comment: string | null;
+  created_at: string;
+  id: string;
+  innovation: { slug: string; title: string };
+  kind: "fits" | "does_not_fit" | "improvement";
+  need_id: string | null;
+  updated_at: string;
+}
+
+export type SignupStatus = "new" | "contacted" | "closed";
+
+export interface AdminTestSignup {
+  contact_email: string;
+  created_at: string;
+  id: string;
+  innovation: { slug: string; title: string };
+  note: string | null;
+  organization: string | null;
+  powiat: string | null;
+  status: SignupStatus;
+  who: "resident" | "ngo" | "local_government" | "expert";
+}
+
+export const feedbackByInnovation = (sort: string) =>
+  api.get<Page<FeedbackByInnovation>>("/admin/feedback/by-innovation", {
+    per_page: 100,
+    sort,
+  });
+
+export const listComments = () =>
+  api.get<Page<AdminFeedback>>("/admin/feedback", { per_page: 50 });
+
+export const listSignups = () =>
+  api.get<Page<AdminTestSignup>>("/admin/test-signups", { per_page: 100 });
+
+export const setSignupStatus = (id: string, status: SignupStatus) =>
+  api.patch<AdminTestSignup>(`/admin/test-signups/${id}`, { status });
