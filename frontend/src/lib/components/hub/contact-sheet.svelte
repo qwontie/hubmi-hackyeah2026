@@ -163,7 +163,7 @@
       </h3>
       {#if signups.length === 0}
         <p class="text-[13px] text-hm-ink-soft">
-          Ten adres nie zgłaszał się do testów.
+          Z tego adresu nikt nie zgłosił się do testów.
         </p>
       {:else}
         <ol class="list">

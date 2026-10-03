@@ -185,9 +185,7 @@
         <p class="none">Obszary tych potrzeb jeszcze się wczytują.</p>
       {/if}
       {#if shown.nothing_fits > 0}
-        <p class="none tabular">
-          W tym {shown.nothing_fits}, do których nic nie pasowało
-        </p>
+        <p class="none tabular">Nic nie pasowało: {shown.nothing_fits}</p>
       {/if}
     </div>
   {/if}
