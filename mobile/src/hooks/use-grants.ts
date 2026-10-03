@@ -9,6 +9,12 @@ import { useResource } from "./use-resource";
 const loadGrantCall = (id: string, signal: AbortSignal) =>
   api.grantCall(id, signal);
 
+const loadGrantCalls = (_attempt: number, signal: AbortSignal) =>
+  Promise.all([
+    api.grantCalls("open", signal),
+    api.grantCalls("upcoming", signal),
+  ]);
+
 export const useGrantCall = (id?: string) => useResource(id, loadGrantCall);
 
 export const useGrantCalls = () => {
@@ -18,16 +24,10 @@ export const useGrantCalls = () => {
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (attempt < 0) {
-      return;
-    }
     const abort = new AbortController();
     setLoading(true);
     setError(null);
-    Promise.all([
-      api.grantCalls("open", abort.signal),
-      api.grantCalls("upcoming", abort.signal),
-    ])
+    loadGrantCalls(attempt, abort.signal)
       .then(([open, upcoming]) => {
         const unique = new Map(
           [...open, ...upcoming].map((call) => [call.id, call])

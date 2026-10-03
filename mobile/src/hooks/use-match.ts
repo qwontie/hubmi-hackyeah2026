@@ -14,7 +14,7 @@ import { saveNeed } from "@/storage/needs";
 export type MatchState =
   | { kind: "idle" }
   | { kind: "loading" }
-  | { kind: "done"; response: MatchResponse; at: Date }
+  | { kind: "done"; response: MatchResponse; at: Date; query: string }
   | { kind: "error"; message: string; retryable: boolean };
 
 export interface RegisteredNeed {
@@ -286,31 +286,9 @@ export const useMatch = () => {
         abort.signal
       );
       const at = new Date();
-      if (response.need) {
-        const legacyNeed: RegisteredNeed = {
-          at,
-          cluster: response.cluster,
-          edit_token: response.need.edit_token,
-          id: response.need.id,
-          number: response.need.number ?? null,
-          similar_count: response.similar_count,
-        };
-        await saveNeed({
-          clusterTitle: response.cluster?.title ?? null,
-          contactEmail: null,
-          createdAt: at.toISOString(),
-          id: legacyNeed.id,
-          nothingFits: false,
-          number: response.need.number ?? null,
-          text: trimmed,
-          token: legacyNeed.edit_token,
-        }).catch(() => undefined);
-        setRegisteredNeed(legacyNeed);
-      } else {
-        setRegisteredNeed(null);
-        setRegistrationPowiat(powiat);
-      }
-      setState({ at, kind: "done", response });
+      setRegisteredNeed(null);
+      setRegistrationPowiat(powiat);
+      setState({ at, kind: "done", query: trimmed, response });
     } catch (caught) {
       if (!isAbort(caught)) {
         fail(caught);
@@ -337,7 +315,7 @@ export const useMatch = () => {
       const created = await api.createNeed(
         needRequest(
           state.response,
-          text.trim(),
+          state.query,
           selectedPowiat,
           email,
           contactConsent
@@ -351,7 +329,7 @@ export const useMatch = () => {
         id: created.id,
         nothingFits: true,
         number: created.number,
-        text: text.trim(),
+        text: state.query,
         token: created.edit_token,
       }).catch(() => undefined);
       setRegisteredNeed(registered);
