@@ -170,6 +170,43 @@ def idea_reply(
     )
 
 
+def application_reply(
+    *,
+    to: str,
+    application_number: int,
+    call_title: str,
+    body: str,
+    idempotency_key: str,
+) -> Email:
+    subject = "Odpowiedź ROPS na Twój wniosek w HubMi"
+    call = excerpt(call_title, 200)
+    text = (
+        "Dzień dobry,\n\n"
+        "Regionalny Ośrodek Polityki Społecznej w Krakowie odpowiedział na wniosek "
+        f"nr {application_number} złożony przez HubMi.\n\n"
+        f"Nabór:\n„{call}”\n\n"
+        f"Odpowiedź:\n{body}\n\n"
+        f"{SIGNATURE}\n\n"
+        f"{CONSENT_NOTE}"
+    )
+    html = html_document(
+        subject,
+        f"{H1}Odpowiedź na Twój wniosek</h1>"
+        '<p style="margin:0 0 16px">Regionalny Ośrodek Polityki Społecznej w Krakowie '
+        f"odpowiedział na wniosek nr {application_number} złożony przez HubMi.</p>"
+        '<h2 style="font-size:16px;margin:0 0 8px">Nabór</h2>'
+        f"{html_quote(call)}"
+        '<h2 style="font-size:16px;margin:0 0 8px">Odpowiedź</h2>'
+        f"{html_paragraphs(body)}"
+        f"{html_paragraphs(SIGNATURE)}"
+        '<p style="margin:24px 0 0;font-size:13px;color:#57534e">'
+        f"{CONSENT_NOTE}</p>",
+    )
+    return Email(
+        to=to, subject=subject, text=text, html=html, idempotency_key=idempotency_key
+    )
+
+
 def staff_digest(*, to: str, items: list[StaffItem], inbox_url: str) -> Email:
     count = len(items)
     noun = plural(count, "nowa sprawa", "nowe sprawy", "nowych spraw")

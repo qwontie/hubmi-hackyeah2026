@@ -3,6 +3,7 @@ from .staff import StaffNotifier
 from .templates import (
     StaffItem,
     StaffItemKind,
+    application_reply,
     author_reply,
     expert_assigned,
     expert_message,
@@ -17,6 +18,7 @@ __all__ = [
     "StaffItem",
     "StaffItemKind",
     "StaffNotifier",
+    "application_reply",
     "author_reply",
     "expert_assigned",
     "expert_message",

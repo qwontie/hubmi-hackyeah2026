@@ -297,6 +297,7 @@ def admin_message(message: Message, login: str | None) -> AdminMessage:
         id=message.id,
         need_id=message.need_id,
         idea_id=message.idea_id,
+        application_id=message.application_id,
         direction=message.direction,
         body=message.body,
         sent_at=message.sent_at,

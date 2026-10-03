@@ -39,8 +39,10 @@ class Message(SQLModel, table=True):
     __table_args__ = (
         Index("ix_message_need_sent", "need_id", "sent_at"),
         Index("ix_message_idea_sent", "idea_id", "sent_at"),
+        Index("ix_message_application_sent", "application_id", "sent_at"),
         CheckConstraint(
-            "num_nonnulls(need_id, idea_id) = 1", name="ck_message_one_owner"
+            "num_nonnulls(need_id, idea_id, application_id) = 1",
+            name="ck_message_one_owner",
         ),
     )
 
@@ -58,6 +60,14 @@ class Message(SQLModel, table=True):
         sa_column=Column(
             postgresql.UUID(as_uuid=True),
             ForeignKey("idea.id", ondelete="CASCADE"),
+            nullable=True,
+        ),
+    )
+    application_id: uuid.UUID | None = Field(
+        default=None,
+        sa_column=Column(
+            postgresql.UUID(as_uuid=True),
+            ForeignKey("grant_application.id", ondelete="CASCADE"),
             nullable=True,
         ),
     )

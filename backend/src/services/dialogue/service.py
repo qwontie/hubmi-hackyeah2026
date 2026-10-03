@@ -17,6 +17,7 @@ from services.mail import (
     DeliveryStatus,
     Email,
     Mailer,
+    application_reply,
     author_reply,
     expert_message,
     idea_reply,
@@ -31,6 +32,8 @@ from services.needs import (
 from utils.db import session_scope
 from utils.db.models import (
     AdminUser,
+    GrantApplication,
+    GrantCall,
     Idea,
     Message,
     MessageDelivery,
@@ -53,7 +56,8 @@ TOO_MANY = (
     "Poczekaj, aż ROPS odpowie, zanim napiszesz ponownie."
 )
 
-type Owner = Need | Idea
+type Owner = Need | Idea | GrantApplication
+type Thread = Need | Idea
 
 background: set[asyncio.Task[Any]] = set()
 
@@ -65,12 +69,14 @@ def spawn(job: Coroutine[Any, Any, Any]) -> None:
 
 
 def owned_by(owner: Owner) -> ColumnElement[bool]:
+    if isinstance(owner, GrantApplication):
+        return col(Message.application_id) == owner.id
     if isinstance(owner, Idea):
         return col(Message.idea_id) == owner.id
     return col(Message.need_id) == owner.id
 
 
-def token_opens(owner: Owner, token: str | None) -> bool:
+def token_opens(owner: Thread, token: str | None) -> bool:
     if not token:
         return False
     if hmac.compare_digest(hash_token(token), owner.edit_token_hash):
@@ -189,9 +195,11 @@ async def reply(
 ) -> AdminMessage:
     emailed = can_email(owner)
     is_idea = isinstance(owner, Idea)
+    is_application = isinstance(owner, GrantApplication)
     message = Message(
-        need_id=None if is_idea else owner.id,
+        need_id=owner.id if isinstance(owner, Need) else None,
         idea_id=owner.id if is_idea else None,
+        application_id=owner.id if is_application else None,
         direction=MessageDirection.TO_AUTHOR,
         body=body,
         admin_id=admin.id,
@@ -206,11 +214,12 @@ async def reply(
         session.add(owner)
     await session.flush()
     details["message_id"] = str(message.id)
+    kind = "application" if is_application else "idea" if is_idea else "need"
     record(
         session,
         admin,
-        "idea.reply" if is_idea else "need.reply",
-        target=("idea" if is_idea else "need", owner.id),
+        f"{kind}.reply",
+        target=("grant_application" if is_application else kind, owner.id),
         details=details,
     )
     await session.exec(read_all(owner))
@@ -226,8 +235,16 @@ async def reply(
     return result
 
 
-def reply_email(owner: Owner, message: Message) -> Email:
+def reply_email(owner: Owner, message: Message, call_title: str = "") -> Email:
     key = f"message-{message.id}"
+    if isinstance(owner, GrantApplication):
+        return application_reply(
+            to=str(owner.contact_email),
+            application_number=owner.number or 0,
+            call_title=call_title,
+            body=message.body,
+            idempotency_key=key,
+        )
     if message.expert_name:
         is_idea = isinstance(owner, Idea)
         return expert_message(
@@ -260,6 +277,8 @@ def reply_email(owner: Owner, message: Message) -> Email:
 
 
 async def owner_of(session: AsyncSession, message: Message) -> Owner | None:
+    if message.application_id is not None:
+        return await session.get(GrantApplication, message.application_id)
     if message.idea_id is not None:
         return await session.get(Idea, message.idea_id)
     if message.need_id is not None:
@@ -274,8 +293,15 @@ async def deliver(message_id: uuid.UUID, mailer: Mailer) -> None:
             owner = None if message is None else await owner_of(session, message)
             if message is None or owner is None:
                 return
+            call = (
+                await session.get(GrantCall, owner.call_id)
+                if isinstance(owner, GrantApplication)
+                else None
+            )
             delivery = (
-                await mailer.send(reply_email(owner, message))
+                await mailer.send(
+                    reply_email(owner, message, call.title if call else "")
+                )
                 if can_email(owner)
                 else Delivery(DeliveryStatus.SKIPPED, error="no contact consent")
             )

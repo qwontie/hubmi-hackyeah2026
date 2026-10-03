@@ -43,6 +43,7 @@ class AdminMessage(BaseModel):
     id: uuid.UUID
     need_id: uuid.UUID | None
     idea_id: uuid.UUID | None
+    application_id: uuid.UUID | None = None
     direction: MessageDirection
     body: str
     sent_at: datetime

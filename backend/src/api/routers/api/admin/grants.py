@@ -2,13 +2,16 @@ import uuid
 from typing import Annotated
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.errors import conflict, invalid, not_found
+from api.errors import ApiError, conflict, invalid, not_found
+from api.limits import rate_limit
 from api.security import AdminPerson
 from services.bus import bus
+from services.dialogue import service as dialogue
 from services.dialogue.audit import record
+from services.dialogue.schemas import AdminMessage, ReplyBody
 from services.dialogue.service import spawn
 from services.grants import TEMPLATES, applications, calls, notify, subscribers
 from services.grants.schemas import (
@@ -41,6 +44,9 @@ KEYS_LOCKED = "Ten nabór ma już wnioski: nie można zmienić kluczy sekcji."
 HAS_APPLICATIONS = "Ten nabór ma już wnioski: zamiast usuwać, anuluj go."
 DRAFT_APPLICATION = "Wniosek nie został jeszcze złożony."
 SUBSCRIBER_MISSING = "Nie znaleziono subskrybenta."
+USE_IDEA_THREAD = "Ten wniosek ma pomysł: odpowiedz w rozmowie o pomyśle."
+
+reply_limit = rate_limit("admin_application_reply", per_minute=30, per_day=1000)
 
 PageNumber = Annotated[int, Query(ge=1, le=10_000)]
 PerPage = Annotated[int, Query(ge=1, le=100)]
@@ -266,3 +272,29 @@ async def remove_subscriber(
         target=("grant_subscriber", subscriber_id),
     )
     await session.commit()
+
+
+@router.get("/applications/{application_id}/messages")
+async def application_messages(
+    application_id: uuid.UUID, session: FromDishka[AsyncSession]
+) -> list[AdminMessage]:
+    application, _, _ = await application_or_404(session, application_id)
+    return await dialogue.thread_for_admin(session, application)
+
+
+@router.post(
+    "/applications/{application_id}/reply",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(reply_limit)],
+)
+async def reply_to_application(
+    application_id: uuid.UUID,
+    body: ReplyBody,
+    admin: AdminPerson,
+    session: FromDishka[AsyncSession],
+    mailer: FromDishka[Mailer],
+) -> AdminMessage:
+    application, _, idea = await application_or_404(session, application_id)
+    if idea is not None:
+        raise ApiError(status.HTTP_409_CONFLICT, "use_idea_thread", USE_IDEA_THREAD)
+    return await dialogue.reply(session, application, admin, body.body, mailer)
