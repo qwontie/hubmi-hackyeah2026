@@ -29,6 +29,11 @@ const TOPICS = [
   "grant_call.updated",
   "ingest.progress",
   "ingest.finished",
+  "adaptation.created",
+  "volunteer.created",
+  "volunteer.updated",
+  "volunteer.reported",
+  "demand.created",
 ] as const;
 
 export type Topic = (typeof TOPICS)[number];

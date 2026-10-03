@@ -829,14 +829,22 @@ export interface AdaptationPlan {
   local_context?: string | null;
   local_facts?: {
     label: string;
-    malopolska?: string | null;
-    source?: string | null;
-    value: string;
+    page?: number | null;
+    region_value?: number | null;
+    source_title?: string | null;
+    source_url?: string | null;
+    unit?: string | null;
+    value: number | string;
     year?: number | null;
   }[];
   measures: string[];
   partners: string[];
-  regional_challenges?: { slug: string; summary?: string; title: string }[];
+  regional_challenges?: {
+    area?: string;
+    slug: string;
+    summary?: string;
+    title: string;
+  }[];
   risks: { mitigation: string; risk: string }[];
   service_name: string;
   staff: string[];
