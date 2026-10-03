@@ -349,8 +349,9 @@
                       >
                       <span class="text-sm">{r.innovation.title}</span>
                       <span class="text-hm-ink-soft text-xs">
-                        {whoLabel[r.who]}
-                        · {r.powiat_name} · {when(r.created_at)}
+                        {[whoLabel[r.who], r.powiat_name, when(r.created_at)]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </span>
                     </span>
                     <span class="st">{volunteerLabel[r.status]}</span>

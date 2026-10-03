@@ -252,11 +252,9 @@
           {detail.organization || detail.email}
         </h2>
         <p class="text-[13px] text-hm-ink-soft">
-          {whoLabel[detail.who]}
-          · {detail.powiat_name}
-          {#if detail.organization}
-            · {detail.email}
-          {/if}
+          {[whoLabel[detail.who], detail.powiat_name, detail.organization ? detail.email : ""]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
       </header>
 
@@ -273,7 +271,7 @@
         </div>
         <div>
           <dt>Powiat</dt>
-          <dd>{detail.powiat_name}</dd>
+          <dd>{detail.powiat_name || "nie podano"}</dd>
         </div>
       </dl>
 

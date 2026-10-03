@@ -88,15 +88,8 @@
         load(id);
       }
     }),
-    live.on("message.created", (data) => {
-      const m = data as Message;
-      if (
-        (detail?.idea && m.idea_id === detail.idea.id) ||
-        (detail && m.application_id === detail.id)
-      ) {
-        messages = [...messages.filter((x) => x.id !== m.id), m];
-      }
-    }),
+    live.on("message.created", (data) => upsertMessage(data as Message)),
+    live.on("message.updated", (data) => upsertMessage(data as Message)),
   ];
 
   onDestroy(() => {
@@ -105,6 +98,20 @@
       off();
     }
   });
+
+  function upsertMessage(m: Message) {
+    const mine =
+      (detail?.idea && m.idea_id === detail.idea.id) ||
+      (detail && m.application_id === detail.id);
+    if (!mine) {
+      return;
+    }
+    const index = messages.findIndex((x) => x.id === m.id);
+    messages =
+      index === -1
+        ? [...messages, m]
+        : messages.map((x) => (x.id === m.id ? m : x));
+  }
 
   async function change(
     status: "in_review" | "accepted" | "rejected",
