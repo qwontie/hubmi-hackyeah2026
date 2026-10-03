@@ -292,6 +292,7 @@ async def deliver_notice(
 
 async def notify(call_id: uuid.UUID, mailer: Mailer, *, opened: bool) -> int:
     sent = 0
+    complete = 0
     total = 0
     async with session_scope() as session:
         call = await session.get(GrantCall, call_id)
@@ -316,21 +317,32 @@ async def notify(call_id: uuid.UUID, mailer: Mailer, *, opened: bool) -> int:
             if record is not None:
                 if record.status == GrantNoticeStatus.SENT:
                     sent += 1
+                    complete += 1
                     continue
                 if (
                     record.status == GrantNoticeStatus.SKIPPED
                     or record.attempts >= MAX_NOTICE_ATTEMPTS
                 ):
+                    complete += 1
                     continue
-            sent += await deliver_notice(
+            delivered = await deliver_notice(
                 session,
                 mailer,
                 call_email(call, subscriber, opened=opened, event_key=event_key),
                 subscriber.id,
                 record=record,
             )
+            sent += delivered
+            if delivered or (
+                record is not None
+                and (
+                    record.status == GrantNoticeStatus.SKIPPED
+                    or record.attempts >= MAX_NOTICE_ATTEMPTS
+                )
+            ):
+                complete += 1
     logger.info("grant call %s: %d subscribers notified", call_id, sent)
-    return sent if sent == total else -1
+    return sent if complete == total else -1
 
 
 async def mark_open_notice(session: AsyncSession, call_id: uuid.UUID) -> bool:
