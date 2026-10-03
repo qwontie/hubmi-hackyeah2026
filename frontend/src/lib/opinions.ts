@@ -1,8 +1,5 @@
-import type {
-  AdminFeedback,
-  AdminTestSignup,
-  SignupStatus,
-} from "$lib/api/admin";
+import type { AdminFeedback, AdminTestSignup } from "$lib/api/admin";
+import { volunteerLabel, volunteerStatuses } from "$lib/volunteers";
 
 export const whoLabel: Record<AdminTestSignup["who"], string> = {
   expert: "Ekspert lub ekspertka",
@@ -11,17 +8,9 @@ export const whoLabel: Record<AdminTestSignup["who"], string> = {
   resident: "Mieszkaniec lub mieszkanka",
 };
 
-export const signupStatuses: { id: SignupStatus; label: string }[] = [
-  { id: "new", label: "Nowe" },
-  { id: "contacted", label: "Po kontakcie" },
-  { id: "closed", label: "Zamknięte" },
-];
+export const signupStatuses = volunteerStatuses;
 
-export const signupLabel: Record<SignupStatus, string> = {
-  closed: "Zamknięte",
-  contacted: "Po kontakcie",
-  new: "Nowe",
-};
+export const signupLabel = volunteerLabel;
 
 export const kindLabel: Record<AdminFeedback["kind"], string> = {
   does_not_fit: "Nie pasuje",

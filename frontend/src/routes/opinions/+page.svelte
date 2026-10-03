@@ -13,7 +13,6 @@
     listFeedback,
     listSignups,
     type SignupStatus,
-    setSignupStatus,
   } from "$lib/api/admin";
   import { ApiError } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
@@ -38,7 +37,7 @@
   type View = "votes" | "signups" | "comments";
 
   const WEEK = 7 * 86_400_000;
-  const views: View[] = ["votes", "signups", "comments"];
+  const views: View[] = ["votes", "comments"];
   const viewTitle: Record<View, string> = {
     comments: "Uwagi i usprawnienia",
     signups: "Zgłoszenia do testów",
@@ -61,9 +60,11 @@
     { id: "fits", label: "Pasuje" },
   ];
   const statusOrder: Record<SignupStatus, number> = {
-    closed: 2,
-    contacted: 1,
+    accepted: 1,
+    closed: 4,
     new: 0,
+    rejected: 3,
+    reported: 2,
   };
 
   let rows = $state<FeedbackByInnovation[]>([]);
@@ -200,7 +201,8 @@
 
   const offs = [
     live.on("feedback.created", () => load()),
-    live.on("test_signup.created", () => load()),
+    live.on("volunteer.created", () => load()),
+    live.on("volunteer.updated", () => load()),
   ];
 
   onDestroy(() => {
@@ -266,9 +268,11 @@
 
   const statusCounts = $derived.by(() => {
     const counts: Record<SignupStatus, number> = {
+      accepted: 0,
       closed: 0,
-      contacted: 0,
       new: 0,
+      rejected: 0,
+      reported: 0,
     };
     for (const s of searchedSignups) {
       counts[s.status] += 1;
@@ -305,15 +309,6 @@
       size: rows.length,
       title: viewTitle.votes,
       week: rows.filter((r) => recent(r.last_at)).length,
-    },
-    {
-      cluster: null,
-      fresh: signups.filter((s) => s.status === "new").length,
-      href: switchTo("signups"),
-      id: "signups",
-      size: signups.length,
-      title: viewTitle.signups,
-      week: signups.filter((s) => recent(s.created_at)).length,
     },
     {
       cluster: null,
@@ -375,33 +370,6 @@
         replaceState: true,
       });
     }, 220);
-  }
-
-  async function changeStatus(
-    signup: AdminTestSignup,
-    next: SignupStatus,
-    anchor: HTMLElement | null
-  ) {
-    if (signup.status === next) {
-      return;
-    }
-    const target = signups.find((s) => s.id === signup.id);
-    if (!target) {
-      return;
-    }
-    const before = target.status;
-    target.status = next;
-    try {
-      Object.assign(target, await setSignupStatus(signup.id, next));
-      showTip(anchor, "Zapisano");
-    } catch (e) {
-      target.status = before;
-      showTip(
-        anchor,
-        e instanceof ApiError ? e.message : "Nie udało się zapisać.",
-        "bad"
-      );
-    }
   }
 
   function copy(text: string, anchor: HTMLElement | null, done: string) {
@@ -469,13 +437,10 @@
             })
           ),
       },
-      "-",
-      ...signupStatuses
-        .filter((s) => s.id !== signup.status)
-        .map((s) => ({
-          label: `Oznacz: ${s.label.toLocaleLowerCase("pl")}`,
-          run: () => changeStatus(signup, s.id, anchor),
-        })),
+      {
+        label: "Otwórz zgłoszenie wolontariusza",
+        run: () => goto(resolve("/volunteers/[[id]]", { id: signup.id })),
+      },
       "-",
       {
         label: "Otwórz w programie pocztowym",
@@ -828,7 +793,6 @@
           email={openEmail}
           innovationHref={(slug) =>
             href({ contact: null, innovation: slug, view: "votes" })}
-          onstatus={changeStatus}
           signups={signups.filter(sameContact)}
         />
       {:else if openSlug}
@@ -839,7 +803,6 @@
           contactHref={(email) =>
             href({ contact: idOf(email), innovation: null, view: "signups" })}
           highlight={openNote}
-          onstatus={changeStatus}
           row={rows.find((r) => r.innovation.slug === openSlug) ?? null}
           signups={signups.filter((s) => s.innovation.slug === openSlug)}
           slug={openSlug}

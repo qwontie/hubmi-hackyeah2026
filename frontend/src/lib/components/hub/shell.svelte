@@ -63,6 +63,8 @@
   const knowledgePath = resolve("/knowledge");
   const onKnowledge = $derived(page.url.pathname.startsWith(knowledgePath));
   const adaptationsPath = resolve("/adaptations/[[id]]", {});
+  const volunteersPath = resolve("/volunteers/[[id]]", {});
+  const onVolunteers = $derived(page.url.pathname.startsWith(volunteersPath));
   const onAdaptations = $derived(page.url.pathname.startsWith(adaptationsPath));
 
   const liveWords: Record<string, string> = {
@@ -161,8 +163,13 @@
           href={adaptationsPath}
           >Plany wdrożenia</a
         >
+        <a
+          aria-current={onVolunteers ? "page" : undefined}
+          href={volunteersPath}
+          >Wolontariusze</a
+        >
         <a aria-current={onOpinions ? "page" : undefined} href={opinionsPath}
-          >Opinie i&nbsp;zgłoszenia</a
+          >Opinie</a
         >
         <a aria-current={onStats ? "page" : undefined} href={statsPath}
           >Statystyki</a

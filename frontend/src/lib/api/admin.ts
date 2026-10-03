@@ -366,7 +366,7 @@ export interface AdminFeedback {
   updated_at: string;
 }
 
-export type SignupStatus = "new" | "contacted" | "closed";
+export type SignupStatus = VolunteerStatus;
 
 export interface AdminTestSignup {
   contact_email: string;
@@ -391,9 +391,6 @@ export const listSignups = () =>
   allPages<AdminTestSignup>("/admin/test-signups");
 
 export const listAllNeeds = () => allPages<AdminNeed>("/admin/needs");
-
-export const setSignupStatus = (id: string, status: SignupStatus) =>
-  api.patch<AdminTestSignup>(`/admin/test-signups/${id}`, { status });
 
 export interface Ref {
   name: string;
@@ -878,3 +875,134 @@ export const listAdaptations = (
 
 export const getAdaptation = (id: string, signal?: AbortSignal) =>
   api.get<Adaptation>(`/adaptations/${id}`, undefined, signal);
+
+export type VolunteerStatus =
+  | "new"
+  | "accepted"
+  | "rejected"
+  | "reported"
+  | "closed";
+
+export interface VolunteerReport {
+  activity: string;
+  created_at: string;
+  not_worked: string;
+  participants: number;
+  recommend: "yes" | "after_changes" | "no";
+  updated_at: string;
+  worked: string;
+}
+
+export interface AdminVolunteer {
+  created_at: string;
+  decided_at: string | null;
+  decision_reason: string | null;
+  email: string;
+  id: string;
+  innovation: { slug: string; title: string };
+  organization: string | null;
+  powiat: string;
+  powiat_name: string;
+  proposal: string;
+  report: VolunteerReport | null;
+  status: VolunteerStatus;
+  updated_at: string;
+  who: AdminTestSignup["who"];
+}
+
+export interface VolunteerMessage {
+  admin: string | null;
+  body: string;
+  created_at: string;
+  delivery_error: string | null;
+  delivery_status: "pending" | "sent" | "skipped" | "failed";
+  id: string;
+  kind: "message" | "accept" | "reject";
+}
+
+export interface AdminVolunteerDetail extends AdminVolunteer {
+  drafts: { accept: string; reject: string };
+  messages: VolunteerMessage[];
+}
+
+export type VolunteerCounts = Record<VolunteerStatus, number>;
+
+export const listVolunteers = (params: { innovation?: string } = {}) =>
+  allPages<AdminVolunteer>("/admin/volunteers", params);
+
+export const volunteerCounts = () =>
+  api.get<VolunteerCounts>("/admin/volunteers/counts");
+
+export const getVolunteer = (id: string, signal?: AbortSignal) =>
+  api.get<AdminVolunteerDetail>(`/admin/volunteers/${id}`, undefined, signal);
+
+export const writeToVolunteer = (id: string, body: string) =>
+  api.post<VolunteerMessage>(`/admin/volunteers/${id}/messages`, { body });
+
+export const acceptVolunteer = (id: string, body: string | null) =>
+  api.post<AdminVolunteerDetail>(`/admin/volunteers/${id}/accept`, { body });
+
+export const rejectVolunteer = (
+  id: string,
+  reason: string,
+  body: string | null
+) =>
+  api.post<AdminVolunteerDetail>(`/admin/volunteers/${id}/reject`, {
+    body,
+    reason,
+  });
+
+export const closeVolunteer = (id: string) =>
+  api.post<AdminVolunteerDetail>(`/admin/volunteers/${id}/close`, {});
+
+export interface VolunteerReports {
+  innovation: { slug: string; title: string };
+  items: AdminVolunteer[];
+  participants: number;
+  recommend: { after_changes: number; no: number; yes: number };
+  reports: number;
+}
+
+export const volunteerReports = (innovation: string, signal?: AbortSignal) =>
+  api.get<VolunteerReports>(
+    "/admin/volunteers/reports",
+    { innovation },
+    signal
+  );
+
+export interface AdaptationVolunteers {
+  count: number;
+  innovation: { slug: string; title: string };
+  items: AdminVolunteer[];
+  powiat: string | null;
+  powiat_name: string | null;
+}
+
+export const adaptationVolunteers = (
+  adaptationId: string,
+  signal?: AbortSignal
+) =>
+  api.get<AdaptationVolunteers>(
+    `/admin/volunteers/for-adaptation/${adaptationId}`,
+    undefined,
+    signal
+  );
+
+export interface DemandRow {
+  count: number;
+  innovation: { slug: string; title: string };
+  last_at: string | null;
+  powiat: string;
+  powiat_name: string;
+  with_email: number;
+}
+
+export const listDemand = (
+  params: { innovation?: string; powiat?: string } = {},
+  signal?: AbortSignal
+) =>
+  api.get<Page<DemandRow>>(
+    "/admin/demand",
+    { per_page: 100, ...params },
+    signal
+  );

@@ -5,10 +5,8 @@
     type AdminTestSignup,
     type ContactProfile,
     contactProfile,
-    type SignupStatus,
   } from "$lib/api/admin";
   import ErrorState from "$lib/components/error-state.svelte";
-  import SignupStatusControl from "$lib/components/hub/signup-status.svelte";
   import {
     dayWords,
     nbsp,
@@ -18,7 +16,7 @@
     when,
   } from "$lib/format";
   import { powiats } from "$lib/live/powiats.svelte";
-  import { contactKey, kindLabel, whoLabel } from "$lib/opinions";
+  import { contactKey, kindLabel, signupLabel, whoLabel } from "$lib/opinions";
   import { showTip } from "$lib/tip";
 
   let {
@@ -26,17 +24,11 @@
     signups,
     backHref,
     innovationHref,
-    onstatus,
   }: {
     email: string;
     signups: AdminTestSignup[];
     backHref: string;
     innovationHref: (slug: string) => string;
-    onstatus: (
-      signup: AdminTestSignup,
-      status: SignupStatus,
-      anchor: HTMLElement | null
-    ) => void;
   } = $props();
 
   let profile = $state<ContactProfile | null>(null);
@@ -163,14 +155,14 @@
 
     <section aria-labelledby="c-signups-h">
       <h3 class="mb-1.5 font-semibold text-[13px]" id="c-signups-h">
-        Zgłoszenia do testów
+        Zgłoszenia wolontariusza
         <span class="font-medium text-hm-ink-soft tabular"
           >{signups.length}</span
         >
       </h3>
       {#if signups.length === 0}
         <p class="text-[13px] text-hm-ink-soft">
-          Z tego adresu nikt nie zgłosił się do testów.
+          Z tego adresu nikt nie zgłosił się jako wolontariusz.
         </p>
       {:else}
         <ol class="list">
@@ -186,7 +178,12 @@
               {#if s.note}
                 <p class="text-sm text-pretty">{nbsp(s.note)}</p>
               {/if}
-              <SignupStatusControl {onstatus} signup={s} />
+              <a
+                class="title"
+                href={resolve("/volunteers/[[id]]", { id: s.id })}
+                >{signupLabel[s.status]}
+                · otwórz zgłoszenie</a
+              >
             </li>
           {/each}
         </ol>

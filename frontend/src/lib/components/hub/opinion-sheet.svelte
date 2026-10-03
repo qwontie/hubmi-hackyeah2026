@@ -4,12 +4,10 @@
     AdminFeedback,
     AdminTestSignup,
     FeedbackByInnovation,
-    SignupStatus,
   } from "$lib/api/admin";
-  import SignupStatusControl from "$lib/components/hub/signup-status.svelte";
   import { nbsp, plural, powiatName, when } from "$lib/format";
   import { powiats } from "$lib/live/powiats.svelte";
-  import { kindLabel, whoLabel } from "$lib/opinions";
+  import { kindLabel, signupLabel, whoLabel } from "$lib/opinions";
 
   let {
     slug,
@@ -21,7 +19,6 @@
     signups,
     backHref,
     contactHref,
-    onstatus,
   }: {
     slug: string;
     title: string;
@@ -32,11 +29,6 @@
     signups: AdminTestSignup[];
     backHref: string;
     contactHref: (email: string) => string;
-    onstatus: (
-      signup: AdminTestSignup,
-      status: SignupStatus,
-      anchor: HTMLElement | null
-    ) => void;
   } = $props();
 
   const fits = $derived(row?.fits ?? 0);
@@ -143,11 +135,11 @@
 
     <section aria-labelledby="testers-h">
       <h3 class="mb-1.5 font-semibold text-[13px]" id="testers-h">
-        Chętni do testów
+        Wolontariusze
       </h3>
       {#if signups.length === 0}
         <p class="text-[13px] text-hm-ink-soft">
-          Nikt nie zgłosił się do testów tej innowacji.
+          Nikt nie zgłosił się jako wolontariusz do tej innowacji.
         </p>
       {:else}
         <ol class="list">
@@ -163,7 +155,10 @@
               {#if s.note}
                 <p class="text-sm text-pretty">{nbsp(s.note)}</p>
               {/if}
-              <SignupStatusControl {onstatus} signup={s} />
+              <a class="who" href={resolve("/volunteers/[[id]]", { id: s.id })}
+                >{signupLabel[s.status]}
+                · otwórz zgłoszenie</a
+              >
             </li>
           {/each}
         </ol>
