@@ -35,6 +35,7 @@ from .calls import due_for_open_notice
 CONFIRM = "grant-sub-confirm"
 UNSUBSCRIBE = "grant-sub-unsubscribe"
 WATCH_SECONDS = 60.0
+MAX_NOTICE_ATTEMPTS = 5
 WARSAW = ZoneInfo("Europe/Warsaw")
 NOTE = (
     "Dostajesz tę wiadomość, bo zapisano ten adres na powiadomienia o naborach w HubMi."
@@ -257,6 +258,9 @@ async def save_attempt(
     if delivery_status == DeliveryStatus.SENT:
         record.status = GrantNoticeStatus.SENT
         record.sent_at = datetime.now(UTC)
+    elif delivery_status == DeliveryStatus.SKIPPED:
+        record.status = GrantNoticeStatus.SKIPPED
+        record.attempts = MAX_NOTICE_ATTEMPTS
     elif delivery_status == DeliveryStatus.FAILED:
         record.status = GrantNoticeStatus.FAILED
     else:
@@ -309,9 +313,15 @@ async def notify(call_id: uuid.UUID, mailer: Mailer, *, opened: bool) -> int:
         )
         for subscriber in subscribers:
             record = deliveries.get(subscriber.id)
-            if record is not None and record.status == GrantNoticeStatus.SENT:
-                sent += 1
-                continue
+            if record is not None:
+                if record.status == GrantNoticeStatus.SENT:
+                    sent += 1
+                    continue
+                if (
+                    record.status == GrantNoticeStatus.SKIPPED
+                    or record.attempts >= MAX_NOTICE_ATTEMPTS
+                ):
+                    continue
             sent += await deliver_notice(
                 session,
                 mailer,

@@ -47,7 +47,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "status IN ('pending', 'failed', 'sent')",
+            "status IN ('pending', 'failed', 'skipped', 'sent')",
             name="ck_grant_notice_delivery_status",
         ),
         sa.ForeignKeyConstraint(["call_id"], ["grant_call.id"], ondelete="CASCADE"),

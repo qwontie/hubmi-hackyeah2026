@@ -39,6 +39,7 @@ class ApplicationStatus(StrEnum):
 class GrantNoticeStatus(StrEnum):
     PENDING = "pending"
     FAILED = "failed"
+    SKIPPED = "skipped"
     SENT = "sent"
 
 
@@ -151,7 +152,7 @@ class GrantNoticeDelivery(SQLModel, table=True):
             name="uq_grant_notice_delivery_event",
         ),
         CheckConstraint(
-            "status IN ('pending', 'failed', 'sent')",
+            "status IN ('pending', 'failed', 'skipped', 'sent')",
             name="ck_grant_notice_delivery_status",
         ),
     )

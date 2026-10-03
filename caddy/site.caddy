@@ -13,6 +13,7 @@
 		header Content-Security-Policy "default-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
 		reverse_proxy hubmi-api:8080 {
 			flush_interval -1
+			header_up X-Forwarded-For {client_ip}
 		}
 	}
 

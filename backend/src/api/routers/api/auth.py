@@ -38,7 +38,7 @@ async def login(
 ) -> Me:
     guard = LoginGuard(session)
     try:
-        await guard.check(request, body.login)
+        await guard.check_ip(request)
     except LoginBlockedError as exc:
         raise HTTPException(
             status.HTTP_429_TOO_MANY_REQUESTS,
@@ -47,6 +47,14 @@ async def login(
         ) from exc
     admin = await AdminRepository(session).verify(body.login, body.password)
     if admin is None:
+        try:
+            await guard.check_account(body.login)
+        except LoginBlockedError as exc:
+            raise HTTPException(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "Too many login attempts",
+                headers={"Retry-After": str(exc.retry_after)},
+            ) from exc
         await guard.failed(request, body.login)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Wrong login or password")
     await guard.succeeded(request, body.login)

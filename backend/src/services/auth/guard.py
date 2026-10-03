@@ -36,17 +36,14 @@ class LoginGuard:
     def _keys(self, request: Request, login: str) -> tuple[str, str]:
         return (_key("ip", client_ip(request)), _key("account", login.strip().lower()))
 
-    async def check(self, request: Request, login: str) -> None:
+    async def _check(self, key_hash: str) -> None:
         connection = await self.session.connection()
         rows = await connection.execute(
             text(
                 "SELECT blocked_until FROM auth_login_guard "
-                "WHERE key_hash IN (:ip_key, :account_key) "
-                "AND blocked_until > now() ORDER BY blocked_until DESC LIMIT 1"
+                "WHERE key_hash = :key_hash AND blocked_until > now()"
             ),
-            dict(
-                zip(("ip_key", "account_key"), self._keys(request, login), strict=True)
-            ),
+            {"key_hash": key_hash},
         )
         blocked_until = rows.scalar_one_or_none()
         if blocked_until is not None:
@@ -54,6 +51,12 @@ class LoginGuard:
                 1, math.ceil((blocked_until - datetime.now(UTC)).total_seconds())
             )
             raise LoginBlockedError(retry)
+
+    async def check_ip(self, request: Request) -> None:
+        await self._check(_key("ip", client_ip(request)))
+
+    async def check_account(self, login: str) -> None:
+        await self._check(_key("account", login.strip().lower()))
 
     async def failed(self, request: Request, login: str) -> None:
         statement = text(
