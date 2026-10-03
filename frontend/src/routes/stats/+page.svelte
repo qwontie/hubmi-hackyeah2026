@@ -179,48 +179,48 @@
       <div>
         <dt>Potrzeby</dt>
         <dd class="tabular">{stats.totals.needs}</dd>
-        <span>{delta}</span>
+        <dd class="note">{delta}</dd>
       </div>
       <div>
         <dt>Czekają na odpowiedź</dt>
         <dd class="tabular">{stats.totals.waiting}</dd>
-        <span
-          >{stats.totals.answered}
+        <dd class="note">
+          {stats.totals.answered}
           z&nbsp;odpowiedzią, {stats.totals.closed}
-          {plural(stats.totals.closed, "zamknięta", "zamknięte", "zamkniętych")}</span
-        >
+          {plural(stats.totals.closed, "zamknięta", "zamknięte", "zamkniętych")}
+        </dd>
       </div>
       <div>
         <dt>Pierwsza odpowiedź</dt>
         <dd class="tabular">{hours(stats.totals.median_first_reply_hours)}</dd>
-        <span>mediana od zgłoszenia</span>
+        <dd class="note">mediana od zgłoszenia</dd>
       </div>
       <div>
         <dt>Nic nie pasowało</dt>
         <dd class="tabular">{pct(stats.totals.nothing_fits_share)}</dd>
-        <span
-          >{stats.totals.nothing_fits}
+        <dd class="note">
+          {stats.totals.nothing_fits}
           z&nbsp;{stats.totals.needs}
-          potrzeb</span
-        >
+          potrzeb
+        </dd>
       </div>
       <div>
         <dt>Trafność według testerów</dt>
         <dd class="tabular">
           {stats.feedback.fits + stats.feedback.does_not_fit > 0 ? pct(stats.feedback.fit_share) : "brak ocen"}
         </dd>
-        <span
-          >{stats.feedback.fits}
-          pasuje, {stats.feedback.does_not_fit} nie pasuje</span
-        >
+        <dd class="note">
+          {stats.feedback.fits}
+          pasuje, {stats.feedback.does_not_fit} nie pasuje
+        </dd>
       </div>
       <div>
         <dt>Zapisy do testów</dt>
         <dd class="tabular">{stats.feedback.test_signups}</dd>
-        <span
-          >{stats.feedback.improvements}
-          {plural(stats.feedback.improvements, "pomysł na ulepszenie", "pomysły na ulepszenie", "pomysłów na ulepszenie")}</span
-        >
+        <dd class="note">
+          {stats.feedback.improvements}
+          {plural(stats.feedback.improvements, "pomysł na ulepszenie", "pomysły na ulepszenie", "pomysłów na ulepszenie")}
+        </dd>
       </div>
     </dl>
 
@@ -422,7 +422,7 @@
     color: var(--hm-ink-soft);
   }
 
-  .figures dd {
+  .figures dd:not(.note) {
     order: 2;
     margin: 0;
     font-size: 26px;
@@ -431,8 +431,9 @@
     letter-spacing: -0.03em;
   }
 
-  .figures span {
+  .figures .note {
     order: 3;
+    margin: 0;
     font-size: 12px;
     color: var(--hm-ink-soft);
   }
