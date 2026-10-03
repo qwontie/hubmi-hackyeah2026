@@ -6,7 +6,9 @@ from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
+from services.kreator import PublicIdea
 from services.needs import POWIATS
+from services.problems import ProblemRow
 from services.tester import Votes
 from utils.db.models.category import Category
 from utils.db.models.innovation import Innovation
@@ -198,3 +200,45 @@ class NeedPatch(StrictModel):
 class NeedPatched(BaseModel):
     id: uuid.UUID
     status: str
+
+
+class Problem(BaseModel):
+    id: uuid.UUID
+    title: str
+    summary: str
+    category: CategoryRef | None
+    needs_total: int
+    needs_open: int
+    needs_answered: int
+    ideas_count: int
+    powiats: list[str]
+
+    @classmethod
+    def build(cls, row: ProblemRow) -> "Problem":
+        return cls(
+            id=row.id,
+            title=row.title,
+            summary=row.summary,
+            category=CategoryRef(
+                slug=row.category_slug, name=row.category_name or row.category_slug
+            )
+            if row.category_slug
+            else None,
+            needs_total=row.needs_total,
+            needs_open=row.needs_open,
+            needs_answered=row.needs_answered,
+            ideas_count=row.ideas_count,
+            powiats=row.powiats,
+        )
+
+
+class ProblemPage(BaseModel):
+    items: list[Problem]
+    total: int
+    page: int
+    per_page: int
+
+
+class ProblemDetail(Problem):
+    innovations: list[InnovationSummary]
+    ideas: list[PublicIdea]
