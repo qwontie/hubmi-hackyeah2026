@@ -72,7 +72,8 @@ def test_token_belongs_to_one_application() -> None:
     assert volunteers.token_opens(first, token)
     assert not volunteers.token_opens(second, token)
     assert not volunteers.token_opens(first, None)
-    assert not volunteers.token_opens(first, token[:-1] + "x")
+    other_last = "y" if token.endswith("x") else "x"
+    assert not volunteers.token_opens(first, token[:-1] + other_last)
     assert volunteers.report_url(first).endswith(f"/wolontariat/{first}#token={token}")
 
 
