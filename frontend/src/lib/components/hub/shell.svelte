@@ -11,9 +11,21 @@
 
   let { children }: { children: Snippet } = $props();
 
+  const expert = $derived(session.me?.role === "expert");
+  const expertPath = resolve("/expert");
+  const onExpert = $derived(page.url.pathname.startsWith(expertPath));
+
   $effect(() => {
-    inbox.start();
     powiats.load();
+    if (!expert) {
+      inbox.start();
+    }
+  });
+
+  $effect(() => {
+    if (expert && !onExpert) {
+      goto(expertPath, { replaceState: true });
+    }
   });
 
   const needsPath = resolve("/needs");
@@ -57,7 +69,10 @@
   <header
     class="flex flex-wrap items-center gap-x-7 gap-y-2.5 px-3 py-2.5 min-[900px]:h-15 min-[900px]:px-5 min-[900px]:py-0"
   >
-    <a class="flex items-center gap-2.5 rounded-xl" href={needsPath}>
+    <a
+      class="flex items-center gap-2.5 rounded-xl"
+      href={expert ? expertPath : needsPath}
+    >
       <span aria-hidden="true" class="seal">Hm</span>
       <span class="leading-tight">
         <b class="block font-semibold text-[15px] tracking-tight">HubMi</b>
@@ -68,37 +83,47 @@
       aria-label="Główne"
       class="nav order-3 w-full min-w-0 overflow-x-auto min-[900px]:order-none min-[900px]:w-auto"
     >
-      <a aria-current={onNeeds ? "page" : undefined} href={needsPath}>
-        Dziennik potrzeb
-        {#if inbox.newCount > 0}
-          <span class="font-semibold text-hm-stamp text-xs tabular"
-            >{inbox.newCount}<span class="sr-only"> nowych</span></span
-          >
-        {/if}
-      </a>
-      <a aria-current={onLibrary ? "page" : undefined} href={libraryPath}
-        >Biblioteka</a
-      >
-      <a aria-current={onKnowledge ? "page" : undefined} href={knowledgePath}
-        >Wiedza</a
-      >
-      <a aria-current={onIdeas ? "page" : undefined} href={ideasPath}
-        >Pomysły</a
-      >
-      <a aria-current={onTesters ? "page" : undefined} href={testersPath}
-        >Testerzy</a
-      >
-      <a aria-current={onStats ? "page" : undefined} href={statsPath}
-        >Statystyki</a
-      >
+      {#if expert}
+        <a aria-current={onExpert ? "page" : undefined} href={expertPath}
+          >Moje zadania</a
+        >
+      {:else}
+        <a aria-current={onNeeds ? "page" : undefined} href={needsPath}>
+          Dziennik potrzeb
+          {#if inbox.newCount > 0}
+            <span class="font-semibold text-hm-stamp text-xs tabular"
+              >{inbox.newCount}<span class="sr-only"> nowych</span></span
+            >
+          {/if}
+        </a>
+        <a aria-current={onLibrary ? "page" : undefined} href={libraryPath}
+          >Biblioteka</a
+        >
+        <a aria-current={onKnowledge ? "page" : undefined} href={knowledgePath}
+          >Wiedza</a
+        >
+        <a aria-current={onIdeas ? "page" : undefined} href={ideasPath}
+          >Pomysły</a
+        >
+        <a aria-current={onTesters ? "page" : undefined} href={testersPath}
+          >Testerzy</a
+        >
+        <a aria-current={onStats ? "page" : undefined} href={statsPath}
+          >Statystyki</a
+        >
+      {/if}
     </nav>
     <div class="ml-auto flex items-center gap-4 text-[13px] text-hm-ink-soft">
-      <span class="flex items-center gap-2" role="status">
-        <i class={["size-[7px] rounded-full", liveDots[live.state]]}></i>
-        <span>{liveWords[live.state]}</span>
-      </span>
+      {#if !expert}
+        <span class="flex items-center gap-2" role="status">
+          <i class={["size-[7px] rounded-full", liveDots[live.state]]}></i>
+          <span>{liveWords[live.state]}</span>
+        </span>
+      {/if}
       <button class="signout" onclick={signOut} type="button">
-        <span class="max-[899px]:sr-only">{session.me?.login}</span>
+        <span class="max-[899px]:sr-only"
+          >{session.me?.display_name ?? session.me?.login}</span
+        >
         <span class="sr-only">, wyloguj się</span>
         <span aria-hidden="true" class="text-hm-ink-soft">Wyloguj</span>
       </button>

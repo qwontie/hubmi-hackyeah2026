@@ -1,7 +1,10 @@
 import { api } from "$lib/api/client";
 
 export interface Me {
+  display_name?: string | null;
+  expertise?: string | null;
   login: string;
+  role?: "admin" | "expert";
 }
 
 export const login = (user: string, password: string) =>

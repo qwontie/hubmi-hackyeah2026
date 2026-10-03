@@ -2,6 +2,7 @@
   import type { Message } from "$lib/api/admin";
   import { ApiError } from "$lib/api/client";
   import { when } from "$lib/format";
+  import { messageAuthor } from "$lib/message";
   import { showTip } from "$lib/tip";
 
   let {
@@ -80,9 +81,7 @@
       {#each messages as m (m.id)}
         <li>
           <span class="text-hm-ink-soft text-xs">
-            <b class="font-semibold text-hm-ink"
-              >{m.direction === "to_author" ? `ROPS${m.admin ? ` · ${m.admin.login}` : ""}` : "Autor"}</b
-            >
+            <b class="font-semibold text-hm-ink">{messageAuthor(m)}</b>
             · {when(m.sent_at)}{delivery(m) ? ` · ${delivery(m)}` : ""}
           </span>
           <p class="whitespace-pre-line text-sm">{m.body}</p>

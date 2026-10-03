@@ -12,6 +12,7 @@
   } from "$lib/api/admin";
   import { ApiError } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
+  import ExpertPanel from "$lib/components/hub/expert-panel.svelte";
   import Stamp from "$lib/components/hub/stamp.svelte";
   import {
     nbsp,
@@ -23,6 +24,7 @@
   import { inbox } from "$lib/live/inbox.svelte";
   import { powiats } from "$lib/live/powiats.svelte";
   import { live } from "$lib/live/stream.svelte";
+  import { messageAuthor } from "$lib/message";
   import { showTip } from "$lib/tip";
 
   let {
@@ -331,6 +333,8 @@
           </p>
         {/if}
 
+        <ExpertPanel id={detail.id} kind="needs" />
+
         {#if detail.messages.length > 0}
           <section aria-labelledby="thread-h">
             <h3 class="mb-1.5 font-semibold text-[13px]" id="thread-h">
@@ -340,9 +344,7 @@
               {#each detail.messages as m (m.id)}
                 <li>
                   <span class="text-hm-ink-soft text-xs">
-                    <b class="font-semibold text-hm-ink"
-                      >{m.direction === "to_author" ? `ROPS${m.admin ? ` · ${m.admin.login}` : ""}` : "Autor"}</b
-                    >
+                    <b class="font-semibold text-hm-ink">{messageAuthor(m)}</b>
                     ·
                     {when(m.sent_at)}{deliveryWord(m) ? ` · ${deliveryWord(m)}` : ""}
                   </span>

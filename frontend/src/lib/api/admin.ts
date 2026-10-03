@@ -59,6 +59,7 @@ export interface Message {
   body: string;
   delivery_status: "pending" | "sent" | "skipped" | "failed" | null;
   direction: "to_author" | "from_author";
+  expert?: { display_name: string; expertise: string | null } | null;
   id: string;
   idea_id?: string | null;
   need_id: string | null;
@@ -268,6 +269,8 @@ export interface AdminIdea {
   status: IdeaStatus;
   title: string;
   updated_at?: string;
+  visualisation_alt?: string | null;
+  visualisation_url?: string | null;
 }
 
 export interface AdminIdeaDetail extends AdminIdea {
@@ -285,6 +288,7 @@ export interface AdminIdeaDetail extends AdminIdea {
     slug: string;
     title: string;
   }[];
+  visualisation_prompt?: string | null;
 }
 
 export interface IdeaOptions {
@@ -448,3 +452,85 @@ export const runKnowledgeImport = () =>
   api.post<{ run_id: string }>("/admin/knowledge/import/run");
 export const knowledgeRuns = () =>
   api.get<KnowledgeRun[]>("/admin/knowledge/import/runs", { limit: 3 });
+
+export interface Expert {
+  answered: number;
+  display_name: string;
+  expertise: string | null;
+  has_email: boolean;
+  id: string;
+  login: string;
+  open: number;
+}
+
+export interface Assignment {
+  answered_at: string | null;
+  assigned_by: string;
+  created_at: string;
+  expert: { display_name: string; expertise: string | null; id: string };
+  id: string;
+  idea_id: string | null;
+  kind: "need" | "idea";
+  need_id: string | null;
+  note: string | null;
+  opinions_count: number;
+  private_notes?: { body: string; created_at: string; id: string }[];
+  status: "open" | "answered";
+  title: string;
+}
+
+export interface ExpertAssignmentDetail extends Assignment {
+  item: {
+    canvas?: Record<string, string> | null;
+    created_at: string;
+    essence?: string;
+    for_whom?: string;
+    id: string;
+    number: number | null;
+    powiat: string | null;
+    stage?: string;
+    status: string;
+    text?: string;
+    title: string | null;
+    visualisation_alt?: string | null;
+    visualisation_url?: string | null;
+  };
+  messages: Message[];
+}
+
+export const listExperts = () => api.get<Expert[]>("/admin/experts");
+
+export const listAssignments = (kind: "needs" | "ideas", id: string) =>
+  api.get<Assignment[]>(`/admin/${kind}/${id}/assignments`);
+
+export const assignExpert = (
+  kind: "needs" | "ideas",
+  id: string,
+  expertId: string,
+  note: string
+) =>
+  api.post<Assignment>(`/admin/${kind}/${id}/assign`, {
+    expert_id: expertId,
+    note: note || undefined,
+  });
+
+export const unassign = (id: string) => api.del(`/admin/assignments/${id}`);
+
+export const myAssignments = () => api.get<Assignment[]>("/expert/assignments");
+
+export const myAssignment = (id: string, signal?: AbortSignal) =>
+  api.get<ExpertAssignmentDetail>(
+    `/expert/assignments/${id}`,
+    undefined,
+    signal
+  );
+
+export const sendOpinion = (id: string, body: string, privateNote: string) =>
+  api.post<{
+    assignment: Assignment;
+    message: Message | null;
+    private_note: { body: string; created_at: string; id: string } | null;
+  }>(`/expert/assignments/${id}/opinion`, {
+    body: body || undefined,
+    private_note: privateNote || undefined,
+  });

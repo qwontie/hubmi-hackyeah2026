@@ -22,6 +22,8 @@ const TOPICS = [
   "knowledge.import.finished",
   "material.updated",
   "challenge.updated",
+  "assignment.created",
+  "assignment.answered",
 ] as const;
 
 export type Topic = (typeof TOPICS)[number];

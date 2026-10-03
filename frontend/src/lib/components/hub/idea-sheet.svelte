@@ -15,6 +15,7 @@
   } from "$lib/api/admin";
   import { ApiError } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
+  import ExpertPanel from "$lib/components/hub/expert-panel.svelte";
   import Stamp from "$lib/components/hub/stamp.svelte";
   import ThreadReply from "$lib/components/hub/thread-reply.svelte";
   import { nbsp, powiatName, registerNumber } from "$lib/format";
@@ -197,6 +198,27 @@
         {/key}
       </header>
 
+      {#if detail.visualisation_url}
+        <figure class="visual">
+          <img
+            alt={detail.visualisation_alt ?? ""}
+            src={detail.visualisation_url}
+          >
+
+          {#if detail.visualisation_prompt}
+            <figcaption>
+              <details>
+                <summary>
+                  Ilustracja wygenerowana automatycznie. Opis dla modelu
+                </summary>
+
+                <p>{detail.visualisation_prompt}</p>
+              </details>
+            </figcaption>
+          {/if}
+        </figure>
+      {/if}
+
       <p class="reading">{nbsp(detail.essence)}</p>
       <p class="text-sm">
         <b class="font-semibold">Dla kogo:</b> {detail.for_whom}
@@ -268,6 +290,8 @@
         </section>
       {/if}
 
+      <ExpertPanel id={detail.id} kind="ideas" />
+
       <ThreadReply
         canEmail={Boolean(detail.contact_email)}
         {messages}
@@ -294,6 +318,31 @@
 
   .back {
     display: none;
+  }
+
+  .visual {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .visual img {
+    width: 100%;
+    max-width: 440px;
+    border-radius: 14px;
+    box-shadow: 0 0 0 1px var(--hm-rule);
+  }
+
+  .visual summary {
+    font-size: 12px;
+    color: var(--hm-ink-soft);
+    cursor: pointer;
+  }
+
+  .visual details p {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--hm-ink-soft);
   }
 
   .reading {
