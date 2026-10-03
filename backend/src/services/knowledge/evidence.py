@@ -10,7 +10,12 @@ YEAR_ONLY = re.compile(r"\s*(?:19[5-9]\d|20[0-4]\d)\s*(?:r\.?|rok)?\s*")
 
 
 class Figure(BaseModel):
-    label: str = Field(description="what the number counts, plain Polish, max 12 words")
+    label: str = Field(
+        description=(
+            "what the number counts, plain Polish, max 12 words, exactly as the "
+            "quote says it (a change stays a change, a share stays a share)"
+        )
+    )
     value: str = Field(description="the number exactly as written in the text")
     unit: str = Field(default="", description="unit if any: %, osób, rodzin, zł")
     year: int | None = Field(default=None, description="year the number refers to")

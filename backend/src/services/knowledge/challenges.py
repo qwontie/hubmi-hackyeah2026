@@ -113,7 +113,9 @@ Only numbers about the whole of Małopolska, not single gminas or people. Leave 
 challenge without numbers when the report has no direct one; most challenges will
 have none. Never guess. For every figure:
 - challenge: the slug from the list;
-- label: what the number counts, in plain Polish, max 12 words;
+- label: what the number counts, in plain Polish, max 12 words, saying exactly
+  what the quote says: a change stays a change ("wzrost o", "przybyło od 2020"),
+  a share stays a share, a subgroup stays a subgroup;
 - value: copied exactly as written in the text;
 - quote: the exact fragment of the text, 5 to 30 words, containing the value;
 - page: the page of the quote; year: the year it refers to.
