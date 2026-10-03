@@ -1,5 +1,6 @@
 import Head from "expo-router/head";
 import { Send } from "lucide-react-native";
+import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import type { ThreadMessage } from "@/api/types";
 import { APP_NAME } from "@/config";
@@ -37,6 +38,19 @@ const COPY = {
   },
 };
 
+const senderName = (message: ThreadMessage) => {
+  if (message.direction !== "to_author") {
+    return "Ty";
+  }
+  if (message.author === "expert" && message.expert) {
+    const field = message.expert.expertise
+      ? `, ${message.expert.expertise}`
+      : "";
+    return `Ekspert · ${message.expert.display_name}${field}`;
+  }
+  return "ROPS w Krakowie";
+};
+
 function Message({ message }: { message: ThreadMessage }) {
   const { colors, borderWidth } = useTheme();
   const fromRops = message.direction === "to_author";
@@ -60,7 +74,7 @@ function Message({ message }: { message: ThreadMessage }) {
           variant="detail"
           weight="600"
         >
-          {fromRops ? "ROPS w Krakowie" : "Ty"}
+          {senderName(message)}
         </Txt>
         {` · ${messageTime(message.sent_at)}`}
       </Txt>
@@ -201,9 +215,11 @@ function Conversation({
 }
 
 export function ThreadScreen({
+  extra,
   kind,
   id,
 }: {
+  extra?: ReactNode;
   kind: ThreadKind;
   id: string | undefined;
 }) {
@@ -241,6 +257,7 @@ export function ThreadScreen({
           token={load.token}
         />
       ) : null}
+      {load.kind === "done" ? (extra ?? null) : null}
     </Screen>
   );
 }

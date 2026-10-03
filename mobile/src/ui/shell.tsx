@@ -96,7 +96,11 @@ const isActive = (pathname: string, href: string) => {
     return pathname.startsWith("/zgloszeni");
   }
   if (href === "/pomysl") {
-    return pathname.startsWith("/pomysl") || pathname.startsWith("/problemy");
+    return (
+      pathname.startsWith("/pomysl") ||
+      pathname.startsWith("/problemy") ||
+      pathname.startsWith("/nabory")
+    );
   }
   return pathname.startsWith(href);
 };

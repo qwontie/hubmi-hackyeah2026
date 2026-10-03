@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Linking, Platform, Pressable, StyleSheet, View } from "react-native";
-import { API_BASE } from "@/config";
+import { useMeta } from "@/hooks/use-meta";
 import { useTheme } from "@/theme/settings";
 import { minTarget, space } from "@/theme/tokens";
 import { Txt } from "@/ui/text";
@@ -29,19 +29,6 @@ const logos = {
   malopolskaWhite: require("../../assets/rops/malopolska-white.png"),
   rops: require("../../assets/rops/rops.png"),
   ropsWhite: require("../../assets/rops/rops-white.png"),
-};
-
-const useDemoData = () => {
-  const [demo, setDemo] = useState(false);
-  useEffect(() => {
-    const abort = new AbortController();
-    fetch(`${API_BASE}/api/meta`, { signal: abort.signal })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((meta: { demo?: boolean } | null) => setDemo(meta?.demo === true))
-      .catch(() => setDemo(false));
-    return () => abort.abort();
-  }, []);
-  return demo;
 };
 
 function FooterLink({ href, label }: { href: string; label: string }) {
@@ -80,7 +67,8 @@ function FooterLink({ href, label }: { href: string; label: string }) {
 
 export function RopsFooter() {
   const { colors, dark, highContrast } = useTheme();
-  const demo = useDemoData();
+  const meta = useMeta();
+  const demo = meta.state.kind === "done" && meta.state.data.demo === true;
   return (
     <View
       aria-label="O serwisie"

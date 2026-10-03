@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import Head from "expo-router/head";
-import { PenLine, Search, X } from "lucide-react-native";
+import { FileText, PenLine, Search, X } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
 import { CategoryFilter } from "@/features/category-filter";
@@ -82,11 +82,18 @@ export default function ProblemsScreen() {
           onSelect={selectCategory}
           value={category}
         />
-        <View>
+        <View style={styles.links}>
           <Button
             icon={PenLine}
             label="Mam własny pomysł"
             onPress={ownIdea}
+            role="link"
+            variant="quiet"
+          />
+          <Button
+            icon={FileText}
+            label="Nabory i wnioski"
+            onPress={() => router.push("/nabory")}
             role="link"
             variant="quiet"
           />
@@ -165,6 +172,11 @@ const styles = StyleSheet.create({
   },
   group: {
     gap: space.md,
+  },
+  links: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space.sm,
   },
   results: {
     gap: space.lg,
