@@ -1,7 +1,11 @@
 <script lang="ts">
   import { clock, dayWords, registerNumber } from "$lib/format";
 
-  let { at, number }: { at: string; number?: number | null } = $props();
+  let {
+    at,
+    number,
+    prefix = "HUB",
+  }: { at: string; number?: number | null; prefix?: string } = $props();
 
   const nr = $derived(registerNumber(number));
   const label = $derived(
@@ -14,7 +18,7 @@
     <span class="stamp-word">Wpłynęło</span>
     <span class="font-semibold text-sm">{dayWords(at)}</span>
     <span class="mono-num text-xs"
-      >godz. {clock(at)}{nr ? ` · HUB/${nr}` : ""}</span
+      >godz. {clock(at)}{nr ? ` · ${prefix}/${nr}` : ""}</span
     >
   </div>
 </div>

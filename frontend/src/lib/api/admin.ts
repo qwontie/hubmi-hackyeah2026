@@ -568,3 +568,125 @@ export const replySuggestions = (id: string, signal?: AbortSignal) =>
     undefined,
     signal
   );
+
+export interface GrantSection {
+  hint: string;
+  key: string;
+  label: string;
+  max_length: number;
+  required: boolean;
+}
+
+export type CallPhase = "upcoming" | "open" | "closed";
+export type CallStatus = "draft" | "published" | "cancelled";
+export type ApplicationStatus =
+  | "draft"
+  | "submitted"
+  | "in_review"
+  | "accepted"
+  | "rejected";
+
+export interface AdminGrantCall {
+  applications: {
+    accepted: number;
+    in_review: number;
+    rejected: number;
+    submitted: number;
+    total: number;
+  };
+  closes_at: string;
+  created_at: string;
+  demo: boolean;
+  description: string;
+  id: string;
+  opens_at: string;
+  phase: CallPhase;
+  sections: GrantSection[];
+  source_url: string | null;
+  status: CallStatus;
+  template: string | null;
+  title: string;
+  updated_at: string;
+}
+
+export interface GrantTemplate {
+  description: string;
+  sections: GrantSection[];
+  slug: string;
+  source_url: string;
+  title: string;
+}
+
+export interface ApplicationSummary {
+  call_id: string;
+  id: string;
+  idea: { id: string; number: number; title: string };
+  missing_required: string[];
+  number: number;
+  status: ApplicationStatus;
+  submitted_at: string | null;
+  updated_at: string;
+}
+
+export interface AdminApplication {
+  call: {
+    closes_at: string;
+    demo: boolean;
+    id: string;
+    opens_at: string;
+    phase: CallPhase;
+    title: string;
+  };
+  created_at: string;
+  id: string;
+  idea: { id: string; number: number; title: string };
+  idea_contact: boolean;
+  missing_required: string[];
+  number: number;
+  pdf_url: string;
+  sections: (GrantSection & {
+    missing: string[];
+    source: "ai" | "author";
+    text: string;
+  })[];
+  status: ApplicationStatus;
+  submitted_at: string | null;
+  updated_at: string;
+}
+
+export type CallBody = Partial<{
+  closes_at: string;
+  description: string;
+  opens_at: string;
+  sections: GrantSection[];
+  source_url: string | null;
+  status: CallStatus;
+  template: string;
+  title: string;
+}>;
+
+export const listGrantCalls = () =>
+  allPages<AdminGrantCall>("/admin/grant-calls");
+
+export const grantTemplates = () =>
+  api.get<GrantTemplate[]>("/admin/grant-templates");
+
+export const createGrantCall = (body: CallBody) =>
+  api.post<AdminGrantCall>("/admin/grant-calls", body);
+
+export const patchGrantCall = (id: string, body: CallBody) =>
+  api.patch<AdminGrantCall>(`/admin/grant-calls/${id}`, body);
+
+export const deleteGrantCall = (id: string) =>
+  api.del(`/admin/grant-calls/${id}`);
+
+export const callApplications = (id: string) =>
+  allPages<ApplicationSummary>(`/admin/grant-calls/${id}/applications`);
+
+export const getApplication = (id: string, signal?: AbortSignal) =>
+  api.get<AdminApplication>(`/admin/applications/${id}`, undefined, signal);
+
+export const setApplicationStatus = (
+  id: string,
+  status: "in_review" | "accepted" | "rejected"
+) => api.patch<AdminApplication>(`/admin/applications/${id}`, { status });

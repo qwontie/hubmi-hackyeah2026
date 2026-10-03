@@ -36,6 +36,13 @@
   const onStats = $derived(page.url.pathname.startsWith(statsPath));
   const ideasPath = resolve("/ideas");
   const onIdeas = $derived(page.url.pathname.startsWith(ideasPath));
+  const grantsPath = resolve("/grants/[[id]]", {});
+  const onGrants = $derived(
+    Boolean(
+      page.route.id?.startsWith("/grants") ||
+        page.route.id?.startsWith("/applications")
+    )
+  );
   const opinionsPath = resolve("/opinions");
   const onOpinions = $derived(page.url.pathname.startsWith(opinionsPath));
   const knowledgePath = resolve("/knowledge");
@@ -104,6 +111,9 @@
         >
         <a aria-current={onIdeas ? "page" : undefined} href={ideasPath}
           >Pomysły</a
+        >
+        <a aria-current={onGrants ? "page" : undefined} href={grantsPath}
+          >Nabory</a
         >
         <a aria-current={onOpinions ? "page" : undefined} href={opinionsPath}
           >Opinie i&nbsp;zgłoszenia</a
