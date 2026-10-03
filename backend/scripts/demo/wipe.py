@@ -19,6 +19,7 @@ from utils.db import init_db, session_scope
 from utils.db.models import (
     AdminAction,
     AdminUser,
+    Assignment,
     DemoRecord,
     Feedback,
     Idea,
@@ -35,6 +36,7 @@ console = Console()
 
 type DemoModel = type[
     Feedback
+    | Assignment
     | TestSignup
     | InnovationDemand
     | Adaptation
@@ -94,6 +96,9 @@ async def wipe(session: AsyncSession) -> dict[str, int]:
         registry.FEEDBACK: await remove(session, Feedback, ids[registry.FEEDBACK]),
         registry.SIGNUP: await remove(session, TestSignup, ids[registry.SIGNUP]),
         registry.DEMAND: await remove(session, InnovationDemand, ids[registry.DEMAND]),
+        registry.ASSIGNMENT: await remove(
+            session, Assignment, ids[registry.ASSIGNMENT]
+        ),
         registry.ADAPTATION: await remove(
             session, Adaptation, ids[registry.ADAPTATION]
         ),
