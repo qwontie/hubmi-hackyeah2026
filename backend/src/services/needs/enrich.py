@@ -5,14 +5,14 @@ from datetime import UTC, datetime, timedelta
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
-from sqlalchemy import text
+from sqlalchemy import and_, or_, text
 from sqlmodel import col, select
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 from services.ai import (
     AiBudgetExceededError,
     AiUnavailableError,
     embed_query,
+    embed_titles,
     run_agent,
 )
 from services.bus import bus
@@ -20,7 +20,7 @@ from services.search import category_for
 from utils.db import session_scope
 from utils.db.models.innovation import Innovation
 from utils.db.models.match_result import MatchResult
-from utils.db.models.need import Need, NeedCluster
+from utils.db.models.need import Need, NeedCluster, NeedStatus
 from utils.logging import logger
 
 from .clusters import assign_cluster, schedule_summary
@@ -84,21 +84,19 @@ async def _title(need_id: uuid.UUID, need_text: str) -> str | None:
     return result.title.strip()[:80] or None
 
 
-async def _attach(
-    session: AsyncSession, need: Need, vector: list[float]
-) -> NeedCluster:
-    need.embedding = vector
-    need.category_slug = need.category_slug or await category_for(session, vector)
-    session.add(need)
-    await session.flush()
-    cluster = await assign_cluster(session, need, title=need.title or "")
-    connection = await session.connection()
-    await connection.execute(SCORE_SQL, {"need_id": need.id})
-    return cluster
+async def _title_vector(need_id: uuid.UUID, title: str) -> list[float] | None:
+    try:
+        return (await embed_titles([title], kind="embed_need_title"))[0]
+    except (AiUnavailableError, AiBudgetExceededError):
+        logger.warning("need %s waits for a group, retry later", need_id)
+        return None
 
 
 async def _save(
-    need_id: uuid.UUID, vector: list[float], title: str | None
+    need_id: uuid.UUID,
+    vector: list[float],
+    title: str | None,
+    title_vector: list[float] | None,
 ) -> tuple[Need, NeedCluster | None] | None:
     async with session_scope() as session:
         need = await session.get(Need, need_id)
@@ -106,10 +104,29 @@ async def _save(
             return None
         if title:
             need.title = title
-        attached = (
-            None if need.embedding is not None else await _attach(session, need, vector)
-        )
+        fresh = need.embedding is None
+        if fresh:
+            need.embedding = vector
+            need.category_slug = need.category_slug or await category_for(
+                session, vector
+            )
         session.add(need)
+        await session.flush()
+        attached = None
+        if (
+            need.cluster_id is None
+            and need.status != NeedStatus.JUNK
+            and title_vector is not None
+        ):
+            try:
+                attached = await assign_cluster(
+                    session, need, title=need.title or "", title_vector=title_vector
+                )
+            except (AiUnavailableError, AiBudgetExceededError):
+                logger.warning("need %s waits for a group, retry later", need_id)
+        if fresh:
+            connection = await session.connection()
+            await connection.execute(SCORE_SQL, {"need_id": need.id})
         await session.commit()
         await session.refresh(need)
         if attached is not None:
@@ -129,21 +146,25 @@ async def enrich_need(need_id: uuid.UUID) -> bool:
         need_text = need.text
         vector = list(need.embedding) if need.embedding is not None else None
         wants_title = need.title in {None, "", first_words(need.text)}
+        title = need.title
+        grouped = need.cluster_id is not None or need.status == NeedStatus.JUNK
     if vector is None:
         try:
             vector = await embed_query(need_text, kind="embed_need")
         except (AiUnavailableError, AiBudgetExceededError):
             logger.warning("need %s left without embedding, retry later", need_id)
             return False
-    title = await _title(need_id, need_text) if wants_title else None
-    saved = await _save(need_id, vector, title)
+    new_title = await _title(need_id, need_text) if wants_title else None
+    title = new_title or title or first_words(need_text)
+    title_vector = None if grouped else await _title_vector(need_id, title)
+    saved = await _save(need_id, vector, new_title, title_vector)
     if saved is None:
         return True
     need, cluster = saved
     bus.publish("need.updated", need_payload(need, cluster, await _matches(need_id)))
     if cluster is not None and cluster.summary_stale:
         schedule_summary(cluster.id)
-    return True
+    return need.cluster_id is not None or need.status == NeedStatus.JUNK
 
 
 async def _guarded(need_id: uuid.UUID) -> bool:
@@ -177,7 +198,13 @@ async def pending_needs() -> list[uuid.UUID]:
                 await session.exec(
                     select(Need.id)
                     .where(
-                        col(Need.embedding).is_(None),
+                        or_(
+                            col(Need.embedding).is_(None),
+                            and_(
+                                col(Need.cluster_id).is_(None),
+                                col(Need.status) != NeedStatus.JUNK,
+                            ),
+                        ),
                         col(Need.created_at) <= now - SWEEP_MIN_AGE,
                         col(Need.created_at) >= now - SWEEP_MAX_AGE,
                     )

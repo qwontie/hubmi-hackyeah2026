@@ -6,7 +6,7 @@ from sqlmodel import col, delete
 
 from api.routers.api.public.match import log_search
 from services.dialogue import inbox
-from services.needs import attach_need, clusters, create_need, detach_need, service
+from services.needs import attach_need, clusters, create_need, detach_need, enrich
 from services.needs.service import SearchOutcome
 from services.stats.queries import collect
 from services.stats.schemas import Period
@@ -24,30 +24,48 @@ def lonely_vector() -> list[float]:
     return vector
 
 
-@pytest.fixture(autouse=True)
-def quiet(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(service, "schedule_enrichment", lambda _: None)
-    monkeypatch.setattr(service, "schedule_summary", lambda _: None)
-
-
-async def registered(created_needs: list[uuid.UUID], vector: list[float]) -> Need:
+async def registered(
+    created_needs: list[uuid.UUID],
+    vector: list[float],
+    fake_ai: dict[str, str],
+    title: str | None = None,
+) -> Need:
+    marker = uuid.uuid4().hex
+    fake_ai[marker] = title or f"Zakupy dla sąsiadki {marker}"
     async with session_scope() as session:
         outcome = await create_need(
             session,
-            f"Nie ma kto pomóc sąsiadce w zakupach {uuid.uuid4().hex}",
+            f"Nie ma kto pomóc sąsiadce w zakupach {marker}",
             powiat=None,
             contact_email=None,
             vector=vector,
         )
     created_needs.append(outcome.need.id)
-    return outcome.need
+    assert outcome.cluster is None
+    assert await enrich.enrich_need(outcome.need.id) is True
+    async with session_scope() as session:
+        need = await session.get(Need, outcome.need.id)
+    assert need is not None
+    return need
+
+
+async def test_same_problem_shares_a_group_other_problems_do_not(
+    created_needs: list[uuid.UUID], fake_ai: dict[str, str]
+) -> None:
+    title = f"Brak pomocy w zakupach {uuid.uuid4().hex}"
+    first = await registered(created_needs, lonely_vector(), fake_ai, title)
+    second = await registered(created_needs, lonely_vector(), fake_ai, title)
+    other = await registered(created_needs, lonely_vector(), fake_ai)
+    assert first.cluster_id is not None
+    assert second.cluster_id == first.cluster_id
+    assert other.cluster_id not in {None, first.cluster_id}
 
 
 async def test_junk_leaves_the_group_and_every_count(
-    created_needs: list[uuid.UUID],
+    created_needs: list[uuid.UUID], fake_ai: dict[str, str]
 ) -> None:
     vector = lonely_vector()
-    need = await registered(created_needs, vector)
+    need = await registered(created_needs, vector, fake_ai)
     assert need.cluster_id is not None
     cluster_id = need.cluster_id
     async with session_scope() as session:
@@ -79,9 +97,11 @@ async def test_junk_leaves_the_group_and_every_count(
 
 
 async def test_staff_title_survives_the_summary(
-    monkeypatch: pytest.MonkeyPatch, created_needs: list[uuid.UUID]
+    monkeypatch: pytest.MonkeyPatch,
+    created_needs: list[uuid.UUID],
+    fake_ai: dict[str, str],
 ) -> None:
-    need = await registered(created_needs, lonely_vector())
+    need = await registered(created_needs, lonely_vector(), fake_ai)
     assert need.cluster_id is not None
 
     async def summarized(*_: Any, **__: Any) -> clusters.ClusterSummary:

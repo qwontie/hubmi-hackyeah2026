@@ -2,6 +2,7 @@ import math
 import time
 from collections.abc import Sequence
 from functools import cache
+from typing import Literal
 
 from pydantic_ai import Embedder
 from pydantic_ai.embeddings.google import GoogleEmbeddingModel, GoogleEmbeddingSettings
@@ -26,6 +27,18 @@ def embedder() -> Embedder:
     )
 
 
+@cache
+def title_embedder() -> Embedder:
+    return Embedder(
+        GoogleEmbeddingModel(EMBEDDING_MODEL, provider=google_provider()),
+        settings=GoogleEmbeddingSettings(
+            dimensions=EMBEDDING_DIMENSIONS,
+            truncate=True,
+            google_task_type="SEMANTIC_SIMILARITY",
+        ),
+    )
+
+
 def normalize(vector: Sequence[float]) -> list[float]:
     norm = math.sqrt(sum(x * x for x in vector))
     if norm == 0:
@@ -37,7 +50,9 @@ def cosine(a: Sequence[float], b: Sequence[float]) -> float:
     return sum(x * y for x, y in zip(a, b, strict=True))
 
 
-async def _embed(texts: list[str], *, kind: str, query: bool) -> list[list[float]]:
+async def _embed(
+    texts: list[str], *, kind: str, mode: Literal["query", "document", "title"]
+) -> list[list[float]]:
     await ensure_budget()
     vectors: list[list[float]] = []
     for start in range(0, len(texts), BATCH_SIZE):
@@ -45,8 +60,10 @@ async def _embed(texts: list[str], *, kind: str, query: bool) -> list[list[float
         tokens = sum(len(t) for t in batch) // CHARS_PER_TOKEN
         started = time.perf_counter()
         try:
-            if query:
+            if mode == "query":
                 result = await embedder().embed_query(batch)
+            elif mode == "title":
+                result = await title_embedder().embed_documents(batch)
             else:
                 result = await embedder().embed_documents(batch)
         except Exception as e:
@@ -73,12 +90,16 @@ async def _embed(texts: list[str], *, kind: str, query: bool) -> list[list[float
 
 
 async def embed_documents(texts: list[str], *, kind: str) -> list[list[float]]:
-    return await _embed(texts, kind=kind, query=False)
+    return await _embed(texts, kind=kind, mode="document")
 
 
 async def embed_queries(texts: list[str], *, kind: str) -> list[list[float]]:
-    return await _embed(texts, kind=kind, query=True)
+    return await _embed(texts, kind=kind, mode="query")
 
 
 async def embed_query(text: str, *, kind: str) -> list[float]:
     return (await embed_queries([text], kind=kind))[0]
+
+
+async def embed_titles(texts: list[str], *, kind: str) -> list[list[float]]:
+    return await _embed(texts, kind=kind, mode="title")

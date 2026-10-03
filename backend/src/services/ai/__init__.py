@@ -1,5 +1,5 @@
 from .costs import AiBudgetExceededError, ensure_budget, log_ai_call
-from .embeddings import embed_documents, embed_queries, embed_query
+from .embeddings import embed_documents, embed_queries, embed_query, embed_titles
 from .models import AiUnavailableError, chat_model, run_agent
 
 __all__ = [
@@ -9,6 +9,7 @@ __all__ = [
     "embed_documents",
     "embed_queries",
     "embed_query",
+    "embed_titles",
     "ensure_budget",
     "log_ai_call",
     "run_agent",

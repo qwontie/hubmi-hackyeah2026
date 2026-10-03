@@ -85,24 +85,14 @@ async def test_spent_budget_does_not_block_registration(
 
 
 async def test_need_is_enriched_later_when_the_model_is_back(
-    monkeypatch: pytest.MonkeyPatch,
-    created_needs: list[uuid.UUID],
-    no_background: list[uuid.UUID],
+    created_needs: list[uuid.UUID], fake_ai: dict[str, str]
 ) -> None:
-    async def embedded(*_: Any, **__: Any) -> list[float]:
-        return vector()
-
-    async def titled(*_: Any, **__: Any) -> enrich.NeedTitle:
-        return enrich.NeedTitle(title="Samotność starszego sąsiada")
-
     async with session_scope() as session:
         outcome = await create_need(
             session, unique_text(), powiat=None, contact_email=None
         )
         created_needs.append(outcome.need.id)
-    assert no_background == [outcome.need.id]
-    monkeypatch.setattr(enrich, "embed_query", embedded)
-    monkeypatch.setattr(enrich, "run_agent", titled)
+    fake_ai["Sąsiad zostaje sam"] = "Samotność starszego sąsiada"
     async with bus.subscribe() as queue:
         assert await enrich.enrich_need(outcome.need.id) is True
         message = queue.get_nowait()

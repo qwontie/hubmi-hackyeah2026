@@ -9,7 +9,12 @@ from sqlalchemy import text
 from sqlmodel import col, func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from services.ai import AiUnavailableError, run_agent
+from services.ai import (
+    AiBudgetExceededError,
+    AiUnavailableError,
+    embed_titles,
+    run_agent,
+)
 from services.ai.embeddings import normalize
 from services.bus import bus
 from services.search.vector import cosine_distance
@@ -21,6 +26,8 @@ from utils.logging import logger
 from .payloads import cluster_payload
 
 CLUSTER_SIMILARITY = 0.80
+TITLE_SIMILARITY = 0.88
+TITLE_BATCH = 100
 SIMILAR_NEED = 0.80
 CLUSTER_LOCK_KEY = 0x48554D32
 SUMMARY_SIZES = frozenset({1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144})
@@ -95,24 +102,58 @@ def _mean(vectors: list[list[float]]) -> list[float] | None:
     return normalize([sum(v[i] for v in vectors) / len(vectors) for i in range(size)])
 
 
-async def assign_cluster(
-    session: AsyncSession, need: Need, *, title: str
-) -> NeedCluster:
-    await session.scalar(
-        text("SELECT pg_advisory_xact_lock(:key)"), {"key": CLUSTER_LOCK_KEY}
+async def fill_title_vectors(session: AsyncSession) -> None:
+    missing = list(
+        (
+            await session.exec(
+                select(NeedCluster)
+                .where(
+                    col(NeedCluster.title_embedding).is_(None),
+                    col(NeedCluster.size) > 0,
+                )
+                .limit(TITLE_BATCH)
+            )
+        ).all()
     )
-    vector = list(need.embedding or [])
-    distance = cosine_distance(NeedCluster.centroid, vector)
-    nearest = (
+    if not missing:
+        return
+    vectors = await embed_titles(
+        [cluster.title for cluster in missing], kind="embed_cluster_title"
+    )
+    for cluster, vector in zip(missing, vectors, strict=True):
+        cluster.title_embedding = vector
+        session.add(cluster)
+    await session.flush()
+
+
+async def nearest_by_title(
+    session: AsyncSession, title_vector: list[float]
+) -> tuple[NeedCluster, float] | None:
+    distance = cosine_distance(NeedCluster.title_embedding, title_vector)
+    found = (
         await session.exec(
             select(NeedCluster, distance)
-            .where(col(NeedCluster.centroid).is_not(None))
+            .where(col(NeedCluster.title_embedding).is_not(None))
             .order_by(distance)
             .limit(1)
         )
     ).first()
+    if found is None:
+        return None
+    return found[0], 1 - float(found[1])
+
+
+async def assign_cluster(
+    session: AsyncSession, need: Need, *, title: str, title_vector: list[float]
+) -> NeedCluster:
+    await session.scalar(
+        text("SELECT pg_advisory_xact_lock(:key)"), {"key": CLUSTER_LOCK_KEY}
+    )
+    await fill_title_vectors(session)
+    vector = list(need.embedding or [])
+    nearest = await nearest_by_title(session, title_vector)
     now = datetime.now(UTC)
-    if nearest is not None and 1 - float(nearest[1]) >= CLUSTER_SIMILARITY:
+    if nearest is not None and nearest[1] >= TITLE_SIMILARITY:
         cluster = nearest[0]
         old = list(cluster.centroid or vector)
         weight = cluster.size
@@ -122,7 +163,12 @@ async def assign_cluster(
         cluster.size += 1
     else:
         cluster = NeedCluster(
-            title=title, summary="", centroid=vector, size=1, category_slug=None
+            title=title,
+            summary="",
+            centroid=vector,
+            size=1,
+            category_slug=None,
+            title_embedding=title_vector,
         )
     cluster.last_need_at = now
     if need.category_slug and not cluster.category_slug:
@@ -172,9 +218,16 @@ async def detach_need(session: AsyncSession, need: Need) -> NeedCluster | None:
 
 
 async def attach_need(session: AsyncSession, need: Need) -> NeedCluster | None:
-    if need.cluster_id is not None or need.embedding is None:
+    if need.cluster_id is not None or need.embedding is None or not need.title:
         return None
-    return await assign_cluster(session, need, title=need.title or "")
+    try:
+        title_vector = (await embed_titles([need.title], kind="embed_need_title"))[0]
+        return await assign_cluster(
+            session, need, title=need.title, title_vector=title_vector
+        )
+    except (AiUnavailableError, AiBudgetExceededError):
+        logger.warning("need %s waits for a group until the model is back", need.id)
+        return None
 
 
 async def _members(session: AsyncSession, cluster_id: uuid.UUID) -> list[Need]:
@@ -209,8 +262,10 @@ async def _summarize(cluster_id: uuid.UUID) -> tuple[bool, NeedCluster | None]:
             return True, None
         if {need.id for need in await _members(session, cluster_id)} != snapshot:
             return False, cluster
-        if not cluster.title_locked:
-            cluster.title = result.title.strip()[:80] or cluster.title
+        title = result.title.strip()[:80]
+        if title and not cluster.title_locked and title != cluster.title:
+            cluster.title = title
+            cluster.title_embedding = None
         cluster.summary = result.summary.strip()
         cluster.summary_size = len(snapshot)
         cluster.summary_stale = False

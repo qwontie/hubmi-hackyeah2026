@@ -7,7 +7,12 @@ from sqlalchemy import text as sql
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from services.ai import AiBudgetExceededError, AiUnavailableError, embed_query
+from services.ai import (
+    AiBudgetExceededError,
+    AiUnavailableError,
+    embed_query,
+    embed_titles,
+)
 from services.bus import bus
 from services.search import (
     Hit,
@@ -169,7 +174,10 @@ async def match_need(
     )
     session.add(need)
     await session.flush()
-    cluster = await assign_cluster(session, need, title=title)
+    title_vector = (await embed_titles([title], kind="embed_need_title"))[0]
+    cluster = await assign_cluster(
+        session, need, title=title, title_vector=title_vector
+    )
     for rank, result in enumerate(results, start=1):
         session.add(
             MatchResult(
@@ -338,21 +346,17 @@ async def create_need(  # noqa: PLR0913
     session.add(need)
     await session.flush()
     hits: list[Hit] = []
-    cluster: NeedCluster | None = None
     similar = 0
     if vector is not None:
         hits = await hybrid_search(session, text, vector, limit=CANDIDATES)
         need.category_slug = await category_for(session, vector)
         similar = await similar_count(session, vector, exclude=need.id)
-        cluster = await assign_cluster(session, need, title=need.title or "")
     await _store_shown(session, need, shown, hits)
     await session.commit()
     await session.refresh(need)
-    if cluster is not None:
-        await session.refresh(cluster)
-    _publish_created(need, cluster, await stored_match_refs(session, need.id))
+    _publish_created(need, None, await stored_match_refs(session, need.id))
     schedule_enrichment(need.id)
-    return FormOutcome(need=need, token=token, similar_count=similar, cluster=cluster)
+    return FormOutcome(need=need, token=token, similar_count=similar, cluster=None)
 
 
 async def update_need(  # noqa: PLR0913
