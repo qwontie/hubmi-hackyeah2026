@@ -1,3 +1,4 @@
+import hmac
 import uuid
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -9,6 +10,8 @@ from sqlmodel import col
 from sqlmodel import select as entity_select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from services.needs import hash_token
+from services.needs.tokens import new_token
 from services.signing import key_matches, signed_key
 from utils.db.models import ApplicationStatus, GrantApplication, GrantCall, Idea
 
@@ -21,9 +24,28 @@ from .schemas import (
     ApplicationSection,
     GrantSection,
     IdeaRef,
+    SectionSource,
 )
 
 PDF_CONTEXT = "application-pdf"
+SOURCES: frozenset[str] = frozenset({"idea", "ai", "author"})
+IDEA_FIELDS: dict[str, str] = {
+    "title": "title",
+    "description": "essence",
+    "recipients": "for_whom",
+}
+CANVAS_FIELDS: dict[str, str] = {
+    "diagnosis": "problem",
+    "novelty": "novelty",
+    "testing": "micro_test",
+    "change": "measures",
+    "team": "partners",
+    "preparation": "resources",
+}
+
+
+class NothingToDraftError(ValueError):
+    pass
 
 
 class SectionError(ValueError):
@@ -54,12 +76,24 @@ def stored(application: GrantApplication, key: str) -> dict[str, Any]:
     return raw if isinstance(raw, dict) else {}
 
 
+def source_of(raw: dict[str, Any], text: str) -> SectionSource:
+    if not text.strip():
+        return "empty"
+    source = raw.get("source")
+    if source == "idea":
+        return "idea"
+    if source == "author":
+        return "author"
+    return "ai"
+
+
 def section_views(
     application: GrantApplication, sections: Sequence[GrantSection]
 ) -> list[ApplicationSection]:
     views = []
     for section in sections:
         raw = stored(application, section.key)
+        text = str(raw.get("text") or "")
         views.append(
             ApplicationSection(
                 key=section.key,
@@ -67,18 +101,16 @@ def section_views(
                 hint=section.hint,
                 max_length=section.max_length,
                 required=section.required,
-                text=str(raw.get("text") or ""),
+                text=text,
                 missing=[str(item) for item in raw.get("missing") or []],
-                source="author" if raw.get("source") == "author" else "ai",
+                source=source_of(raw, text),
             )
         )
     return views
 
 
 def incomplete(view_: ApplicationSection) -> bool:
-    if not view_.text.strip():
-        return True
-    return view_.source == "ai" and bool(view_.missing)
+    return not view_.text.strip()
 
 
 def missing_required(views: Sequence[ApplicationSection]) -> list[str]:
@@ -89,13 +121,40 @@ def idea_ref(idea: Idea) -> IdeaRef:
     return IdeaRef(id=idea.id, number=idea.number or 0, title=idea.title)
 
 
-def view(application: GrantApplication, call: GrantCall, idea: Idea) -> ApplicationOut:
+def token_opens_application(application: GrantApplication, token: str | None) -> bool:
+    if not token or application.edit_token_hash is None:
+        return False
+    return hmac.compare_digest(hash_token(token), application.edit_token_hash)
+
+
+def issue_token(application: GrantApplication) -> str:
+    token, token_hash = new_token()
+    application.edit_token_hash = token_hash
+    return token
+
+
+def set_contact(
+    application: GrantApplication, *, email: str | None, consent: bool | None
+) -> None:
+    if consent is False or (email is not None and not email):
+        application.contact_email = None
+        application.contact_consent = False
+    elif email:
+        application.contact_email = email
+        application.contact_consent = True
+
+
+def view(
+    application: GrantApplication, call: GrantCall, idea: Idea | None
+) -> ApplicationOut:
     views = section_views(application, sections_of(call))
     return ApplicationOut(
         id=application.id,
         number=application.number or 0,
         call=ref(call),
-        idea=idea_ref(idea),
+        idea=idea_ref(idea) if idea else None,
+        contact_email=application.contact_email,
+        contact_consent=application.contact_consent,
         status=application.status,
         sections=views,
         missing_required=missing_required(views),
@@ -111,13 +170,15 @@ def view(application: GrantApplication, call: GrantCall, idea: Idea) -> Applicat
 
 async def load(
     session: AsyncSession, application_id: uuid.UUID
-) -> tuple[GrantApplication, GrantCall, Idea] | None:
+) -> tuple[GrantApplication, GrantCall, Idea | None] | None:
     application = await session.get(GrantApplication, application_id)
     if application is None:
         return None
     call = await session.get(GrantCall, application.call_id)
-    idea = await session.get(Idea, application.idea_id)
-    if call is None or idea is None:
+    if call is None:
+        return None
+    idea = await session.get(Idea, application.idea_id) if application.idea_id else None
+    if application.idea_id is not None and idea is None:
         return None
     return application, call, idea
 
@@ -151,34 +212,70 @@ def apply_draft(
     application.sections = sections
 
 
+def idea_copy(idea: Idea, sections: Sequence[GrantSection]) -> dict[str, Any]:
+    canvas = idea.canvas or {}
+    copied: dict[str, Any] = {}
+    for section in sections:
+        if section.key in IDEA_FIELDS:
+            value = getattr(idea, IDEA_FIELDS[section.key])
+        else:
+            value = canvas.get(CANVAS_FIELDS.get(section.key, section.key))
+        text = " ".join(str(value or "").split())[: section.max_length]
+        if text:
+            copied[section.key] = {"text": text, "missing": [], "source": "idea"}
+    return copied
+
+
+def author_answers(
+    application: GrantApplication, sections: Sequence[GrantSection]
+) -> str:
+    lines = []
+    for section in sections:
+        text = str(stored(application, section.key).get("text") or "").strip()
+        if text:
+            lines.append(f"{section.label}: {text}")
+    return "\n".join(lines)
+
+
 async def start(
-    session: AsyncSession, call: GrantCall, idea: Idea
-) -> tuple[GrantApplication, bool]:
-    existing = await find(session, call.id, idea.id)
-    if existing is not None:
-        return existing, False
-    await session.commit()
-    draft, model = await draft_sections(call, sections_of(call), idea)
-    application = GrantApplication(call_id=call.id, idea_id=idea.id, model=model)
-    apply_draft(application, draft, None)
+    session: AsyncSession, call: GrantCall, idea: Idea | None
+) -> tuple[GrantApplication, str, bool]:
+    if idea is not None:
+        existing = await find(session, call.id, idea.id)
+        if existing is not None:
+            token = issue_token(existing)
+            session.add(existing)
+            await session.commit()
+            await session.refresh(existing)
+            return existing, token, False
+    application = GrantApplication(
+        call_id=call.id,
+        idea_id=idea.id if idea else None,
+        sections=idea_copy(idea, sections_of(call)) if idea else {},
+    )
+    token = issue_token(application)
     session.add(application)
     try:
         await session.commit()
     except IntegrityError:
         await session.rollback()
-        existing = await find(session, call.id, idea.id)
+        existing = await find(session, call.id, idea.id) if idea else None
         if existing is None:
             raise
-        return existing, False
+        token = issue_token(existing)
+        session.add(existing)
+        await session.commit()
+        await session.refresh(existing)
+        return existing, token, False
     await session.refresh(application)
-    return application, True
+    return application, token, True
 
 
-async def redraft(
+async def suggest(
     session: AsyncSession,
     application: GrantApplication,
     call: GrantCall,
-    idea: Idea,
+    idea: Idea | None,
     keys: Sequence[str] | None,
 ) -> GrantApplication:
     sections = sections_of(call)
@@ -189,8 +286,11 @@ async def redraft(
         if unknown:
             error = unknown_section(f"keys.{unknown[0]}")
             raise error
+    answers = author_answers(application, sections)
+    if idea is None and not answers:
+        raise NothingToDraftError
     await session.commit()
-    draft, model = await draft_sections(call, sections, idea)
+    draft, model = await draft_sections(call, sections, idea, answers)
     apply_draft(application, draft, wanted)
     application.model = model
     session.add(application)
@@ -245,14 +345,14 @@ def mark_submitted(application: GrantApplication) -> None:
 
 
 def summary(
-    application: GrantApplication, call: GrantCall, idea: Idea
+    application: GrantApplication, call: GrantCall, idea: Idea | None
 ) -> AdminApplicationSummary:
     views = section_views(application, sections_of(call))
     return AdminApplicationSummary(
         id=application.id,
         number=application.number or 0,
         call_id=call.id,
-        idea=idea_ref(idea),
+        idea=idea_ref(idea) if idea else None,
         status=application.status,
         missing_required=missing_required(views),
         submitted_at=application.submitted_at,
@@ -261,11 +361,11 @@ def summary(
 
 
 def admin_view(
-    application: GrantApplication, call: GrantCall, idea: Idea
+    application: GrantApplication, call: GrantCall, idea: Idea | None
 ) -> AdminApplication:
     return AdminApplication(
         **view(application, call, idea).model_dump(),
-        idea_contact=bool(idea.contact_email and idea.contact_consent),
+        idea_contact=bool(idea and idea.contact_email and idea.contact_consent),
     )
 
 
@@ -284,7 +384,7 @@ async def list_for_call(
     )
     rows = await session.exec(
         entity_select(GrantApplication, Idea)
-        .join(Idea, col(Idea.id) == col(GrantApplication.idea_id))
+        .outerjoin(Idea, col(Idea.id) == col(GrantApplication.idea_id))
         .where(*filters)
         .order_by(
             col(GrantApplication.submitted_at).desc().nulls_last(),

@@ -13,6 +13,7 @@ from services.dialogue.service import token_opens
 from services.grants import applications, calls, notify
 from services.grants.pdf import render
 from services.grants.schemas import (
+    ApplicationCreated,
     ApplicationOut,
     GrantCallOut,
     Phase,
@@ -24,6 +25,7 @@ from services.grants.schemas import (
     TokenIn,
 )
 from services.mail import Mailer
+from services.modules.text import EMAIL as EMAIL_PATTERN
 from utils.db.models import (
     ApplicationStatus,
     GrantApplication,
@@ -48,8 +50,13 @@ LOCKED = "Wniosek został już złożony i nie można go zmieniać."
 CONSENT = "Zaznacz zgodę, abyśmy mogli wysyłać powiadomienia."
 EMAIL = "Wpisz poprawny adres e-mail."
 LINK_INVALID = "Ten link jest nieprawidłowy albo wygasł."
+NOTHING_TO_DRAFT = "Napisz najpierw kilka zdań w dowolnej sekcji wniosku."
+CONTACT_CONSENT = "Zaznacz zgodę na kontakt, jeśli podajesz adres e-mail."
 
 IdeaToken = Annotated[str | None, Header(alias="X-Idea-Token", max_length=200)]
+ApplicationToken = Annotated[
+    str | None, Header(alias="X-Application-Token", max_length=200)
+]
 PdfKey = Annotated[str | None, Query(max_length=64, pattern=r"^[A-Za-z0-9_-]*$")]
 ReadLimited = Annotated[None, Depends(read_limit)]
 
@@ -69,13 +76,36 @@ async def published_call(session: AsyncSession, call_id: uuid.UUID) -> GrantCall
     return call
 
 
+def opens(
+    application: GrantApplication,
+    idea: Idea | None,
+    application_token: str | None,
+    idea_token: str | None,
+) -> bool:
+    if applications.token_opens_application(application, application_token):
+        return True
+    return idea is not None and token_opens(idea, idea_token)
+
+
 async def owned_application(
-    session: AsyncSession, application_id: uuid.UUID, token: str | None
-) -> tuple[GrantApplication, GrantCall, Idea]:
+    session: AsyncSession,
+    application_id: uuid.UUID,
+    application_token: str | None,
+    idea_token: str | None,
+) -> tuple[GrantApplication, GrantCall, Idea | None]:
     found = await applications.load(session, application_id)
-    if found is None or not token_opens(found[2], token):
+    if found is None or not opens(found[0], found[2], application_token, idea_token):
         raise not_found(APPLICATION_MISSING)
     return found
+
+
+def check_contact(*, email: str | None, consent: bool | None) -> None:
+    if email and not consent:
+        error = invalid("contact_consent", CONTACT_CONSENT)
+        raise error
+    if email and not EMAIL_PATTERN.match(email):
+        error = invalid("contact_email", EMAIL)
+        raise error
 
 
 def section_error(error: applications.SectionError) -> ApiError:
@@ -135,34 +165,45 @@ async def unsubscribe(
     return SubscriptionOut(status="unsubscribed")
 
 
-@router.post("/grant-calls/{call_id}/applications", status_code=status.HTTP_201_CREATED)
-async def start_application(  # noqa: PLR0913
+@router.post(
+    "/grant-calls/{call_id}/applications",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(edit_limit)],
+)
+async def start_application(
     *,
     call_id: uuid.UUID,
     body: StartIn,
-    request: Request,
     response: Response,
     session: FromDishka[AsyncSession],
     x_idea_token: IdeaToken = None,
-) -> ApplicationOut:
+) -> ApplicationCreated:
     call = await published_call(session, call_id)
-    idea = await session.get(Idea, body.idea_id)
-    if idea is None or not token_opens(idea, x_idea_token):
-        raise not_found(IDEA_MISSING)
-    existing = await applications.find(session, call.id, idea.id)
-    if existing is not None:
-        response.status_code = status.HTTP_200_OK
-        return applications.view(existing, call, idea)
-    if not calls.is_open(call):
+    check_contact(email=body.contact_email, consent=body.contact_consent)
+    idea = None
+    if body.idea_id is not None:
+        idea = await session.get(Idea, body.idea_id)
+        if idea is None or not token_opens(idea, x_idea_token):
+            raise not_found(IDEA_MISSING)
+        existing = await applications.find(session, call.id, idea.id)
+        if existing is None and not calls.is_open(call):
+            raise call_not_open()
+    elif not calls.is_open(call):
         raise call_not_open()
-    draft_limit.check(client_ip(request))
-    async with ai_guard():
-        application, created = await applications.start(session, call, idea)
-    await session.refresh(call)
-    await session.refresh(idea)
+    application, token, created = await applications.start(session, call, idea)
+    if body.contact_email is not None or body.contact_consent is not None:
+        applications.set_contact(
+            application, email=body.contact_email, consent=body.contact_consent
+        )
+        session.add(application)
+        await session.commit()
+    for row in (application, call, *([idea] if idea else [])):
+        await session.refresh(row)
     if not created:
         response.status_code = status.HTTP_200_OK
-    return applications.view(application, call, idea)
+    return ApplicationCreated(
+        **applications.view(application, call, idea).model_dump(), edit_token=token
+    )
 
 
 @router.get("/applications/{application_id}")
@@ -170,10 +211,11 @@ async def get_application(
     application_id: uuid.UUID,
     session: FromDishka[AsyncSession],
     _: ReadLimited,
+    x_application_token: ApplicationToken = None,
     x_idea_token: IdeaToken = None,
 ) -> ApplicationOut:
     application, call, idea = await owned_application(
-        session, application_id, x_idea_token
+        session, application_id, x_application_token, x_idea_token
     )
     return applications.view(application, call, idea)
 
@@ -183,34 +225,43 @@ async def edit_application(
     application_id: uuid.UUID,
     body: SectionsPatch,
     session: FromDishka[AsyncSession],
+    x_application_token: ApplicationToken = None,
     x_idea_token: IdeaToken = None,
 ) -> ApplicationOut:
     application, call, idea = await owned_application(
-        session, application_id, x_idea_token
+        session, application_id, x_application_token, x_idea_token
     )
     if application.status != ApplicationStatus.DRAFT:
         raise locked()
+    check_contact(email=body.contact_email, consent=body.contact_consent)
     try:
         applications.edit_sections(application, call, body.sections)
     except applications.SectionError as e:
         raise section_error(e) from None
+    if "contact_email" in body.model_fields_set or (
+        "contact_consent" in body.model_fields_set
+    ):
+        applications.set_contact(
+            application, email=body.contact_email, consent=body.contact_consent
+        )
     session.add(application)
     await session.commit()
-    for row in (application, call, idea):
+    for row in (application, call, *([idea] if idea else [])):
         await session.refresh(row)
     return applications.view(application, call, idea)
 
 
-@router.post("/applications/{application_id}/redraft")
-async def redraft_application(
+async def run_suggest(  # noqa: PLR0913
+    *,
     application_id: uuid.UUID,
     body: RedraftIn,
     request: Request,
-    session: FromDishka[AsyncSession],
-    x_idea_token: IdeaToken = None,
+    session: AsyncSession,
+    application_token: str | None,
+    idea_token: str | None,
 ) -> ApplicationOut:
     application, call, idea = await owned_application(
-        session, application_id, x_idea_token
+        session, application_id, application_token, idea_token
     )
     if application.status != ApplicationStatus.DRAFT:
         raise locked()
@@ -219,14 +270,59 @@ async def redraft_application(
     draft_limit.check(client_ip(request))
     async with ai_guard():
         try:
-            application = await applications.redraft(
+            application = await applications.suggest(
                 session, application, call, idea, body.keys
             )
         except applications.SectionError as e:
             raise section_error(e) from None
+        except applications.NothingToDraftError:
+            raise ApiError(
+                status.HTTP_409_CONFLICT, "nothing_to_draft", NOTHING_TO_DRAFT
+            ) from None
     await session.refresh(call)
-    await session.refresh(idea)
+    if idea is not None:
+        await session.refresh(idea)
     return applications.view(application, call, idea)
+
+
+@router.post("/applications/{application_id}/suggest")
+async def suggest_application(  # noqa: PLR0913
+    *,
+    application_id: uuid.UUID,
+    body: RedraftIn,
+    request: Request,
+    session: FromDishka[AsyncSession],
+    x_application_token: ApplicationToken = None,
+    x_idea_token: IdeaToken = None,
+) -> ApplicationOut:
+    return await run_suggest(
+        application_id=application_id,
+        body=body,
+        request=request,
+        session=session,
+        application_token=x_application_token,
+        idea_token=x_idea_token,
+    )
+
+
+@router.post("/applications/{application_id}/redraft")
+async def redraft_application(  # noqa: PLR0913
+    *,
+    application_id: uuid.UUID,
+    body: RedraftIn,
+    request: Request,
+    session: FromDishka[AsyncSession],
+    x_application_token: ApplicationToken = None,
+    x_idea_token: IdeaToken = None,
+) -> ApplicationOut:
+    return await run_suggest(
+        application_id=application_id,
+        body=body,
+        request=request,
+        session=session,
+        application_token=x_application_token,
+        idea_token=x_idea_token,
+    )
 
 
 @router.post(
@@ -235,10 +331,11 @@ async def redraft_application(
 async def submit_application(
     application_id: uuid.UUID,
     session: FromDishka[AsyncSession],
+    x_application_token: ApplicationToken = None,
     x_idea_token: IdeaToken = None,
 ) -> ApplicationOut:
     application, call, idea = await owned_application(
-        session, application_id, x_idea_token
+        session, application_id, x_application_token, x_idea_token
     )
     if application.status != ApplicationStatus.DRAFT:
         raise locked()
@@ -255,7 +352,7 @@ async def submit_application(
     applications.mark_submitted(application)
     session.add(application)
     await session.commit()
-    for row in (application, call, idea):
+    for row in (application, call, *([idea] if idea else [])):
         await session.refresh(row)
     bus.publish(
         "application.submitted",
@@ -273,6 +370,7 @@ async def export_pdf(
     application_id: uuid.UUID,
     session: FromDishka[AsyncSession],
     key: PdfKey = None,
+    x_application_token: ApplicationToken = None,
     x_idea_token: IdeaToken = None,
 ) -> Response:
     found = await applications.load(session, application_id)
@@ -281,7 +379,7 @@ async def export_pdf(
     application, call, idea = found
     if not (
         applications.pdf_key_matches(application.id, key)
-        or token_opens(idea, x_idea_token)
+        or opens(application, idea, x_application_token, x_idea_token)
     ):
         raise not_found(APPLICATION_MISSING)
     content = render(applications.view(application, call, idea))

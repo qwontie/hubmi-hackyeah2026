@@ -19,6 +19,7 @@ KEY_PATTERN = r"^[a-z][a-z0-9_]{1,40}$"
 NO_NUL = r"^[^\x00]*$"
 Trimmed = StringConstraints(strip_whitespace=True, pattern=NO_NUL)
 Phase = Literal["upcoming", "open", "closed"]
+SectionSource = Literal["empty", "idea", "ai", "author"]
 
 
 class Strict(BaseModel):
@@ -137,14 +138,16 @@ class ApplicationSection(BaseModel):
     required: bool
     text: str
     missing: list[str]
-    source: Literal["ai", "author"]
+    source: SectionSource
 
 
 class ApplicationOut(BaseModel):
     id: uuid.UUID
     number: int
     call: CallRef
-    idea: IdeaRef
+    idea: IdeaRef | None
+    contact_email: str | None
+    contact_consent: bool
     status: ApplicationStatus
     sections: list[ApplicationSection]
     missing_required: list[str]
@@ -152,6 +155,10 @@ class ApplicationOut(BaseModel):
     submitted_at: datetime | None
     created_at: datetime
     updated_at: datetime
+
+
+class ApplicationCreated(ApplicationOut):
+    edit_token: str
 
 
 class AdminApplication(ApplicationOut):
@@ -162,7 +169,7 @@ class AdminApplicationSummary(BaseModel):
     id: uuid.UUID
     number: int
     call_id: uuid.UUID
-    idea: IdeaRef
+    idea: IdeaRef | None
     status: ApplicationStatus
     missing_required: list[str]
     submitted_at: datetime | None
@@ -183,15 +190,20 @@ class CallPage(BaseModel):
     per_page: int
 
 
-class StartIn(Strict):
-    idea_id: uuid.UUID
+class ContactIn(Strict):
+    contact_email: Annotated[str, Trimmed, Field(max_length=254)] | None = None
+    contact_consent: bool | None = None
 
 
-class SectionsPatch(Strict):
+class StartIn(ContactIn):
+    idea_id: uuid.UUID | None = None
+
+
+class SectionsPatch(ContactIn):
     sections: dict[
         Annotated[str, Field(pattern=KEY_PATTERN)],
         Annotated[str, Field(max_length=10000, pattern=NO_NUL)],
-    ] = Field(max_length=SECTIONS_MAX)
+    ] = Field(default_factory=dict, max_length=SECTIONS_MAX)
 
 
 class RedraftIn(Strict):

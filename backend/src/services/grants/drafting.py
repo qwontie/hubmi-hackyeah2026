@@ -19,7 +19,8 @@ INSTRUCTIONS = """
 Pomagasz autorowi pomysłu na innowację społeczną przygotować pierwszą wersję
 wniosku w konkretnym naborze grantowym Regionalnego Ośrodka Polityki Społecznej
 w Krakowie. Dostajesz NABÓR (tytuł, opis i sekcje wniosku z podpowiedziami)
-oraz POMYSŁ (fiszka i kanwa napisane przez autora).
+oraz POMYSŁ: fiszkę i kanwę napisane przez autora i albo odpowiedzi, które
+autor wpisał już we wniosku. Jedno z nich może być puste.
 
 Zasady, których nie wolno złamać:
 - Piszesz tylko na podstawie POMYSŁU. Możesz przeredagować, uporządkować
@@ -127,9 +128,12 @@ def clean(draft: Draft, sections: Sequence[GrantSection], sources: Sources) -> D
 
 
 async def draft_sections(
-    call: GrantCall, sections: Sequence[GrantSection], idea: Idea
+    call: GrantCall, sections: Sequence[GrantSection], idea: Idea | None, answers: str
 ) -> tuple[Draft, str]:
-    idea_part = full_idea_text(idea)
+    parts = [full_idea_text(idea)] if idea else []
+    if answers:
+        parts.append(f"Odpowiedzi autora we wniosku:\n{answers}")
+    idea_part = "\n\n".join(parts)
     sources = Sources(
         [
             idea_part,

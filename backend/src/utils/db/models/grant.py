@@ -104,13 +104,24 @@ class GrantApplication(SQLModel, table=True):
             index=True,
         )
     )
-    idea_id: uuid.UUID = Field(
+    idea_id: uuid.UUID | None = Field(
+        default=None,
         sa_column=Column(
             postgresql.UUID(as_uuid=True),
             ForeignKey("idea.id", ondelete="CASCADE"),
-            nullable=False,
+            nullable=True,
             index=True,
-        )
+        ),
+    )
+    edit_token_hash: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
+    contact_email: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
+    contact_consent: bool = Field(
+        default=False,
+        sa_column=Column(Boolean, nullable=False, server_default=sa_false()),
     )
     sections: dict[str, Any] = Field(
         default_factory=dict,

@@ -112,7 +112,9 @@ def render(application: ApplicationOut) -> bytes:
     call = application.call
     meta = [
         f"Nabór: od {local(call.opens_at)} do {local(call.closes_at)}",
-        f"Pomysł nr {application.idea.number}: {application.idea.title}",
+        f"Pomysł nr {application.idea.number}: {application.idea.title}"
+        if application.idea
+        else "Wniosek bez pomysłu w HubMi",
         f"Stan: {STATUS_NAMES.get(application.status, application.status)}",
     ]
     if application.submitted_at:

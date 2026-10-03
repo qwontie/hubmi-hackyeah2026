@@ -200,7 +200,7 @@ async def call_applications(
 
 async def application_or_404(
     session: AsyncSession, application_id: uuid.UUID
-) -> tuple[GrantApplication, GrantCall, Idea]:
+) -> tuple[GrantApplication, GrantCall, Idea | None]:
     found = await applications.load(session, application_id)
     if found is None:
         raise not_found(APPLICATION_MISSING)
