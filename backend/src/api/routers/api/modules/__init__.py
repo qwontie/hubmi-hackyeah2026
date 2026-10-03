@@ -1,9 +1,8 @@
 from fastapi import APIRouter
 
-from . import middleman, tester
+from . import kreator, middleman, tester
 
 router = APIRouter()
-router.include_router(tester.public)
-router.include_router(tester.admin, prefix="/admin")
-router.include_router(middleman.public)
-router.include_router(middleman.admin, prefix="/admin")
+for module in (tester, middleman, kreator):
+    router.include_router(module.public)
+    router.include_router(module.admin, prefix="/admin")

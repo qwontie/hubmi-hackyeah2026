@@ -4,6 +4,7 @@ from .admin_user import AdminUser
 from .ai_call import AiCall
 from .category import Category
 from .feedback import Feedback, FeedbackKind
+from .idea import Idea, IdeaStage, IdeaStatus
 from .import_run import ImportRun, ImportStatus, ImportTrigger
 from .innovation import EMBEDDING_DIMENSIONS, Innovation, InnovationStatus
 from .match_result import MatchResult
@@ -20,6 +21,9 @@ __all__ = [
     "Category",
     "Feedback",
     "FeedbackKind",
+    "Idea",
+    "IdeaStage",
+    "IdeaStatus",
     "ImportRun",
     "ImportStatus",
     "ImportTrigger",

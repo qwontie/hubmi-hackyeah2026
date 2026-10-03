@@ -9,7 +9,8 @@ from api.errors import not_found
 from api.limits import rate_limit
 from api.security import AdminPerson
 from services.bus import bus
-from services.modules import Page, token_matches
+from services.modules import Page
+from services.needs.tokens import token_matches
 from services.tester import (
     AdminFeedback,
     AdminTestSignup,
@@ -71,7 +72,7 @@ async def post_feedback(
     comment = optional_text("comment", body.comment)
     if body.need_id is not None:
         expected = await repository.need_token_hash(session, body.need_id)
-        if expected is None or not token_matches(expected, x_need_token):
+        if expected is None or not token_matches(x_need_token, expected):
             raise not_found(NEED_MISSING)
     feedback = await repository.add_vote(
         session,

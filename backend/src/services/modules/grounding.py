@@ -24,10 +24,11 @@ class Sources:
         self.numbers = _numbers(joined)
         self.legal = _legal(joined)
 
-    def invented(self, text: str) -> list[str]:
-        numbers = sorted(_numbers(text) - self.numbers)
+    def invented(self, text: str, *, numbers: bool = True) -> list[str]:
         legal = sorted(_legal(text) - self.legal)
-        return numbers + legal
+        if not numbers:
+            return legal
+        return sorted(_numbers(text) - self.numbers) + legal
 
     def clean_list(self, items: Iterable[str]) -> list[str]:
         return [item for item in items if not self.invented(item)]

@@ -41,6 +41,9 @@ adapt_limit = rate_limit("adapt", per_minute=3, per_day=20)
 
 PLACE_MIN = 2
 CONTEXT_MIN = 20
+OFF_TOPIC = (
+    "Opisz instytucję: kim są wasi odbiorcy, kto u was pracuje, jaki macie budżet."
+)
 ADAPTATION_MISSING = "Nie znaleziono tego planu."
 
 
@@ -73,7 +76,7 @@ async def adapt(
                 candidates=candidates,
             )
         except UnclearRequestError:
-            error = unclear("context")
+            error = unclear("context", OFF_TOPIC)
             raise error from None
     adaptation = await repository.store(
         session,

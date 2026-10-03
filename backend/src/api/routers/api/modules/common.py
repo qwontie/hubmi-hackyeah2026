@@ -23,6 +23,7 @@ from utils.logging import logger
 CONSENT_MESSAGE = "Zaznacz zgodę na kontakt, abyśmy mogli odpisać."
 EMAIL_MESSAGE = "Wpisz poprawny adres e-mail."
 UNCLEAR_MESSAGE = "Nie rozumiemy tego tekstu. Napisz kilka słów pełnymi zdaniami."
+NOISE_MESSAGE = "Ten tekst wygląda na przypadkowe znaki."
 INNOVATION_MISSING = "Nie znaleziono takiej innowacji."
 AI_MESSAGE = "Asystent jest chwilowo niedostępny. Spróbuj ponownie za kilka minut."
 POWIAT_MESSAGE = "Wybierz powiat z listy."
@@ -34,24 +35,28 @@ PerPage = Annotated[int, Query(ge=1, le=MAX_PER_PAGE)]
 ReadLimited = Annotated[None, Depends(read_limit)]
 
 
-def unclear(field: str) -> ApiError:
+def unclear(field: str, message: str = NOISE_MESSAGE) -> ApiError:
     return ApiError(
         status.HTTP_422_UNPROCESSABLE_CONTENT,
         "unclear_text",
         UNCLEAR_MESSAGE,
-        fields=[{"field": field, "message": "Ten tekst wygląda na przypadkowe znaki."}],
+        fields=[{"field": field, "message": message}],
+    )
+
+
+def text_too_short(field: str, minimum: int) -> ApiError:
+    return ApiError(
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+        "text_too_short",
+        f"Napisz co najmniej {minimum} znaków.",
+        fields=[{"field": field, "message": "Za krótki tekst."}],
     )
 
 
 def required_text(field: str, value: str, *, minimum: int) -> str:
     text = clean(value)
     if len(text) < minimum:
-        raise ApiError(
-            status.HTTP_422_UNPROCESSABLE_CONTENT,
-            "text_too_short",
-            f"Napisz co najmniej {minimum} znaków.",
-            fields=[{"field": field, "message": "Za krótki tekst."}],
-        )
+        raise text_too_short(field, minimum)
     if not is_meaningful(text):
         raise unclear(field)
     return text
