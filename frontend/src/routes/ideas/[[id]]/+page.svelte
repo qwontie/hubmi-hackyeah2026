@@ -39,13 +39,22 @@
 
   const id = $derived(page.params.id ?? null);
   const group = $derived(page.url.searchParams.get("status") ?? "all");
+  const problem = $derived(page.url.searchParams.get("problem"));
 
   function href(target: string | null, next: { group?: string } = {}) {
     const g = next.group ?? group;
     const path = target
       ? resolve("/ideas/[[id]]", { id: target })
       : resolve("/ideas/[[id]]", {});
-    return g === "all" ? path : `${path}?status=${g}`;
+    const params = new URLSearchParams();
+    if (g !== "all") {
+      params.set("status", g);
+    }
+    if (problem) {
+      params.set("problem", problem);
+    }
+    const q = params.toString();
+    return q ? `${path}?${q}` : path;
   }
 
   async function load() {
@@ -124,7 +133,16 @@
   ]);
 
   const visible = $derived(
-    ideas.filter((i) => group === "all" || i.status === group)
+    ideas.filter(
+      (i) =>
+        (group === "all" || i.status === group) &&
+        (!problem || i.problem_id === problem || i.problem?.id === problem)
+    )
+  );
+  const problemTitle = $derived(
+    problem
+      ? (ideas.find((i) => i.problem?.id === problem)?.problem?.title ?? null)
+      : null
   );
   const stageName = (slug: string) =>
     options?.stages.find((s) => s.slug === slug)?.name ?? slug;
@@ -159,6 +177,16 @@
       >
         {groups.find((g) => g.id === group)?.title ?? "Pomysły mieszkańców"}
       </h1>
+      {#if problem}
+        <p class="mt-1.5 text-sm">
+          Odpowiadają na problem:
+          <b class="font-semibold">{problemTitle ?? "wybrany problem"}</b>
+          ·
+          <a class="clear" href={resolve("/ideas/[[id]]", {})}
+            >pokaż wszystkie</a
+          >
+        </p>
+      {/if}
     </header>
 
     <div class="work">
@@ -190,7 +218,8 @@
                     <span class="lead">{nbsp(idea.essence)}</span>
                     <span class="text-hm-ink-soft text-xs"
                       >{stamp(idea.created_at)}
-                      · {stageName(idea.stage)}</span
+                      ·
+                      {stageName(idea.stage)}{idea.problem ? ` · do: ${idea.problem.title}` : ""}</span
                     >
                   </span>
                   <span class="st">{labels[idea.status]}</span>
@@ -240,6 +269,12 @@
 
   .board.first {
     border-top-left-radius: 0;
+  }
+
+  .clear {
+    color: var(--hm-stamp);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .work {

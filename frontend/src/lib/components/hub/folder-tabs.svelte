@@ -64,10 +64,11 @@
   .tab {
     position: relative;
     display: grid;
+    flex: none;
     grid-template-rows: 1fr auto;
     gap: 6px;
     width: calc(100% - 12px);
-    height: var(--h);
+    min-height: var(--h);
     padding: 11px 16px 10px;
     margin-left: 12px;
     color: var(--hm-ink);
@@ -112,8 +113,8 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     font-size: 14px;
     font-weight: 600;
     line-height: 1.3;
@@ -160,20 +161,22 @@
     }
 
     .tabs li {
+      display: flex;
       flex: none;
+      align-items: flex-end;
     }
 
     .tab,
     .tab:hover {
       width: 172px;
-      height: 92px;
+      min-height: 92px;
       margin: 8px 0 0;
       border-radius: 16px 16px 0 0;
     }
 
     .tab[aria-current="true"] {
       width: 172px;
-      height: 100px;
+      min-height: 100px;
       margin-top: 0;
     }
 

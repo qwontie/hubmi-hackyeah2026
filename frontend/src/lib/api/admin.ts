@@ -78,6 +78,7 @@ export interface AdminCluster {
   created_at: string;
   daily?: number[];
   id: string;
+  ideas_count?: number;
   last_need_at: string | null;
   new_last_7d: number;
   powiats?: { count: number; name: string; slug: string }[];
@@ -261,6 +262,8 @@ export interface AdminIdea {
   id: string;
   number: number;
   powiat: string | null;
+  problem?: { id: string; title: string } | null;
+  problem_id?: string | null;
   stage: string;
   status: IdeaStatus;
   title: string;

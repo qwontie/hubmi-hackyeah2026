@@ -423,6 +423,20 @@
             +{tabs.find((t) => t.id === folder)?.week ?? 0}
           </dd>
         </div>
+        {#if (currentFolder?.cluster?.ideas_count ?? 0) > 0}
+          <div>
+            <dt>
+              {plural(currentFolder?.cluster?.ideas_count ?? 0, "pomysł", "pomysły", "pomysłów")}
+            </dt>
+            <dd class="tabular">
+              <a
+                class="ideas-link"
+                href="{resolve('/ideas/[[id]]', {})}?problem={currentFolder?.id}"
+                >{currentFolder?.cluster?.ideas_count}</a
+              >
+            </dd>
+          </div>
+        {/if}
         {#if currentFolder?.cluster?.daily && currentFolder.cluster.daily.length > 1}
           <div>
             <dt>ostatnie 14 dni</dt>
@@ -557,6 +571,13 @@
     font-weight: 650;
     line-height: 1;
     letter-spacing: -0.03em;
+  }
+
+  .ideas-link {
+    color: var(--hm-stamp);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
   }
 
   .work {

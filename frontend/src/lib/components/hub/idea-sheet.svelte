@@ -181,6 +181,16 @@
             Pomysł nr {registerNumber(detail.number)} ·
             {stageName(detail.stage)}{detail.powiat ? ` · ${powiatName(detail.powiat, powiats.names)}` : ""}
           </p>
+          {#if detail.problem}
+            <p class="mt-1 text-[13px]">
+              Odpowiada na problem:
+              <a
+                class="plink"
+                href="{resolve('/needs')}?folder={detail.problem.id}"
+                >{detail.problem.title}</a
+              >
+            </p>
+          {/if}
         </div>
         {#key detail.id}
           <Stamp at={detail.created_at} number={detail.number} />
@@ -376,6 +386,13 @@
 
   .list a {
     font-weight: 600;
+  }
+
+  .plink {
+    font-weight: 600;
+    color: var(--hm-stamp);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .list a:hover {
