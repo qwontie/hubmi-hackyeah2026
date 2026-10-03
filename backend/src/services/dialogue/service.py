@@ -11,7 +11,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import ApiError
 from services.bus import bus
-from services.mail import DeliveryStatus, Mailer, author_reply
+from services.mail import Delivery, DeliveryStatus, Mailer, author_reply
 from utils.db import session_scope
 from utils.db.models import (
     AdminUser,
@@ -174,16 +174,20 @@ async def deliver(message_id: uuid.UUID, mailer: Mailer) -> None:
             if message is None or message.need_id is None:
                 return
             need = await session.get(Need, message.need_id)
-            if need is None or not can_email(need):
+            if need is None:
                 return
-            delivery = await mailer.send(
-                author_reply(
-                    to=str(need.contact_email),
-                    need_text=need.text,
-                    body=message.body,
-                    thread_url=thread_url(need.id),
-                    idempotency_key=f"message-{message.id}",
+            delivery = (
+                await mailer.send(
+                    author_reply(
+                        to=str(need.contact_email),
+                        need_text=need.text,
+                        body=message.body,
+                        thread_url=thread_url(need.id),
+                        idempotency_key=f"message-{message.id}",
+                    )
                 )
+                if can_email(need)
+                else Delivery(DeliveryStatus.SKIPPED, error="no contact consent")
             )
             message.delivery_status = MessageDelivery(delivery.status.value)
             message.provider_id = delivery.provider_id
