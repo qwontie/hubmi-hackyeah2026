@@ -4,10 +4,12 @@
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
   import {
+    type AdminGrantCall,
     type AdminIdea,
     type IdeaOptions,
     type IdeaStatus,
     ideaOptions,
+    listGrantCalls,
     listIdeas,
   } from "$lib/api/admin";
   import ErrorState from "$lib/components/error-state.svelte";
@@ -15,6 +17,7 @@
   import IdeaSheet from "$lib/components/hub/idea-sheet.svelte";
   import type { FolderTab } from "$lib/components/hub/types";
   import { clock, nbsp, registerNumber, when } from "$lib/format";
+  import { callState } from "$lib/grants";
   import { live } from "$lib/live/stream.svelte";
 
   const labels: Record<IdeaStatus, string> = {
@@ -31,6 +34,7 @@
   ];
 
   let ideas = $state<AdminIdea[]>([]);
+  let calls = $state<AdminGrantCall[]>([]);
   let options = $state<IdeaOptions | null>(null);
   let loadError = $state<Error | null>(null);
   let loaded = $state(false);
@@ -73,8 +77,17 @@
     }
   }
 
+  async function loadCalls() {
+    try {
+      calls = await listGrantCalls();
+    } catch {
+      calls = [];
+    }
+  }
+
   $effect(() => {
     load();
+    loadCalls();
   });
 
   function upsert(idea: AdminIdea, fresh: boolean) {
@@ -92,6 +105,9 @@
   const offs = [
     live.on("idea.created", (data) => upsert(data as AdminIdea, true)),
     live.on("idea.updated", (data) => upsert(data as AdminIdea, false)),
+    live.on("grant_call.updated", loadCalls),
+    live.on("application.submitted", loadCalls),
+    live.on("application.updated", loadCalls),
     live.onReconnect(load),
   ];
 
@@ -132,6 +148,22 @@
     })),
   ]);
 
+  const callTabs = $derived<FolderTab[]>(
+    calls.map((c) => ({
+      cluster: null,
+      fresh: 0,
+      href: resolve("/grants/[[id]]", { id: c.id }),
+      id: c.id,
+      note:
+        c.applications.submitted > 0
+          ? `${c.applications.submitted} do oceny`
+          : callState(c),
+      size: c.applications.total,
+      title: c.title,
+      week: 0,
+    }))
+  );
+
   const visible = $derived(
     ideas.filter(
       (i) =>
@@ -166,8 +198,31 @@
 </svelte:head>
 
 <div class={["binder", id && "has-item"]}>
-  <nav aria-label="Stan pomysłów" class="rail">
+  <nav aria-label="Pomysły i nabory" class="rail">
+    <p class="railh">Pomysły</p>
     <FolderTabs current={group} {tabs} />
+    <p class="railh">Nabory</p>
+    {#if calls.length > 0}
+      <FolderTabs current="" tabs={callTabs} />
+    {/if}
+    <a class="newtab" href={resolve("/grants/[[id]]", { id: "new" })}>
+      <svg
+        aria-hidden="true"
+        fill="none"
+        height="16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-width="1.75"
+        viewBox="0 0 24 24"
+        width="16"
+      >
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      Nowy nabór
+    </a>
+    <a class="newtab" href={resolve("/grants/[[id]]", { id: "subscribers" })}>
+      Subskrybenci naborów
+    </a>
   </nav>
 
   <main class={["board", group === "all" && "first"]}>
@@ -251,8 +306,58 @@
   }
 
   .rail {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     min-width: 0;
     min-height: 0;
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .rail :global(.tabs) {
+    flex: none;
+    height: auto;
+    overflow: visible;
+  }
+
+  .railh {
+    padding: 8px 0 2px 16px;
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--hm-ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .newtab {
+    display: flex;
+    flex: none;
+    gap: 8px;
+    align-items: center;
+    width: calc(100% - 12px);
+    min-height: 48px;
+    padding: 0 16px;
+    margin-left: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--hm-tab-ink-soft);
+    border: 1.5px dashed
+      color-mix(in oklab, var(--hm-tab-ink-soft) 45%, transparent);
+    border-right: 0;
+    border-radius: 16px 0 0 16px;
+    transition:
+      margin 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      width 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 150ms ease;
+  }
+
+  .newtab:hover {
+    width: calc(100% - 6px);
+    margin-left: 6px;
+    color: var(--hm-ink);
+    background: var(--hm-tab-hover);
   }
 
   .board {
@@ -380,8 +485,30 @@
     }
 
     .rail {
+      flex-direction: row;
+      align-items: flex-end;
       overflow-x: auto;
       scrollbar-width: none;
+    }
+
+    .rail :global(.tabs) {
+      flex: none;
+    }
+
+    .railh {
+      display: none;
+    }
+
+    .newtab,
+    .newtab:hover {
+      flex: none;
+      width: auto;
+      min-height: 92px;
+      margin: 8px 0 0;
+      border: 1.5px dashed
+        color-mix(in oklab, var(--hm-tab-ink-soft) 45%, transparent);
+      border-bottom: 0;
+      border-radius: 16px 16px 0 0;
     }
 
     .board,

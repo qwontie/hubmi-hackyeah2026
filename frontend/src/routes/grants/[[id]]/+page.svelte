@@ -10,8 +10,12 @@
     type CallBody,
     callApplications,
     deleteGrantCall,
+    type GrantSubscriberList,
+    grantSubscribers,
     listGrantCalls,
+    listIdeas,
     patchGrantCall,
+    removeGrantSubscriber,
   } from "$lib/api/admin";
   import { ApiError } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
@@ -44,6 +48,9 @@
   };
 
   let calls = $state<AdminGrantCall[]>([]);
+  let ideaCount = $state<{ total: number; fresh: number } | null>(null);
+  let subscribers = $state<GrantSubscriberList | null>(null);
+  let subscribersError = $state<Error | null>(null);
   let applications = $state<ApplicationSummary[]>([]);
   let appsFor = $state<string | null>(null);
   let loadError = $state<Error | null>(null);
@@ -55,6 +62,7 @@
 
   const id = $derived(page.params.id ?? null);
   const creating = $derived(id === "new");
+  const subscribersView = $derived(id === "subscribers");
   const params = $derived(page.url.searchParams);
   const view = $derived<View>(
     creating || params.get("view") === "call" ? "call" : "applications"
@@ -113,12 +121,60 @@
     }
   }
 
+  async function loadIdeas() {
+    try {
+      const found = await listIdeas();
+      ideaCount = {
+        fresh: found.items.filter((i) => i.status === "new").length,
+        total: found.total,
+      };
+    } catch {
+      ideaCount = null;
+    }
+  }
+
+  async function loadSubscribers() {
+    try {
+      subscribers = await grantSubscribers();
+      subscribersError = null;
+    } catch (e) {
+      subscribersError = e instanceof Error ? e : new Error(String(e));
+    }
+  }
+
+  async function unsubscribe(subscriberId: string, anchor: HTMLElement) {
+    try {
+      await removeGrantSubscriber(subscriberId);
+      await loadSubscribers();
+      showTip(anchor, "Wypisano");
+    } catch (e) {
+      showTip(
+        anchor,
+        e instanceof ApiError ? e.message : "Nie udało się wypisać.",
+        "bad"
+      );
+    }
+  }
+
+  const subscriberState = {
+    confirmed: "potwierdzony",
+    pending: "czeka na potwierdzenie",
+    unsubscribed: "wypisany",
+  } as const;
+
   $effect(() => {
     load();
+    loadIdeas();
   });
 
   $effect(() => {
-    if (id && !creating) {
+    if (subscribersView) {
+      loadSubscribers();
+    }
+  });
+
+  $effect(() => {
+    if (id && !creating && !subscribersView) {
       loadApps(id);
     }
   });
@@ -188,6 +244,22 @@
       off();
     }
   });
+
+  const ideaTabs = $derived<FolderTab[]>([
+    {
+      cluster: null,
+      fresh: 0,
+      href: resolve("/ideas/[[id]]", {}),
+      id: "ideas",
+      note:
+        ideaCount && ideaCount.fresh > 0
+          ? `${ideaCount.fresh} ${plural(ideaCount.fresh, "nowy", "nowe", "nowych")}`
+          : undefined,
+      size: ideaCount?.total ?? 0,
+      title: "Pomysły mieszkańców",
+      week: 0,
+    },
+  ]);
 
   const tabs = $derived<FolderTab[]>(
     calls.map((c) => ({
@@ -395,7 +467,10 @@
 <svelte:window onkeydown={keydown} />
 
 <div class={["binder", openApp && view === "applications" && "has-item"]}>
-  <nav aria-label="Nabory" class="rail">
+  <nav aria-label="Pomysły i nabory" class="rail">
+    <p class="railh">Pomysły</p>
+    <FolderTabs current="" tabs={ideaTabs} />
+    <p class="railh">Nabory</p>
     <FolderTabs
       current={id ?? ""}
       oncontext={(tab, event) => {
@@ -425,6 +500,13 @@
       </svg>
       Nowy nabór
     </a>
+    <a
+      aria-current={subscribersView ? "true" : undefined}
+      class="newtab"
+      href={resolve("/grants/[[id]]", { id: "subscribers" })}
+    >
+      Subskrybenci naborów
+    </a>
   </nav>
 
   <main class={["board", calls[0]?.id === id && "first"]}>
@@ -442,6 +524,74 @@
       </header>
       <div class="pane">
         <CallForm call={null} onsaved={saved} />
+      </div>
+    {:else if subscribersView}
+      <header class="bhead">
+        <div class="min-w-0">
+          <h1
+            class="font-semibold text-[26px] leading-tight tracking-tight max-[899px]:text-[22px]"
+          >
+            Subskrybenci naborów
+          </h1>
+          <p class="mt-1.5 max-w-[70ch] text-pretty text-hm-ink-soft text-sm">
+            Osoby, które poprosiły o&nbsp;e-mail, gdy ruszy nowy nabór.
+            Powiadomienie wychodzi samo przy publikacji i&nbsp;otwarciu naboru.
+          </p>
+        </div>
+        {#if subscribers}
+          <dl class="stats">
+            <div>
+              <dt>potwierdzonych</dt>
+              <dd class="tabular">{subscribers.totals.confirmed}</dd>
+            </div>
+            <div>
+              <dt>czeka na potwierdzenie</dt>
+              <dd class="tabular">{subscribers.totals.pending}</dd>
+            </div>
+            <div>
+              <dt>nieudanych wysyłek</dt>
+              <dd class="tabular">{subscribers.totals.failed_deliveries}</dd>
+            </div>
+          </dl>
+        {/if}
+      </header>
+      <div class="pane">
+        {#if subscribersError && !subscribers}
+          <ErrorState error={subscribersError} retry={loadSubscribers} />
+        {:else if !subscribers}
+          <p class="text-hm-ink-soft text-sm">Wczytywanie…</p>
+        {:else if subscribers.items.length === 0}
+          <p class="text-hm-ink-soft text-sm">
+            Nikt jeszcze nie zapisał się na powiadomienia o&nbsp;naborach.
+          </p>
+        {:else}
+          <ol class="subs">
+            {#each subscribers.items as sub (sub.id)}
+              <li class={[sub.state === "unsubscribed" && "off"]}>
+                <span class="grid min-w-0 gap-[3px]">
+                  <span class="break-all font-semibold text-sm"
+                    >{sub.email}</span
+                  >
+                  <span class="text-hm-ink-soft text-xs">
+                    {subscriberState[sub.state]}
+                    · zgoda {dayWords(sub.consent_at)}
+                    · wysłano
+                    {sub.sent}{sub.failed > 0 ? `, nie dotarło ${sub.failed}` : ""}
+                  </span>
+                </span>
+                {#if sub.state !== "unsubscribed"}
+                  <button
+                    class="ghost cladd-clickable"
+                    onclick={(event) => unsubscribe(sub.id, event.currentTarget)}
+                    type="button"
+                  >
+                    <span>Wypisz</span>
+                  </button>
+                {/if}
+              </li>
+            {/each}
+          </ol>
+        {/if}
       </div>
     {:else if !call}
       <div class="grid content-start gap-3">
@@ -610,9 +760,11 @@
                           >{registerNumber(a.number)}</span
                         >
                         <span class="grid min-w-0 gap-[3px]">
-                          <span class="t">{a.idea.title}</span>
+                          <span class="t"
+                            >{a.idea ? a.idea.title : "Wniosek bez pomysłu z Kreatora"}</span
+                          >
                           <span class="text-hm-ink-soft text-xs">
-                            Pomysł nr {registerNumber(a.idea.number)} ·
+                            {a.idea ? `Pomysł nr ${registerNumber(a.idea.number)} · ` : ""}
                             {a.submitted_at ? `złożony ${when(a.submitted_at)}` : `zmieniony ${when(a.updated_at)}`}{a.status === "draft" && a.missing_required.length > 0 ? ` · ${a.missing_required.length} ${plural(a.missing_required.length, "sekcja do uzupełnienia", "sekcje do uzupełnienia", "sekcji do uzupełnienia")}` : ""}
                           </span>
                         </span>
@@ -650,12 +802,77 @@
   }
 
   .rail {
-    display: grid;
-    grid-template-rows: minmax(0, auto) auto;
+    display: flex;
+    flex-direction: column;
     gap: 6px;
-    align-content: start;
     min-width: 0;
     min-height: 0;
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .rail :global(.tabs) {
+    flex: none;
+    height: auto;
+    overflow: visible;
+  }
+
+  .railh {
+    padding: 8px 0 2px 16px;
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--hm-ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .stats {
+    display: flex;
+    gap: 28px;
+    align-items: end;
+    margin: 0;
+  }
+
+  .stats div {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 3px;
+  }
+
+  .stats dt {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--hm-ink-soft);
+    white-space: nowrap;
+  }
+
+  .stats dd {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 650;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .subs {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .subs li {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--hm-rule);
+  }
+
+  .subs li.off {
+    color: var(--hm-ink-soft);
   }
 
   .newtab {
@@ -979,10 +1196,23 @@
     }
 
     .rail {
-      display: flex;
+      flex-direction: row;
       align-items: flex-end;
       overflow-x: auto;
       scrollbar-width: none;
+    }
+
+    .rail :global(.tabs) {
+      flex: none;
+    }
+
+    .railh {
+      display: none;
+    }
+
+    .stats {
+      flex-wrap: wrap;
+      gap: 12px 20px;
     }
 
     .newtab,

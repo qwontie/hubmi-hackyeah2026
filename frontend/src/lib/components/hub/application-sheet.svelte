@@ -3,7 +3,9 @@
   import { resolve } from "$app/paths";
   import {
     type AdminApplication,
+    type AdminIdeaDetail,
     getApplication,
+    getIdea,
     listIdeaMessages,
     type Message,
     replyToIdea,
@@ -30,6 +32,7 @@
 
   let detail = $state<AdminApplication | null>(null);
   let messages = $state<Message[]>([]);
+  let idea = $state<AdminIdeaDetail | null>(null);
   let loadError = $state<Error | null>(null);
   let controller: AbortController | null = null;
 
@@ -43,7 +46,15 @@
         return;
       }
       detail = next;
-      messages = await listIdeaMessages(next.idea.id).catch(() => []);
+      if (next.idea) {
+        const ideaId = next.idea.id;
+        const [thread, full] = await Promise.all([
+          listIdeaMessages(ideaId).catch(() => []),
+          getIdea(ideaId).catch(() => null),
+        ]);
+        messages = thread;
+        idea = full;
+      }
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") {
         return;
@@ -57,6 +68,7 @@
     untrack(() => {
       detail = null;
       messages = [];
+      idea = null;
       load(target);
     });
   });
@@ -74,7 +86,7 @@
     }),
     live.on("message.created", (data) => {
       const m = data as Message;
-      if (detail && m.idea_id === detail.idea.id) {
+      if (detail?.idea && m.idea_id === detail.idea.id) {
         messages = [...messages.filter((x) => x.id !== m.id), m];
       }
     }),
@@ -114,8 +126,8 @@
   }
 
   async function reply(body: string) {
-    if (!detail) {
-      throw new Error("Brak wniosku.");
+    if (!detail?.idea) {
+      throw new Error("Ten wniosek nie ma pomysłu, do którego można pisać.");
     }
     const message = await replyToIdea(detail.idea.id, body);
     messages = [...messages.filter((m) => m.id !== message.id), message];
@@ -156,18 +168,26 @@
             Wniosek nr {registerNumber(detail.number)}
           </h2>
           <p class="mt-1.5 text-[13px] text-hm-ink-soft">
-            <a
-              class="link"
-              href={resolve("/ideas/[[id]]", { id: detail.idea.id })}
-              >Pomysł nr {registerNumber(detail.idea.number)}</a
-            >
-            · {detail.idea_contact ? "autor podał e-mail" : "autor bez e-maila"}
+            {#if detail.idea}
+              <a
+                class="link"
+                href={resolve("/ideas/[[id]]", { id: detail.idea.id })}
+                >Pomysł nr {registerNumber(detail.idea.number)}</a
+              >
+              ·
+              {detail.idea_contact ? "autor podał e-mail" : "autor bez e-maila"}
+            {:else}
+              Wniosek bez pomysłu z&nbsp;Kreatora ·
+              {detail.contact_email ? `autor: ${detail.contact_email}` : "autor bez e-maila"}
+            {/if}
             · {filled} z&nbsp;{detail.sections.length}
             sekcji
           </p>
-          <p class="mt-2 text-balance font-semibold text-base">
-            {nbsp(detail.idea.title)}
-          </p>
+          {#if detail.idea}
+            <p class="mt-2 text-balance font-semibold text-base">
+              {nbsp(detail.idea.title)}
+            </p>
+          {/if}
         </div>
         {#if detail.submitted_at}
           {#key detail.id}
@@ -224,6 +244,27 @@
         </a>
       </div>
 
+      {#if idea}
+        <section aria-labelledby="idea-h" class="idea">
+          <h3
+            class="flex items-baseline gap-2 font-semibold text-[13px]"
+            id="idea-h"
+          >
+            Pomysł autora
+            <a
+              class="link font-normal"
+              href={resolve("/ideas/[[id]]", { id: idea.id })}
+              >cała karta pomysłu</a
+            >
+          </h3>
+          <p class="body">{nbsp(idea.essence)}</p>
+          {#if idea.for_whom}
+            <p class="text-hm-ink-soft text-xs">Dla kogo</p>
+            <p class="body">{nbsp(idea.for_whom)}</p>
+          {/if}
+        </section>
+      {/if}
+
       <ol class="sections">
         {#each detail.sections as s, i (s.key)}
           <li>
@@ -249,9 +290,16 @@
         {/each}
       </ol>
 
-      <section aria-label="Rozmowa z autorem pomysłu">
-        <ThreadReply canEmail={detail.idea_contact} {messages} send={reply} />
-      </section>
+      {#if detail.idea}
+        <section aria-label="Rozmowa z autorem pomysłu">
+          <ThreadReply canEmail={detail.idea_contact} {messages} send={reply} />
+        </section>
+      {:else}
+        <p class="text-[13px] text-hm-ink-soft">
+          Ten wniosek złożono bez pomysłu z&nbsp;Kreatora.
+          {detail.contact_email ? `Autor podał adres ${detail.contact_email}; wysyłka z HubMi do takich wniosków jest w przygotowaniu.` : "Autor nie zostawił adresu."}
+        </p>
+      {/if}
     </div>
   {:else if loadError}
     <ErrorState error={loadError} retry={() => load(id)} />
@@ -285,6 +333,15 @@
       transparent
     );
     text-underline-offset: 3px;
+  }
+
+  .idea {
+    display: grid;
+    gap: 6px;
+    padding: 12px 14px;
+    background: var(--hm-sunk);
+    border-radius: 12px;
+    box-shadow: var(--shadow-cladd-cut-outline);
   }
 
   .seg {

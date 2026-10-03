@@ -644,7 +644,7 @@ export interface GrantTemplate {
 export interface ApplicationSummary {
   call_id: string;
   id: string;
-  idea: { id: string; number: number; title: string };
+  idea: { id: string; number: number; title: string } | null;
   missing_required: string[];
   number: number;
   status: ApplicationStatus;
@@ -661,9 +661,11 @@ export interface AdminApplication {
     phase: CallPhase;
     title: string;
   };
+  contact_consent: boolean;
+  contact_email: string | null;
   created_at: string;
   id: string;
-  idea: { id: string; number: number; title: string };
+  idea: { id: string; number: number; title: string } | null;
   idea_contact: boolean;
   missing_required: string[];
   number: number;
