@@ -5,7 +5,7 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api import routers
+from api import errors, routers
 from dependencies.container import container
 from services.mail import StaffNotifier
 from utils.db import init_db
@@ -31,6 +31,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
 )
+
+errors.install(app)
 
 app.include_router(routers.router)
 
