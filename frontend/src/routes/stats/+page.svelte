@@ -3,6 +3,7 @@
   import { page } from "$app/state";
   import { api } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
+  import NeedsMap from "$lib/components/hub/needs-map.svelte";
   import { nbsp, plural } from "$lib/format";
   import { live } from "$lib/live/stream.svelte";
 
@@ -248,6 +249,11 @@
         <span>najwięcej {maxDay} dziennie</span>
         <span>{days.at(-1) ? dayLabel(days.at(-1)?.start ?? "") : ""}</span>
       </div>
+    </section>
+
+    <section aria-labelledby="map-h" class="panel">
+      <h2 class="h" id="map-h">Potrzeby w&nbsp;powiatach</h2>
+      <NeedsMap days={Number.parseInt(period, 10) || 30} />
     </section>
 
     <div class="grid3">
