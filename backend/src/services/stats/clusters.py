@@ -40,6 +40,7 @@ class AdminCluster(BaseModel):
     daily: list[int]
     powiats: list[PowiatCount]
     summary_stale: bool
+    title_locked: bool
     last_need_at: datetime | None
     created_at: datetime
     updated_at: datetime
@@ -60,6 +61,12 @@ class ClusterQuery(BaseModel):
     q: str | None = Field(default=None, max_length=200)
     page: int = Field(default=1, ge=1)
     per_page: int = Field(default=20, ge=1, le=100)
+
+
+class RenameBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=3, max_length=80)
 
 
 class MergeBody(BaseModel):
@@ -188,6 +195,7 @@ async def enrich(
             daily=daily[cluster.id],
             powiats=powiats[cluster.id],
             summary_stale=cluster.summary_stale,
+            title_locked=cluster.title_locked,
             last_need_at=cluster.last_need_at,
             created_at=cluster.created_at,
             updated_at=cluster.updated_at,

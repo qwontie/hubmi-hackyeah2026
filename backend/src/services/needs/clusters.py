@@ -15,7 +15,7 @@ from services.bus import bus
 from services.search.vector import cosine_distance
 from utils.db import session_scope
 from utils.db.models.idea import Idea
-from utils.db.models.need import Need, NeedCluster
+from utils.db.models.need import Need, NeedCluster, NeedStatus
 from utils.logging import logger
 
 from .payloads import cluster_payload
@@ -62,7 +62,9 @@ async def similar_count(
 ) -> int:
     distance = cosine_distance(Need.embedding, vector)
     query = select(func.count()).where(
-        col(Need.embedding).is_not(None), distance <= 1 - SIMILAR_NEED
+        col(Need.embedding).is_not(None),
+        col(Need.status) != NeedStatus.JUNK,
+        distance <= 1 - SIMILAR_NEED,
     )
     if exclude is not None:
         query = query.where(col(Need.id) != exclude)
@@ -148,6 +150,33 @@ async def recompute(session: AsyncSession, cluster: NeedCluster) -> None:
     session.add(cluster)
 
 
+async def detach_need(session: AsyncSession, need: Need) -> NeedCluster | None:
+    if need.cluster_id is None:
+        return None
+    await session.scalar(
+        text("SELECT pg_advisory_xact_lock(:key)"), {"key": CLUSTER_LOCK_KEY}
+    )
+    cluster = await session.get(NeedCluster, need.cluster_id)
+    need.cluster_id = None
+    session.add(need)
+    await session.flush()
+    if cluster is None:
+        return None
+    await recompute(session, cluster)
+    if cluster.size == 0 and not await _linked_ideas(session, cluster.id):
+        await session.delete(cluster)
+        await session.flush()
+        bus.publish("cluster.deleted", {"id": str(cluster.id), "merged_into": None})
+        return None
+    return cluster
+
+
+async def attach_need(session: AsyncSession, need: Need) -> NeedCluster | None:
+    if need.cluster_id is not None or need.embedding is None:
+        return None
+    return await assign_cluster(session, need, title=need.title or "")
+
+
 async def _members(session: AsyncSession, cluster_id: uuid.UUID) -> list[Need]:
     return list(
         (
@@ -180,7 +209,8 @@ async def _summarize(cluster_id: uuid.UUID) -> tuple[bool, NeedCluster | None]:
             return True, None
         if {need.id for need in await _members(session, cluster_id)} != snapshot:
             return False, cluster
-        cluster.title = result.title.strip()[:80] or cluster.title
+        if not cluster.title_locked:
+            cluster.title = result.title.strip()[:80] or cluster.title
         cluster.summary = result.summary.strip()
         cluster.summary_size = len(snapshot)
         cluster.summary_stale = False

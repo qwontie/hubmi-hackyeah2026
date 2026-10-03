@@ -1,4 +1,6 @@
 from .clusters import (
+    attach_need,
+    detach_need,
     merge_clusters,
     refresh_cluster_summary,
     schedule_summary,
@@ -28,9 +30,11 @@ __all__ = [
     "NeedNotFoundError",
     "SearchOutcome",
     "TextRejectedError",
+    "attach_need",
     "cluster_payload",
     "cluster_ref",
     "create_need",
+    "detach_need",
     "enrich_need",
     "first_words",
     "hash_token",

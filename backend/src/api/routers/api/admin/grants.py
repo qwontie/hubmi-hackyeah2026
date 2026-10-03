@@ -10,7 +10,7 @@ from api.security import AdminPerson
 from services.bus import bus
 from services.dialogue.audit import record
 from services.dialogue.service import spawn
-from services.grants import TEMPLATES, applications, calls, notify
+from services.grants import TEMPLATES, applications, calls, notify, subscribers
 from services.grants.schemas import (
     AdminApplication,
     AdminGrantCall,
@@ -40,6 +40,7 @@ DATES = "Data zamknięcia musi być późniejsza niż data otwarcia."
 KEYS_LOCKED = "Ten nabór ma już wnioski: nie można zmienić kluczy sekcji."
 HAS_APPLICATIONS = "Ten nabór ma już wnioski: zamiast usuwać, anuluj go."
 DRAFT_APPLICATION = "Wniosek nie został jeszcze złożony."
+SUBSCRIBER_MISSING = "Nie znaleziono subskrybenta."
 
 PageNumber = Annotated[int, Query(ge=1, le=10_000)]
 PerPage = Annotated[int, Query(ge=1, le=100)]
@@ -241,3 +242,27 @@ async def set_application_status(
         applications.summary(application, call, idea).model_dump(mode="json"),
     )
     return applications.admin_view(application, call, idea)
+
+
+@router.get("/grant-subscribers")
+async def list_subscribers(
+    session: FromDishka[AsyncSession],
+) -> subscribers.SubscriberList:
+    return await subscribers.list_subscribers(session)
+
+
+@router.delete(
+    "/grant-subscribers/{subscriber_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+async def remove_subscriber(
+    subscriber_id: uuid.UUID, admin: AdminPerson, session: FromDishka[AsyncSession]
+) -> None:
+    if not await subscribers.remove(session, subscriber_id):
+        raise not_found(SUBSCRIBER_MISSING)
+    record(
+        session,
+        admin,
+        "grant_subscriber.remove",
+        target=("grant_subscriber", subscriber_id),
+    )
+    await session.commit()

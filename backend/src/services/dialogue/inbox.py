@@ -73,6 +73,8 @@ def conditions(filters: NeedFilters) -> list[ColumnElement[bool]]:
     found: list[ColumnElement[bool]] = []
     if filters.status is not None:
         found.append(col(Need.status) == filters.status)
+    else:
+        found.append(col(Need.status) != NeedStatus.JUNK)
     if filters.cluster_id is not None:
         found.append(col(Need.cluster_id) == filters.cluster_id)
     if filters.powiat:
@@ -322,3 +324,33 @@ async def need_detail(session: AsyncSession, need: Need) -> AdminNeedDetail:
         messages=await admin_messages(session, col(Message.need_id) == need.id),
         can_email=bool(need.contact_email and need.contact_consent),
     )
+
+
+async def counts(session: AsyncSession) -> dict[str, int]:
+    rows = (
+        await session.exec(
+            entity_select(col(Need.status), func.count()).group_by(col(Need.status))
+        )
+    ).all()
+    by_status = {status.value: 0 for status in NeedStatus}
+    for status, count in rows:
+        by_status[NeedStatus(status).value] = int(count)
+    unread = await session.scalar(
+        select(func.count(func.distinct(col(Message.need_id)))).where(
+            col(Message.direction) == MessageDirection.FROM_AUTHOR,
+            col(Message.read_at).is_(None),
+            col(Message.need_id).is_not(None),
+        )
+    )
+    return {
+        "waiting": by_status[NeedStatus.NEW.value],
+        "answered": by_status[NeedStatus.ANSWERED.value],
+        "closed": by_status[NeedStatus.CLOSED.value],
+        "junk": by_status[NeedStatus.JUNK.value],
+        "total": sum(
+            count
+            for status, count in by_status.items()
+            if status != NeedStatus.JUNK.value
+        ),
+        "unread": int(unread or 0),
+    }

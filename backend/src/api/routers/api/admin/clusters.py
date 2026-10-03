@@ -9,25 +9,33 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import ApiError, conflict, invalid, not_found
 from api.security import AdminPerson
+from services.bus import bus
 from services.dialogue.audit import record
-from services.needs import merge_clusters, refresh_cluster_summary, split_cluster
+from services.needs import (
+    cluster_payload,
+    merge_clusters,
+    refresh_cluster_summary,
+    split_cluster,
+)
 from services.stats.clusters import (
     AdminCluster,
     ClusterPage,
     ClusterQuery,
     MergeBody,
+    RenameBody,
     SplitBody,
     SplitResult,
     list_clusters,
     one,
 )
-from utils.db.models import Need
+from utils.db.models import Need, NeedCluster
 
 router = APIRouter(route_class=DishkaRoute)
 
 MISSING = "Nie znaleziono grupy zgłoszeń."
 SELF_MERGE = "Nie można połączyć grupy z nią samą."
 BAD_SPLIT = "Wybierz część zgłoszeń z tej grupy, ale nie wszystkie."
+BAD_TITLE = "Nazwa grupy ma od 3 do 80 znaków."
 AI_DOWN = "Nie udało się teraz odświeżyć opisu grupy. Spróbuj za chwilę."
 
 
@@ -52,6 +60,38 @@ async def clusters(
 async def cluster(
     cluster_id: uuid.UUID, session: FromDishka[AsyncSession]
 ) -> AdminCluster:
+    return await existing(session, cluster_id)
+
+
+@router.patch("/{cluster_id}")
+async def rename(
+    cluster_id: uuid.UUID,
+    body: RenameBody,
+    admin: AdminPerson,
+    session: FromDishka[AsyncSession],
+) -> AdminCluster:
+    title = " ".join(body.title.split())
+    if len(title) < 3:  # noqa: PLR2004
+        field = "title"
+        raise invalid(field, BAD_TITLE)
+    cluster = await session.get(NeedCluster, cluster_id)
+    if cluster is None:
+        raise not_found(MISSING)
+    previous = cluster.title
+    cluster.title = title
+    cluster.title_locked = True
+    cluster.title_embedding = None
+    session.add(cluster)
+    record(
+        session,
+        admin,
+        "cluster.rename",
+        target=("need_cluster", cluster_id),
+        details={"from": previous, "to": title},
+    )
+    await session.commit()
+    await session.refresh(cluster)
+    bus.publish("cluster.updated", cluster_payload(cluster))
     return await existing(session, cluster_id)
 
 

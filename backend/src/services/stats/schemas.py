@@ -32,6 +32,7 @@ class Totals(BaseModel):
     waiting: int
     answered: int
     closed: int
+    junk: int
     with_contact: int
     author_messages: int
     replies: int
@@ -65,6 +66,24 @@ class InnovationUsage(BaseModel):
     matches: int
     top_matches: int
     avg_score: float
+
+
+class SearchDay(BaseModel):
+    start: date
+    searches: int
+    unclear: int
+    no_match: int
+
+
+class SearchStats(BaseModel):
+    total: int
+    ok: int
+    unclear: int
+    no_match: int
+    no_result_share: float
+    degraded: int
+    per_day: list[SearchDay]
+    by_category: list["Bucket"]
 
 
 class AiKind(BaseModel):
@@ -117,5 +136,6 @@ class Stats(BaseModel):
     top_clusters: list[ClusterTrend]
     growing_clusters: list[ClusterTrend]
     top_innovations: list[InnovationUsage]
+    searches: SearchStats
     feedback: FeedbackStats
     ai: AiSpend

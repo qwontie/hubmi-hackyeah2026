@@ -21,7 +21,13 @@ from services.mail import (
     expert_message,
     idea_reply,
 )
-from services.needs import hash_token
+from services.needs import (
+    attach_need,
+    cluster_payload,
+    detach_need,
+    hash_token,
+    schedule_summary,
+)
 from utils.db import session_scope
 from utils.db.models import (
     AdminUser,
@@ -137,6 +143,11 @@ async def set_status(
         return need
     need.status = status
     session.add(need)
+    changed = None
+    if status == NeedStatus.JUNK:
+        changed = await detach_need(session, need)
+    elif previous == NeedStatus.JUNK:
+        changed = await attach_need(session, need)
     record(
         session,
         admin,
@@ -147,6 +158,11 @@ async def set_status(
     await session.commit()
     await session.refresh(need)
     await publish_need(session, need)
+    if changed is not None:
+        await session.refresh(changed)
+        bus.publish("cluster.updated", cluster_payload(changed))
+        if changed.summary_stale:
+            schedule_summary(changed.id)
     return need
 
 
@@ -185,7 +201,8 @@ async def reply(
     details: dict[str, Any] = {"emailed": emailed}
     if isinstance(owner, Need):
         details["from"] = owner.status.value
-        owner.status = NeedStatus.ANSWERED
+        if owner.status != NeedStatus.JUNK:
+            owner.status = NeedStatus.ANSWERED
         session.add(owner)
     await session.flush()
     details["message_id"] = str(message.id)
@@ -332,7 +349,10 @@ async def author_message(
         body=body,
     )
     session.add(message)
-    if isinstance(owner, Need) and owner.status != NeedStatus.NEW:
+    if isinstance(owner, Need) and owner.status not in {
+        NeedStatus.NEW,
+        NeedStatus.JUNK,
+    }:
         owner.status = NeedStatus.NEW
         session.add(owner)
     await session.commit()

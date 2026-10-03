@@ -31,6 +31,7 @@ from .message import Message, MessageDelivery, MessageDirection
 from .need import Need, NeedCluster, NeedOrigin, NeedStatus
 from .powiat_figure import PowiatFigure
 from .rate_counter import RateCounter
+from .search_log import SearchLog
 from .test_signup import SignupStatus, TesterRole, TestSignup
 
 __all__ = [
@@ -83,6 +84,7 @@ __all__ = [
     "NeedStatus",
     "PowiatFigure",
     "RateCounter",
+    "SearchLog",
     "SignupStatus",
     "SummaryState",
     "TestSignup",

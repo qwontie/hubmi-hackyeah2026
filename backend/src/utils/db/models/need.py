@@ -22,6 +22,7 @@ class NeedStatus(StrEnum):
     NEW = "new"
     ANSWERED = "answered"
     CLOSED = "closed"
+    JUNK = "junk"
 
 
 def _enum[T: StrEnum](enum: type[T], name: str) -> Enum:
@@ -59,6 +60,13 @@ class NeedCluster(SQLModel, table=True):
     summary_stale: bool = Field(
         default=False,
         sa_column=Column(Boolean, nullable=False, server_default=sa_false()),
+    )
+    title_locked: bool = Field(
+        default=False,
+        sa_column=Column(Boolean, nullable=False, server_default=sa_false()),
+    )
+    title_embedding: list[float] | None = Field(
+        default=None, sa_column=Column(Vector(EMBEDDING_DIMENSIONS), nullable=True)
     )
     created_at: datetime = created_at_col()
     updated_at: datetime = updated_at_col()

@@ -16,6 +16,8 @@ from .schemas import (
     InnovationUsage,
     Period,
     Range,
+    SearchDay,
+    SearchStats,
     SeriesPoint,
     Stats,
     Totals,
@@ -28,19 +30,24 @@ UNKNOWN_LABEL = "Nie podano"
 
 TOTALS_SQL = text("""
 SELECT
-    count(*) FILTER (WHERE created_at >= :start) AS needs,
-    count(*) FILTER (WHERE created_at < :start) AS needs_previous,
-    count(*) FILTER (WHERE created_at >= :start AND nothing_fits) AS nothing_fits,
-    count(*) FILTER (WHERE created_at >= :start AND status = 'new') AS waiting,
+    count(*) FILTER (WHERE created_at >= :start AND status <> 'junk') AS needs,
+    count(*) FILTER (WHERE created_at < :start AND status <> 'junk') AS needs_previous,
+    count(*) FILTER (
+        WHERE created_at >= :start AND status <> 'junk' AND nothing_fits
+    ) AS nothing_fits,
     count(*) FILTER (WHERE created_at >= :start AND status = 'answered') AS answered,
     count(*) FILTER (WHERE created_at >= :start AND status = 'closed') AS closed,
+    count(*) FILTER (WHERE created_at >= :start AND status = 'junk') AS junk,
     count(*) FILTER (
-        WHERE created_at >= :start AND contact_email IS NOT NULL AND contact_consent
+        WHERE created_at >= :start AND status <> 'junk'
+        AND contact_email IS NOT NULL AND contact_consent
     )
         AS with_contact
 FROM need
 WHERE created_at >= :previous_start AND created_at < :end
 """)
+
+WAITING_SQL = text("SELECT count(*) AS waiting FROM need WHERE status = 'new'")
 
 MESSAGES_SQL = text("""
 SELECT
@@ -60,7 +67,7 @@ JOIN LATERAL (
     FROM message m
     WHERE m.need_id = n.id AND m.direction = 'to_author'
 ) first_reply ON first_reply.sent_at IS NOT NULL
-WHERE n.created_at >= :start AND n.created_at < :end
+WHERE n.created_at >= :start AND n.created_at < :end AND n.status <> 'junk'
 """)
 
 SERIES_SQL = text("""
@@ -79,6 +86,7 @@ FROM buckets
 LEFT JOIN need n
     ON date_trunc(:unit, n.created_at AT TIME ZONE :tz)::date = buckets.start
     AND n.created_at >= :start AND n.created_at < :end
+    AND n.status <> 'junk'
 GROUP BY buckets.start
 ORDER BY buckets.start
 """)
@@ -87,7 +95,7 @@ BY_CATEGORY_SQL = text("""
 SELECT n.category_slug AS slug, c.name AS name, count(*) AS count
 FROM need n
 LEFT JOIN category c ON c.slug = n.category_slug
-WHERE n.created_at >= :start AND n.created_at < :end
+WHERE n.created_at >= :start AND n.created_at < :end AND n.status <> 'junk'
 GROUP BY n.category_slug, c.name
 ORDER BY count DESC, c.name
 """)
@@ -95,7 +103,7 @@ ORDER BY count DESC, c.name
 BY_POWIAT_SQL = text("""
 SELECT powiat AS slug, count(*) AS count
 FROM need
-WHERE created_at >= :start AND created_at < :end
+WHERE created_at >= :start AND created_at < :end AND status <> 'junk'
 GROUP BY powiat
 ORDER BY count DESC
 """)
@@ -118,14 +126,54 @@ SELECT
     i.slug,
     i.title,
     count(*) AS matches,
-    count(*) FILTER (WHERE r.rank = 1) AS top_matches,
-    avg(r.score) AS avg_score
-FROM match_result r
-JOIN innovation i ON i.id = r.innovation_id
-WHERE r.created_at >= :start AND r.created_at < :end
+    count(*) FILTER (WHERE p.rank = 1) AS top_matches,
+    coalesce(avg(p.score), 0) AS avg_score
+FROM search_log s
+CROSS JOIN LATERAL unnest(s.slugs, s.scores) WITH ORDINALITY AS p(slug, score, rank)
+JOIN innovation i ON i.slug = p.slug
+WHERE s.created_at >= :start AND s.created_at < :end
 GROUP BY i.slug, i.title
 ORDER BY matches DESC, top_matches DESC
 LIMIT :limit
+""")
+
+SEARCHES_SQL = text("""
+SELECT
+    count(*) AS total,
+    count(*) FILTER (WHERE outcome = 'ok') AS ok,
+    count(*) FILTER (WHERE outcome = 'unclear') AS unclear,
+    count(*) FILTER (WHERE outcome = 'no_match') AS no_match,
+    count(*) FILTER (WHERE degraded) AS degraded
+FROM search_log
+WHERE created_at >= :start AND created_at < :end
+""")
+
+SEARCH_DAYS_SQL = text("""
+WITH days AS (
+    SELECT generate_series(
+        CAST(:first_day AS timestamp), CAST(:last_day AS timestamp), interval '1 day'
+    )::date AS start
+)
+SELECT
+    days.start,
+    count(s.id) AS searches,
+    count(s.id) FILTER (WHERE s.outcome = 'unclear') AS unclear,
+    count(s.id) FILTER (WHERE s.outcome = 'no_match') AS no_match
+FROM days
+LEFT JOIN search_log s
+    ON (s.created_at AT TIME ZONE :tz)::date = days.start
+    AND s.created_at >= :start AND s.created_at < :end
+GROUP BY days.start
+ORDER BY days.start
+""")
+
+SEARCH_CATEGORIES_SQL = text("""
+SELECT s.category_slug AS slug, c.name AS name, count(*) AS count
+FROM search_log s
+LEFT JOIN category c ON c.slug = s.category_slug
+WHERE s.created_at >= :start AND s.created_at < :end AND s.outcome = 'ok'
+GROUP BY s.category_slug, c.name
+ORDER BY count DESC, c.name
 """)
 
 AI_KINDS_SQL = text("""
@@ -266,6 +314,25 @@ async def ai_spend(session: AsyncSession, bounds: dict[str, Any]) -> AiSpend:
     )
 
 
+async def search_stats(session: AsyncSession, bounds: dict[str, Any]) -> SearchStats:
+    found = (await rows(session, SEARCHES_SQL, bounds))[0]
+    failed = found["unclear"] + found["no_match"]
+    return SearchStats(
+        **found,
+        no_result_share=round(failed / found["total"], 4) if found["total"] else 0.0,
+        per_day=[
+            SearchDay.model_validate(row)
+            for row in await rows(session, SEARCH_DAYS_SQL, bounds)
+        ],
+        by_category=[
+            Bucket(
+                slug=row["slug"], name=row["name"] or UNKNOWN_LABEL, count=row["count"]
+            )
+            for row in await rows(session, SEARCH_CATEGORIES_SQL, bounds)
+        ],
+    )
+
+
 async def feedback_stats(
     session: AsyncSession, bounds: dict[str, Any]
 ) -> FeedbackStats:
@@ -298,11 +365,13 @@ async def collect(
         "last_day": datetime.combine(local_end, time.min),
     }
     totals_row = (await rows(session, TOTALS_SQL, bounds))[0]
+    waiting = (await rows(session, WAITING_SQL, {}))[0]["waiting"]
     messages_row = (await rows(session, MESSAGES_SQL, bounds))[0]
     first_reply = (await rows(session, FIRST_REPLY_SQL, bounds))[0]["hours"]
     needs = totals_row["needs"]
     totals = Totals(
         **totals_row,
+        waiting=waiting,
         **messages_row,
         nothing_fits_share=round(totals_row["nothing_fits"] / needs, 4)
         if needs
@@ -336,6 +405,7 @@ async def collect(
         top_clusters=top,
         growing_clusters=growing,
         top_innovations=innovations,
+        searches=await search_stats(session, bounds),
         feedback=await feedback_stats(session, bounds),
         ai=await ai_spend(session, bounds),
     )

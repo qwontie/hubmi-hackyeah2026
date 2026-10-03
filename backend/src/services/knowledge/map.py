@@ -294,7 +294,9 @@ async def admin_map(
                     col(Need.powiat),
                     func.count(),
                     func.count().filter(col(Need.created_at) >= since),
-                ).group_by(col(Need.powiat))
+                )
+                .where(col(Need.status) != NeedStatus.JUNK)
+                .group_by(col(Need.powiat))
             )
         ).all()
     }

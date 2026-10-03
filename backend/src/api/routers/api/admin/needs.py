@@ -3,6 +3,7 @@ from typing import Annotated
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends, Query, status
+from pydantic import BaseModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import not_found
@@ -22,6 +23,16 @@ from services.mail import Mailer
 from utils.db.models import Need
 
 router = APIRouter(route_class=DishkaRoute)
+
+
+class NeedCounts(BaseModel):
+    waiting: int
+    answered: int
+    closed: int
+    junk: int
+    total: int
+    unread: int
+
 
 reply_limit = rate_limit("admin_reply", per_minute=30, per_day=1000)
 
@@ -53,6 +64,11 @@ async def list_needs(
     )
     items, total = await inbox.list_needs(session, filters, query.page, query.per_page)
     return NeedPage(items=items, total=total, page=query.page, per_page=query.per_page)
+
+
+@router.get("/counts")
+async def need_counts(session: FromDishka[AsyncSession]) -> NeedCounts:
+    return NeedCounts(**await inbox.counts(session))
 
 
 @router.get("/{need_id}")
