@@ -1,14 +1,8 @@
 import { useState } from "react";
 import { api, errorMessage } from "@/api/client";
-import type {
-  FeedbackKind,
-  FeedbackSummary,
-  TesterRole,
-  Votes,
-} from "@/api/types";
+import type { FeedbackKind, FeedbackSummary, Votes } from "@/api/types";
 import type { SelectOption } from "@/lib/options";
 import { pluralPl } from "@/lib/plural";
-import { EMAIL_INVALID, fieldMessage, isEmail } from "@/lib/validation";
 import { useCardVote } from "./use-card-vote";
 
 export const TESTER_ROLES: SelectOption[] = [
@@ -24,7 +18,7 @@ export const votesLine = (summary: FeedbackSummary | null) => {
   }
   const testers =
     summary.testers > 0
-      ? ` ${summary.testers} ${pluralPl(summary.testers, "osoba chce", "osoby chcą", "osób chce")} testować.`
+      ? ` ${summary.testers} ${pluralPl(summary.testers, "osoba zgłosiła się", "osoby zgłosiły się", "osób zgłosiło się")} do wolontariatu.`
       : "";
   return `Pasuje: ${summary.fits}. Nie pasuje: ${summary.does_not_fit}.${testers}`;
 };
@@ -63,83 +57,6 @@ export const useVote = (slug: string, needId?: string, initial?: Votes) => {
   };
 };
 
-interface SignupErrors {
-  consent: string | null;
-  email: string | null;
-}
-
-export const useTestSignup = (slug: string) => {
-  const [who, setWho] = useState<TesterRole>("resident");
-  const [organization, setOrganization] = useState("");
-  const [powiat, setPowiat] = useState("");
-  const [email, setEmail] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [note, setNote] = useState("");
-  const [errors, setErrors] = useState<SignupErrors>({
-    consent: null,
-    email: null,
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [doneEmail, setDoneEmail] = useState<string | null>(null);
-
-  const submit = async () => {
-    const trimmed = email.trim();
-    const problems = {
-      consent: consent
-        ? null
-        : "Zaznacz zgodę, żeby ROPS mógł się z Tobą skontaktować.",
-      email: isEmail(trimmed) ? null : EMAIL_INVALID,
-    };
-    setErrors(problems);
-    if (problems.email || problems.consent) {
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    try {
-      await api.testSignup(slug, {
-        contact_consent: true,
-        contact_email: trimmed,
-        who,
-        ...(organization.trim() ? { organization: organization.trim() } : {}),
-        ...(powiat ? { powiat } : {}),
-        ...(note.trim() ? { note: note.trim() } : {}),
-      });
-      setDoneEmail(trimmed);
-    } catch (caught) {
-      setErrors({
-        consent: fieldMessage(caught, "contact_consent"),
-        email: fieldMessage(caught, "contact_email"),
-      });
-      setError(errorMessage(caught));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return {
-    busy,
-    consent,
-    doneEmail,
-    email,
-    error,
-    errors,
-    needsOrganization: who !== "resident",
-    note,
-    organization,
-    powiat,
-    setConsent,
-    setEmail,
-    setNote,
-    setOrganization,
-    setPowiat,
-    setWho: (value: string) => setWho(value as TesterRole),
-    submit,
-    who,
-  };
-};
-
 export const useImprovement = (slug: string) => {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -149,7 +66,7 @@ export const useImprovement = (slug: string) => {
   const submit = async () => {
     const trimmed = text.trim();
     if (trimmed.length < 10) {
-      setError("Opis pomysłu musi mieć co najmniej 10 znaków.");
+      setError("Uwaga musi mieć co najmniej 10 znaków.");
       return;
     }
     setBusy(true);

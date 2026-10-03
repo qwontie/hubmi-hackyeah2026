@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import Head from "expo-router/head";
-import { FileText, PenLine, Search, X } from "lucide-react-native";
+import { PenLine, Search, X } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
 import { CategoryFilter } from "@/features/category-filter";
@@ -38,7 +38,12 @@ export default function ProblemsScreen() {
   const empty = !(list.loading || list.error) && list.items.length === 0;
 
   return (
-    <Screen tabs title="Problemy, które czekają na pomysł" width={900}>
+    <Screen
+      back="Działaj"
+      backFallback="/dzialaj"
+      title="Problemy, które czekają na pomysł"
+      width={900}
+    >
       <Head>
         <title>{`Problemy mieszkańców · ${APP_NAME}`}</title>
       </Head>
@@ -86,12 +91,6 @@ export default function ProblemsScreen() {
             icon={PenLine}
             label="Mam własny pomysł"
             onPress={ownIdea}
-            variant="quiet"
-          />
-          <Button
-            icon={FileText}
-            label="Nabory i wnioski"
-            onPress={() => router.push("/nabory")}
             variant="quiet"
           />
         </View>

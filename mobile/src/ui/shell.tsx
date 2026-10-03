@@ -2,9 +2,8 @@ import { Image } from "expo-image";
 import { Link, usePathname } from "expo-router";
 import {
   ALargeSmall,
-  FlaskConical,
+  HandHeart,
   Library,
-  Lightbulb,
   type LucideIcon,
   Map as MapIcon,
   MessageSquareText,
@@ -28,13 +27,7 @@ import { Glass } from "./glass";
 import { nightAttr } from "./night";
 import { Txt } from "./text";
 
-type TabHref =
-  | "/"
-  | "/mapa"
-  | "/biblioteka"
-  | "/pomysl"
-  | "/zgloszenia"
-  | "/testy";
+type TabHref = "/" | "/mapa" | "/biblioteka" | "/dzialaj" | "/zgloszenia";
 
 export interface TabItem {
   href: TabHref;
@@ -67,11 +60,11 @@ export const TABS: TabItem[] = [
     sf: { default: "books.vertical", selected: "books.vertical.fill" },
   },
   {
-    href: "/pomysl",
-    icon: Lightbulb,
-    label: "Pomysł",
-    name: "pomysl",
-    sf: { default: "lightbulb", selected: "lightbulb.fill" },
+    href: "/dzialaj",
+    icon: HandHeart,
+    label: "Działaj",
+    name: "dzialaj",
+    sf: { default: "hand.raised", selected: "hand.raised.fill" },
   },
   {
     href: "/zgloszenia",
@@ -80,6 +73,14 @@ export const TABS: TabItem[] = [
     name: "zgloszenia",
     sf: { default: "text.bubble", selected: "text.bubble.fill" },
   },
+];
+
+const CONTRIBUTE_PATHS = [
+  "/dzialaj",
+  "/pomysl",
+  "/problemy",
+  "/nabory",
+  "/wolontariat",
 ];
 
 const isActive = (pathname: string, href: string) => {
@@ -96,12 +97,8 @@ const isActive = (pathname: string, href: string) => {
   if (href === "/zgloszenia") {
     return pathname.startsWith("/zgloszeni");
   }
-  if (href === "/pomysl") {
-    return (
-      pathname.startsWith("/pomysl") ||
-      pathname.startsWith("/problemy") ||
-      pathname.startsWith("/nabory")
-    );
+  if (href === "/dzialaj") {
+    return CONTRIBUTE_PATHS.some((path) => pathname.startsWith(path));
   }
   return pathname.startsWith(href);
 };
@@ -333,7 +330,6 @@ export function WideChrome() {
               label={item.label}
             />
           ))}
-          <WideLink href="/testy" icon={FlaskConical} label="Testy" />
         </Glass>
       </View>
     </View>
