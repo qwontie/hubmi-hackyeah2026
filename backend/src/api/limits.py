@@ -60,9 +60,6 @@ class RateLimiter:
 
 
 def client_ip(request: Request) -> str:
-    forwarded = request.headers.get("cf-connecting-ip")
-    if forwarded:
-        return forwarded.strip()
     return request.client.host if request.client else "unknown"
 
 

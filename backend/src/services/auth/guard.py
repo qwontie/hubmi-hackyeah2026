@@ -14,6 +14,8 @@ RESET_SECONDS = 900
 BACKOFF_SECONDS = 30
 MAX_BACKOFF_SECONDS = 900
 BLOCK_AFTER_FAILURES = 5
+ACCOUNT_BLOCK_AFTER_FAILURES = 20
+ACCOUNT_MAX_BACKOFF_SECONDS = 60
 
 
 class LoginBlockedError(RuntimeError):
@@ -73,15 +75,23 @@ class LoginGuard:
             "ELSE NULL END, updated_at = now()"
         )
         connection = await self.session.connection()
-        for key_hash in self._keys(request, login):
+        keys = zip(
+            self._keys(request, login),
+            (
+                (BLOCK_AFTER_FAILURES, MAX_BACKOFF_SECONDS),
+                (ACCOUNT_BLOCK_AFTER_FAILURES, ACCOUNT_MAX_BACKOFF_SECONDS),
+            ),
+            strict=True,
+        )
+        for key_hash, (block_after, max_backoff) in keys:
             await connection.execute(
                 statement,
                 {
                     "key_hash": key_hash,
                     "reset_seconds": RESET_SECONDS,
-                    "block_after": BLOCK_AFTER_FAILURES,
+                    "block_after": block_after,
                     "backoff": BACKOFF_SECONDS,
-                    "max_backoff": MAX_BACKOFF_SECONDS,
+                    "max_backoff": max_backoff,
                 },
             )
         await self.session.commit()

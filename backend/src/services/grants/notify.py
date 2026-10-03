@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from html import escape
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import update
+from sqlalchemy import delete, update
 from sqlmodel import col
 from sqlmodel import select as entity_select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -21,7 +21,12 @@ from services.mail.templates import (
 from services.modules import normalize_email
 from services.signing import key_matches, signed_key
 from utils.db import session_scope
-from utils.db.models import GrantCall, GrantSubscriber
+from utils.db.models import (
+    GrantCall,
+    GrantNoticeDelivery,
+    GrantNoticeStatus,
+    GrantSubscriber,
+)
 from utils.env import env
 from utils.logging import logger
 
@@ -97,7 +102,19 @@ def confirm_email(subscriber: GrantSubscriber) -> Email:
     )
 
 
-def call_email(call: GrantCall, subscriber: GrantSubscriber, *, opened: bool) -> Email:
+def notice_key(call: GrantCall, *, opened: bool) -> str:
+    moment = call.opens_at if opened else call.updated_at or datetime.now(UTC)
+    kind = "open" if opened else "dates"
+    return f"{kind}-{int(moment.timestamp())}"
+
+
+def call_email(
+    call: GrantCall,
+    subscriber: GrantSubscriber,
+    *,
+    opened: bool,
+    event_key: str | None = None,
+) -> Email:
     stop = page_url(f"unsubscribe={token(UNSUBSCRIBE, subscriber.id)}")
     url = calls_url(call.id)
     if opened:
@@ -123,13 +140,15 @@ def call_email(call: GrantCall, subscriber: GrantSubscriber, *, opened: bool) ->
         '<p style="margin:24px 0 0;font-size:13px;color:#57534e">'
         f'{NOTE} <a href="{escape(stop)}">Wypisz się</a>.</p>',
     )
-    kind = "open" if opened else f"dates-{int(call.updated_at.timestamp())}"
     return Email(
         to=subscriber.email,
         subject=subject,
         text=text,
         html=html,
-        idempotency_key=f"grant-{call.id}-{kind}-{subscriber.id}",
+        idempotency_key=(
+            f"grant-{call.id}-{event_key or notice_key(call, opened=opened)}-"
+            f"{subscriber.id}"
+        ),
     )
 
 
@@ -192,6 +211,81 @@ async def unsubscribe(session: AsyncSession, value: str) -> bool:
     return True
 
 
+async def prepare_open_deliveries(
+    session: AsyncSession,
+    call: GrantCall,
+    subscribers: list[GrantSubscriber],
+    event_key: str,
+) -> dict[uuid.UUID, GrantNoticeDelivery]:
+    await session.exec(
+        delete(GrantNoticeDelivery).where(
+            col(GrantNoticeDelivery.call_id) == call.id,
+            col(GrantNoticeDelivery.opened).is_(True),
+            col(GrantNoticeDelivery.notice_key) != event_key,
+            col(GrantNoticeDelivery.status) != GrantNoticeStatus.SENT,
+        )
+    )
+    existing = await session.exec(
+        entity_select(GrantNoticeDelivery).where(
+            col(GrantNoticeDelivery.call_id) == call.id,
+            col(GrantNoticeDelivery.notice_key) == event_key,
+        )
+    )
+    deliveries = {row.subscriber_id: row for row in existing.all()}
+    for subscriber in subscribers:
+        if subscriber.id not in deliveries:
+            delivery = GrantNoticeDelivery(
+                call_id=call.id,
+                subscriber_id=subscriber.id,
+                notice_key=event_key,
+                opened=True,
+            )
+            session.add(delivery)
+            deliveries[subscriber.id] = delivery
+    await session.commit()
+    return deliveries
+
+
+async def save_attempt(
+    session: AsyncSession,
+    record: GrantNoticeDelivery,
+    delivery_status: DeliveryStatus,
+    error: str | None,
+) -> None:
+    record.attempts += 1
+    record.last_error = error
+    if delivery_status == DeliveryStatus.SENT:
+        record.status = GrantNoticeStatus.SENT
+        record.sent_at = datetime.now(UTC)
+    elif delivery_status == DeliveryStatus.FAILED:
+        record.status = GrantNoticeStatus.FAILED
+    else:
+        record.status = GrantNoticeStatus.PENDING
+    session.add(record)
+    await session.commit()
+
+
+async def deliver_notice(
+    session: AsyncSession,
+    mailer: Mailer,
+    email: Email,
+    subscriber_id: uuid.UUID,
+    record: GrantNoticeDelivery | None,
+) -> bool:
+    try:
+        delivery = await mailer.send(email)
+    except Exception as exc:
+        if record is not None:
+            await save_attempt(
+                session, record, DeliveryStatus.FAILED, type(exc).__name__
+            )
+        logger.exception("call mail failed for %s", subscriber_id)
+        return False
+    if record is not None:
+        await save_attempt(session, record, delivery.status, delivery.error)
+    return delivery.status == DeliveryStatus.SENT
+
+
 async def notify(call_id: uuid.UUID, mailer: Mailer, *, opened: bool) -> int:
     sent = 0
     total = 0
@@ -207,15 +301,24 @@ async def notify(call_id: uuid.UUID, mailer: Mailer, *, opened: bool) -> int:
         )
         subscribers = list(rows.all())
         total = len(subscribers)
+        event_key = notice_key(call, opened=opened)
+        deliveries = (
+            await prepare_open_deliveries(session, call, subscribers, event_key)
+            if opened
+            else {}
+        )
         for subscriber in subscribers:
-            try:
-                delivery = await mailer.send(
-                    call_email(call, subscriber, opened=opened)
-                )
-                if delivery.status == DeliveryStatus.SENT:
-                    sent += 1
-            except Exception:
-                logger.exception("call mail failed for %s", subscriber.id)
+            record = deliveries.get(subscriber.id)
+            if record is not None and record.status == GrantNoticeStatus.SENT:
+                sent += 1
+                continue
+            sent += await deliver_notice(
+                session,
+                mailer,
+                call_email(call, subscriber, opened=opened, event_key=event_key),
+                subscriber.id,
+                record=record,
+            )
     logger.info("grant call %s: %d subscribers notified", call_id, sent)
     return sent if sent == total else -1
 

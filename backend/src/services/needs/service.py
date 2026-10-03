@@ -149,6 +149,7 @@ async def _store(  # noqa: PLR0913
     title: str,
     category: str | None,
     contact_email: str | None = None,
+    nothing_fits: bool = False,
 ) -> tuple[Need, str, NeedCluster]:
     token, token_hash = new_token()
     need = Need(
@@ -160,6 +161,7 @@ async def _store(  # noqa: PLR0913
         contact_email=contact_email,
         contact_consent=contact_email is not None,
         consent_at=datetime.now(UTC) if contact_email else None,
+        nothing_fits=nothing_fits,
         edit_token_hash=token_hash,
         embedding=vector,
     )
@@ -274,6 +276,7 @@ async def create_need(  # noqa: PLR0913
         raise rejected(UNCLEAR)
     hits = await hybrid_search(session, text, vector, limit=CANDIDATES)
     similar = await similar_count(session, vector)
+    shown = shown_innovation_slugs or []
     need, token, cluster = await _store(
         session,
         text=text,
@@ -283,13 +286,10 @@ async def create_need(  # noqa: PLR0913
         title=check.title.strip() or text[:TITLE_FALLBACK],
         category=_category(hits),
         contact_email=contact_email,
+        nothing_fits=bool(shown),
     )
-    shown = shown_innovation_slugs or []
     by_slug = {hit.innovation.slug: hit for hit in hits}
     matched = [by_slug[slug] for slug in shown if slug in by_slug]
-    if len(matched) != len(shown):
-        msg = "shown innovations must match published search results"
-        raise ValueError(msg)
     stored = fallback(matched, limit=len(matched))
     for rank, result in enumerate(stored, start=1):
         session.add(

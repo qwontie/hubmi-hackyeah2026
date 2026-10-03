@@ -5,7 +5,7 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends, Header, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.errors import invalid, not_found
+from api.errors import not_found
 from api.limits import rate_limit
 from services.ai import AiBudgetExceededError, AiUnavailableError
 from services.needs import (
@@ -39,10 +39,6 @@ async def create(body: NeedIn, session: FromDishka[AsyncSession]) -> NeedOut:
         )
     except (TextRejectedError, AiUnavailableError, AiBudgetExceededError) as e:
         raise translate(e) from e
-    except ValueError as e:
-        field = "shown_innovation_slugs"
-        message = "Wybierz rozwiązania z wyników wyszukiwania."
-        raise invalid(field, message) from e
     cluster = outcome.cluster
     return NeedOut(
         id=outcome.need.id,

@@ -12,6 +12,8 @@ from .grant import (
     GrantApplication,
     GrantCall,
     GrantCallStatus,
+    GrantNoticeDelivery,
+    GrantNoticeStatus,
     GrantSubscriber,
 )
 from .idea import Idea, IdeaStage, IdeaStatus
@@ -48,6 +50,8 @@ __all__ = [
     "GrantApplication",
     "GrantCall",
     "GrantCallStatus",
+    "GrantNoticeDelivery",
+    "GrantNoticeStatus",
     "GrantSubscriber",
     "Idea",
     "IdeaStage",

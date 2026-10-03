@@ -36,6 +36,12 @@ class ApplicationStatus(StrEnum):
     REJECTED = "rejected"
 
 
+class GrantNoticeStatus(StrEnum):
+    PENDING = "pending"
+    FAILED = "failed"
+    SENT = "sent"
+
+
 class GrantCall(SQLModel, table=True):
     __tablename__ = "grant_call"
     __table_args__ = (
@@ -135,10 +141,59 @@ class GrantSubscriber(SQLModel, table=True):
     updated_at: datetime = updated_at_col()
 
 
+class GrantNoticeDelivery(SQLModel, table=True):
+    __tablename__ = "grant_notice_delivery"
+    __table_args__ = (
+        UniqueConstraint(
+            "call_id",
+            "subscriber_id",
+            "notice_key",
+            name="uq_grant_notice_delivery_event",
+        ),
+        CheckConstraint(
+            "status IN ('pending', 'failed', 'sent')",
+            name="ck_grant_notice_delivery_status",
+        ),
+    )
+
+    id: uuid.UUID = uuid_pk()
+    call_id: uuid.UUID = Field(
+        sa_column=Column(
+            postgresql.UUID(as_uuid=True),
+            ForeignKey("grant_call.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        )
+    )
+    subscriber_id: uuid.UUID = Field(
+        sa_column=Column(
+            postgresql.UUID(as_uuid=True),
+            ForeignKey("grant_subscriber.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        )
+    )
+    notice_key: str = Field(sa_column=Column(Text, nullable=False))
+    opened: bool = Field(sa_column=Column(Boolean, nullable=False))
+    status: GrantNoticeStatus = Field(
+        default=GrantNoticeStatus.PENDING,
+        sa_column=Column(Text, nullable=False, server_default=text("'pending'")),
+    )
+    attempts: int = Field(
+        default=0, sa_column=Column(Integer, nullable=False, server_default=text("0"))
+    )
+    last_error: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    sent_at: datetime | None = nullable_ts_col()
+    created_at: datetime = created_at_col()
+    updated_at: datetime = updated_at_col()
+
+
 __all__ = [
     "ApplicationStatus",
     "GrantApplication",
     "GrantCall",
     "GrantCallStatus",
+    "GrantNoticeDelivery",
+    "GrantNoticeStatus",
     "GrantSubscriber",
 ]

@@ -4,6 +4,7 @@ from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse, Response
 
+from api.errors import STATUS_MESSAGES, body
 from utils.env import env, is_prod
 
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
@@ -40,6 +41,6 @@ class SameOriginMiddleware(BaseHTTPMiddleware):
             if supplied != _expected_origin(request):
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    content={"detail": "Cross-origin request rejected"},
+                    content=body("forbidden", STATUS_MESSAGES[403]),
                 )
         return await call_next(request)
