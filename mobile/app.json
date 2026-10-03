@@ -37,6 +37,13 @@
       "expo-status-bar",
       "expo-image",
       "expo-font",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Pozwól HubMi używać mikrofonu do dyktowania opisu problemu.",
+          "speechRecognitionPermission": "Pozwól HubMi rozpoznawać mowę podczas dyktowania opisu problemu."
+        }
+      ],
       "./plugins/with-scene-lifecycle.js"
     ],
     "experiments": {
