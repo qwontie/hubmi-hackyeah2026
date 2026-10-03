@@ -125,6 +125,9 @@
     outline: 2px solid var(--hm-ring);
     outline-offset: 2px;
   }
+  main[tabindex="-1"]:focus {
+    outline: none;
+  }
   ::selection {
     background: color-mix(in oklab, var(--hm-stamp) 24%, transparent);
   }

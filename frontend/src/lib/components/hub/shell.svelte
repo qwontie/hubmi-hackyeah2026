@@ -73,6 +73,16 @@
     open: "bg-hm-live",
   };
 
+  function skip(event: MouseEvent) {
+    const main = document.querySelector<HTMLElement>("main");
+    if (!main) {
+      return;
+    }
+    event.preventDefault();
+    main.setAttribute("tabindex", "-1");
+    main.focus();
+  }
+
   async function signOut() {
     try {
       await logout();
@@ -87,6 +97,7 @@
 <div
   class="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] bg-hm-desk text-hm-ink max-[899px]:h-auto max-[899px]:min-h-dvh"
 >
+  <a class="skip" href="#main" onclick={skip}>Przejdź do treści</a>
   <header
     class="flex flex-wrap items-center gap-x-7 gap-y-2.5 px-3 py-2.5 min-[900px]:h-15 min-[900px]:px-5 min-[900px]:py-0"
   >
@@ -98,6 +109,11 @@
       <span class="leading-tight">
         <b class="block font-semibold text-[15px] tracking-tight">HubMi</b>
         <span class="text-hm-ink-soft text-xs">ROPS Kraków</span>
+        {#if demo}
+          <span class="block text-hm-ink-soft text-xs min-[900px]:hidden"
+            >Dane pokazowe</span
+          >
+        {/if}
       </span>
     </a>
     <nav
@@ -140,7 +156,6 @@
     <div class="ml-auto flex items-center gap-4 text-[13px] text-hm-ink-soft">
       {#if demo}
         <span class="demo max-[899px]:hidden">W bazie są dane pokazowe</span>
-        <span class="demo min-[900px]:hidden">Dane pokazowe</span>
       {/if}
       {#if !expert}
         <span class="flex items-center gap-2" role="status">
@@ -216,6 +231,24 @@
     box-shadow: var(--shadow-cladd-outline);
   }
 
+  .skip {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 80;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--hm-on-stamp);
+    background: var(--hm-stamp);
+    border-radius: 10px;
+    translate: 0 -200%;
+  }
+
+  .skip:focus-visible {
+    translate: 0 0;
+  }
+
   .demo {
     font-size: 12px;
     white-space: nowrap;
@@ -234,6 +267,21 @@
 
   .signout:hover {
     background: color-mix(in oklab, var(--hm-paper) 60%, transparent);
+  }
+
+  @media (max-width: 899px) {
+    .nav {
+      scrollbar-width: none;
+      mask-image: linear-gradient(
+        to right,
+        black calc(100% - 28px),
+        transparent
+      );
+    }
+
+    .nav a:last-child {
+      margin-right: 24px;
+    }
   }
 
   @media (max-width: 899px), (pointer: coarse) {

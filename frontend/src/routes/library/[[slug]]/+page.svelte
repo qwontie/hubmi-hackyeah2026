@@ -233,7 +233,7 @@
     if (run.status === "failed") {
       return `Ostatni import ${when(run.started_at)} nie powiódł się${run.error ? `: ${run.error}` : "."}`;
     }
-    return `Ostatni import ${when(run.finished_at ?? run.started_at)}: ${run.created} nowych, ${run.updated} zmienionych, ${run.unchanged} bez zmian${run.skipped_edited ? `, ${run.skipped_edited} pominiętych, bo zmienione ręcznie` : ""}.`;
+    return `Ostatni import ${when(run.finished_at ?? run.started_at)}: ${run.created} ${plural(run.created, "nowa", "nowe", "nowych")}, ${run.updated} ${plural(run.updated, "zmieniona", "zmienione", "zmienionych")}, ${run.unchanged} bez zmian${run.skipped_edited ? `, ${run.skipped_edited} ${plural(run.skipped_edited, "pominięta", "pominięte", "pominiętych")}, bo ${plural(run.skipped_edited, "zmieniona", "zmienione", "zmienione")} ręcznie` : ""}.`;
   };
 </script>
 

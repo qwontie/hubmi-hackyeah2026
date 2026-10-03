@@ -226,8 +226,8 @@
           {stats.feedback.fits + stats.feedback.does_not_fit > 0 ? pct(stats.feedback.fit_share) : "brak ocen"}
         </dd>
         <dd class="note">
-          {stats.feedback.fits}
-          pasuje, {stats.feedback.does_not_fit} nie pasuje
+          Pasuje: {stats.feedback.fits}, nie pasuje:
+          {stats.feedback.does_not_fit}
         </dd>
       </div>
       <div>
@@ -343,8 +343,7 @@
               <li>
                 <a href="{resolve('/library')}/{i.slug}">{i.title}</a>
                 <span class="tabular"
-                  >{i.does_not_fit}
-                  nie pasuje, {i.fits} pasuje</span
+                  >Nie pasuje: {i.does_not_fit}, pasuje: {i.fits}</span
                 >
               </li>
             {/each}

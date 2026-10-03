@@ -197,7 +197,7 @@
           <p class="px-3 py-6 text-hm-ink-soft text-sm">Wczytywanie…</p>
         {:else if visible.length === 0}
           <p class="px-3 py-6 text-hm-ink-soft text-sm">
-            {ideas.length === 0 ? "Nikt jeszcze nie zgłosił pomysłu. Pojawią się tutaj same." : "Brak pomysłów w tym stanie."}
+            {ideas.length === 0 ? "Nikt jeszcze nie zgłosił pomysłu. Nowe pomysły pojawią się tutaj same." : "Brak pomysłów w tym stanie."}
           </p>
         {:else}
           <ol class="rows">
