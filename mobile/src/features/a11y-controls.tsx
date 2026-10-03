@@ -8,10 +8,11 @@ import {
   Volume2,
   X,
 } from "lucide-react-native";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useA11yControls } from "@/hooks/use-a11y-controls";
+import { focusElement } from "@/lib/a11y";
 import { useTheme } from "@/theme/settings";
 import { minTarget, radius, space } from "@/theme/tokens";
 import { Glass } from "@/ui/glass";
@@ -139,19 +140,21 @@ export function A11yPanel({
 }) {
   const { colors, highContrast, reduceMotion, wide } = useTheme();
   const insets = useSafeAreaInsets();
+  const close = useRef<View>(null);
   return (
     <Modal
       accessibilityLabel="Dostępność"
       animationType={reduceMotion ? "none" : "fade"}
       aria-label="Dostępność"
       onRequestClose={onClose}
+      onShow={() => focusElement(close.current)}
       transparent
       visible={open}
     >
-      <Pressable
-        accessibilityLabel="Zamknij ustawienia dostępności"
-        onPress={onClose}
-        role="button"
+      <View
+        aria-hidden
+        onResponderRelease={onClose}
+        onStartShouldSetResponder={() => true}
         style={styles.backdrop}
       />
       <View
@@ -183,6 +186,7 @@ export function A11yPanel({
             <Pressable
               aria-label="Zamknij"
               onPress={onClose}
+              ref={close}
               role="button"
               style={styles.close}
             >

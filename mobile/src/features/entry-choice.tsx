@@ -189,20 +189,6 @@ export function EntryChoice({
         { backgroundColor: colors.night },
       ]}
     >
-      <Panel
-        night
-        onPress={onProblem}
-        role="button"
-        text="Opisz go swoimi słowami. Pokażemy rozwiązania, które już działają."
-        title="Mam problem"
-      />
-      <Panel
-        night={false}
-        onPress={() => router.navigate("/pomysl")}
-        role="button"
-        text="Zobacz, z czym mierzą się mieszkańcy, i zaproponuj rozwiązanie."
-        title="Mam pomysł"
-      />
       <View
         pointerEvents="box-none"
         style={[
@@ -219,6 +205,20 @@ export function EntryChoice({
           Z czym przychodzisz?
         </Heading>
       </View>
+      <Panel
+        night
+        onPress={onProblem}
+        role="button"
+        text="Opisz go swoimi słowami. Pokażemy rozwiązania, które już działają."
+        title="Mam problem"
+      />
+      <Panel
+        night={false}
+        onPress={() => router.navigate("/pomysl")}
+        role="button"
+        text="Zobacz, z czym mierzą się mieszkańcy, i zaproponuj rozwiązanie."
+        title="Mam pomysł"
+      />
       <View
         pointerEvents="box-none"
         style={[
@@ -270,6 +270,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     top: 0,
+    zIndex: 1,
   },
   overWide: {
     paddingHorizontal: 40,

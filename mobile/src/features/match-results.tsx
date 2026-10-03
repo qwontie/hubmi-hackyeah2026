@@ -157,7 +157,7 @@ export function MatchResults({
       ]}
     >
       <Heading
-        level={2}
+        level={1}
         nativeID="results-title"
         ref={titleRef}
         size={wide ? "h1" : "h2"}

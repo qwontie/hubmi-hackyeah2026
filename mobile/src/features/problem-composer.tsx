@@ -257,6 +257,7 @@ export function ProblemComposer({ match }: { match: Match }) {
         ) : null}
       </View>
       <Feedback match={match} />
+      {wide ? null : (picker ?? null)}
       <View style={styles.actions}>
         <Button
           busy={loading}
@@ -275,7 +276,6 @@ export function ProblemComposer({ match }: { match: Match }) {
           Enter szuka. Shift i Enter to nowa linia.
         </Txt>
       ) : null}
-      {wide ? null : (picker ?? null)}
     </View>
   );
 

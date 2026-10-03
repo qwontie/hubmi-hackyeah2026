@@ -1,11 +1,18 @@
 import { Link } from "expo-router";
 import { ArrowRight, Check, CircleAlert } from "lucide-react-native";
-import { useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  type Text,
+  TextInput,
+  View,
+} from "react-native";
 import { PowiatPicker } from "@/features/powiat-picker";
 import { Stamp } from "@/features/stamp";
 import type { RegistrationForm } from "@/hooks/use-match";
 import { usePowiats } from "@/hooks/use-powiats";
+import { focusElement } from "@/lib/a11y";
 import { useTheme } from "@/theme/settings";
 import { fonts, minTarget, radius, space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
@@ -70,11 +77,15 @@ function Step({ registration }: { registration: Registration }) {
   const { colors, lineHeight, type, wide } = useTheme();
   const powiats = usePowiats();
   const [focused, setFocused] = useState(false);
+  const title = useRef<Text>(null);
   const { busy, error, fields } = registration;
+  useEffect(() => {
+    focusElement(title.current);
+  }, []);
   return (
     <>
       <View style={styles.text}>
-        <Heading level={3} night size="h2">
+        <Heading level={2} night ref={title}>
           Przekaż problem do ROPS
         </Heading>
         <Txt tone="onNightSoft" variant="lead">
@@ -161,11 +172,26 @@ function Step({ registration }: { registration: Registration }) {
 export function Unsolved({ registration }: { registration: Registration }) {
   const { colors, wide } = useTheme();
   const { fields, need } = registration;
+  const opener = useRef<View>(null);
+  const doneTitle = useRef<Text>(null);
+  const wasOpen = useRef<boolean>(false);
+  const accepted = Boolean(need);
+
+  useEffect(() => {
+    if (accepted) {
+      if (wasOpen.current) {
+        focusElement(doneTitle.current);
+      }
+    } else if (wasOpen.current && !fields.open) {
+      focusElement(opener.current);
+    }
+    wasOpen.current = fields.open;
+  }, [accepted, fields.open]);
 
   let body = (
     <>
       <View style={styles.text}>
-        <Heading level={3} night size="h2">
+        <Heading level={2} night>
           Żadne z tych rozwiązań nie pomaga?
         </Heading>
         <Txt tone="onNightSoft" variant="lead">
@@ -176,6 +202,7 @@ export function Unsolved({ registration }: { registration: Registration }) {
         fill={!wide}
         label="Mój problem nie został rozwiązany"
         onPress={() => fields.setOpen(true)}
+        ref={opener}
         size="large"
         variant="light"
       />
@@ -189,7 +216,7 @@ export function Unsolved({ registration }: { registration: Registration }) {
       <View style={[styles.done, wide && styles.doneWide]}>
         <Stamp at={need.at} number={need.number} word="PRZYJĘTO" />
         <View style={[styles.text, wide && styles.textWide]}>
-          <Heading level={3} night size="h2">
+          <Heading level={2} night ref={doneTitle}>
             ROPS przyjął Twoje zgłoszenie
           </Heading>
           <Txt tone="onNightSoft" variant="lead">
