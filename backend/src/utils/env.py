@@ -3,6 +3,9 @@ import os
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+MIN_AUTH_SECRET_LENGTH = 32
+MIN_DB_PASSWORD_LENGTH = 16
+
 
 def is_prod() -> bool:
     return os.getenv("RUN_ENVIRONMENT") == "prod"
@@ -51,7 +54,7 @@ class ApiSettings(Section):
 class AuthSettings(Section):
     secret: SecretStr = SecretStr("")
     cookie_name: str = "hubmi_session"
-    session_days: int = 30
+    session_hours: int = 12
 
 
 class MailSettings(Section):
@@ -86,3 +89,23 @@ class Settings(BaseSettings):
 
 
 env = Settings()
+
+
+def validate_prod_settings() -> None:
+    if not is_prod():
+        return
+    secret = env.auth.secret.get_secret_value()
+    if len(secret) < MIN_AUTH_SECRET_LENGTH or secret.lower() in {
+        "secret",
+        "changeme",
+        "hubmi",
+    }:
+        message = "AUTH__SECRET must be at least 32 characters in production"
+        raise RuntimeError(message)
+    password = env.db.password.get_secret_value()
+    if (
+        password == env.db.user == env.db.db_name
+        or len(password) < MIN_DB_PASSWORD_LENGTH
+    ):
+        message = "Production database credentials must not use defaults"
+        raise RuntimeError(message)

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from services.auth.crypto import hash_password, verify_password
+from services.auth.crypto import hash_password_async, verify_password
 from utils.db.models import AdminRole, AdminUser
 
 
@@ -31,7 +31,7 @@ class AdminRepository:
 
     async def verify(self, login: str, password: str) -> AdminUser | None:
         admin = await self.by_login(login)
-        if admin is None or not verify_password(password, admin.password_hash):
+        if admin is None or not await verify_password(password, admin.password_hash):
             return None
         return admin
 
@@ -48,7 +48,9 @@ class AdminRepository:
         created = admin is None
         if admin is None:
             admin = AdminUser(login=login, password_hash="")
-        admin.password_hash = hash_password(password)
+        admin.password_hash = await hash_password_async(password)
+        if not created:
+            admin.token_version += 1
         if profile is not None:
             admin.role = profile.role
             admin.display_name = profile.display_name

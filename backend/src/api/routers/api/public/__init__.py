@@ -1,9 +1,10 @@
 from fastapi import APIRouter
 
-from . import innovations, match, needs, problems
+from . import innovations, match, meta, needs, problems
 
 router = APIRouter(tags=["public"])
 router.include_router(match.router, prefix="/match")
+router.include_router(meta.router, prefix="/meta")
 router.include_router(needs.router, prefix="/needs")
 router.include_router(innovations.router)
 router.include_router(problems.router, prefix="/problems")

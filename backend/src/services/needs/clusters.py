@@ -67,6 +67,23 @@ async def similar_count(
     return int((await session.exec(query)).one())
 
 
+async def nearest_cluster(
+    session: AsyncSession, vector: list[float]
+) -> NeedCluster | None:
+    distance = cosine_distance(NeedCluster.centroid, vector)
+    nearest = (
+        await session.exec(
+            select(NeedCluster, distance)
+            .where(col(NeedCluster.centroid).is_not(None))
+            .order_by(distance)
+            .limit(1)
+        )
+    ).first()
+    if nearest is None or 1 - float(nearest[1]) < CLUSTER_SIMILARITY:
+        return None
+    return nearest[0]
+
+
 def _mean(vectors: list[list[float]]) -> list[float] | None:
     if not vectors:
         return None

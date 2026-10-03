@@ -23,7 +23,7 @@ from services.search import (
 from utils.db.models.match_result import MatchResult
 from utils.db.models.need import Need, NeedCluster, NeedOrigin
 
-from .clusters import assign_cluster, schedule_summary, similar_count
+from .clusters import assign_cluster, nearest_cluster, schedule_summary, similar_count
 from .payloads import need_payload
 from .tokens import new_token, token_matches
 
@@ -76,6 +76,14 @@ def clean_text(text: str) -> str:
 class MatchOutcome:
     need: Need
     token: str
+    results: list[Reasoned]
+    similar_count: int
+    cluster: NeedCluster | None
+    degraded: bool
+
+
+@dataclass(slots=True)
+class SearchOutcome:
     results: list[Reasoned]
     similar_count: int
     cluster: NeedCluster | None
@@ -225,12 +233,38 @@ async def match_need(
     )
 
 
-async def create_need(
+async def search_need(
+    session: AsyncSession, text: str, *, powiat: str | None
+) -> SearchOutcome:
+    del powiat
+    text = clean_text(text)
+    vector = await embed_query(text, kind="embed_need")
+    hits = await hybrid_search(session, text, vector, limit=CANDIDATES)
+    try:
+        decision = await decide(text, hits) if hits else None
+    except AiUnavailableError:
+        decision = None
+        degraded = True
+    else:
+        degraded = False
+    if decision is not None and not decision.is_problem:
+        raise rejected(UNCLEAR)
+    results = apply_decision(decision, hits) if decision else fallback(hits)
+    return SearchOutcome(
+        results=results,
+        similar_count=await similar_count(session, vector),
+        cluster=await nearest_cluster(session, vector),
+        degraded=degraded,
+    )
+
+
+async def create_need(  # noqa: PLR0913
     session: AsyncSession,
     text: str,
     *,
     powiat: str | None,
     contact_email: str | None,
+    shown_innovation_slugs: list[str] | None = None,
     vector: list[float] | None = None,
 ) -> FormOutcome:
     text = clean_text(text)
@@ -238,7 +272,7 @@ async def create_need(
     check = await run_agent(check_agent, f"<need>{text}</need>", kind="need_check")
     if not check.is_problem:
         raise rejected(UNCLEAR)
-    hits = await hybrid_search(session, text, vector, limit=3)
+    hits = await hybrid_search(session, text, vector, limit=CANDIDATES)
     similar = await similar_count(session, vector)
     need, token, cluster = await _store(
         session,
@@ -250,10 +284,27 @@ async def create_need(
         category=_category(hits),
         contact_email=contact_email,
     )
+    shown = shown_innovation_slugs or []
+    by_slug = {hit.innovation.slug: hit for hit in hits}
+    matched = [by_slug[slug] for slug in shown if slug in by_slug]
+    if len(matched) != len(shown):
+        msg = "shown innovations must match published search results"
+        raise ValueError(msg)
+    stored = fallback(matched, limit=len(matched))
+    for rank, result in enumerate(stored, start=1):
+        session.add(
+            MatchResult(
+                need_id=need.id,
+                innovation_id=result.hit.innovation.id,
+                rank=rank,
+                score=result.hit.score,
+                reason=result.reason,
+            )
+        )
     await session.commit()
     await session.refresh(need)
     await session.refresh(cluster)
-    _publish_created(need, cluster, [])
+    _publish_created(need, cluster, match_refs(stored))
     return FormOutcome(need=need, token=token, similar_count=similar, cluster=cluster)
 
 
@@ -264,6 +315,8 @@ async def update_need(  # noqa: PLR0913
     *,
     powiat: str | None = None,
     contact_email: str | None = None,
+    contact_email_provided: bool = False,
+    contact_consent: bool | None = None,
     nothing_fits: bool | None = None,
 ) -> Need:
     need = await session.get(Need, need_id)
@@ -271,7 +324,11 @@ async def update_need(  # noqa: PLR0913
         raise NeedNotFoundError
     if powiat is not None:
         need.powiat = powiat
-    if contact_email is not None:
+    if (contact_email_provided and contact_email is None) or contact_consent is False:
+        need.contact_email = None
+        need.contact_consent = False
+        need.consent_at = None
+    elif contact_email is not None:
         need.contact_email = contact_email
         need.contact_consent = True
         need.consent_at = datetime.now(UTC)

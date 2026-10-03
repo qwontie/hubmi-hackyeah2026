@@ -19,6 +19,7 @@ TERMS_URL = (
     "Zasady_wykorzystania_innowacji_MIIS.pdf"
 )
 EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s]+\.[^@\s]{2,}$")
+SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{0,119}$")
 
 
 def _powiat(value: str | None) -> str | None:
@@ -40,9 +41,17 @@ def _email(value: str | None) -> str | None:
     return value
 
 
+def _shown_slugs(value: list[str]) -> list[str]:
+    if len(value) != len(set(value)) or any(not SLUG.fullmatch(slug) for slug in value):
+        msg = "invalid or duplicate innovation slug"
+        raise ValueError(msg)
+    return value
+
+
 Powiat = Annotated[str | None, AfterValidator(_powiat)]
 Email = Annotated[str | None, AfterValidator(_email)]
 NeedText = Annotated[str, Field(max_length=4000)]
+ShownSlugs = Annotated[list[str], Field(max_length=5), AfterValidator(_shown_slugs)]
 
 
 class StrictModel(BaseModel):
@@ -175,7 +184,7 @@ class MatchItem(BaseModel):
 
 
 class MatchOut(BaseModel):
-    need: NeedRef
+    need: NeedRef | None
     results: list[MatchItem]
     similar_count: int
     cluster: ClusterRef | None
@@ -187,6 +196,7 @@ class NeedIn(StrictModel):
     powiat: Powiat = None
     contact_email: Email = None
     contact_consent: bool = False
+    shown_innovation_slugs: ShownSlugs = Field(default_factory=list)
 
 
 class NeedOut(BaseModel):

@@ -9,7 +9,7 @@ from sqlmodel import col
 from sqlmodel import select as entity_select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from services.mail import Email, Mailer
+from services.mail import DeliveryStatus, Email, Mailer
 from services.mail.templates import (
     H1,
     SIGNATURE,
@@ -194,6 +194,7 @@ async def unsubscribe(session: AsyncSession, value: str) -> bool:
 
 async def notify(call_id: uuid.UUID, mailer: Mailer, *, opened: bool) -> int:
     sent = 0
+    total = 0
     async with session_scope() as session:
         call = await session.get(GrantCall, call_id)
         if call is None:
@@ -205,17 +206,21 @@ async def notify(call_id: uuid.UUID, mailer: Mailer, *, opened: bool) -> int:
             )
         )
         subscribers = list(rows.all())
+        total = len(subscribers)
         for subscriber in subscribers:
             try:
-                await mailer.send(call_email(call, subscriber, opened=opened))
-                sent += 1
+                delivery = await mailer.send(
+                    call_email(call, subscriber, opened=opened)
+                )
+                if delivery.status == DeliveryStatus.SENT:
+                    sent += 1
             except Exception:
                 logger.exception("call mail failed for %s", subscriber.id)
     logger.info("grant call %s: %d subscribers notified", call_id, sent)
-    return sent
+    return sent if sent == total else -1
 
 
-async def claim_open_notice(session: AsyncSession, call_id: uuid.UUID) -> bool:
+async def mark_open_notice(session: AsyncSession, call_id: uuid.UUID) -> bool:
     result = await session.exec(
         update(GrantCall)
         .where(col(GrantCall.id) == call_id, col(GrantCall.notified_open_at).is_(None))
@@ -232,9 +237,11 @@ async def watch_calls(mailer: Mailer) -> None:
         try:
             async with session_scope() as session:
                 due = [call.id for call in await due_for_open_notice(session)]
-                claimed = [i for i in due if await claim_open_notice(session, i)]
-            for call_id in claimed:
-                await notify(call_id, mailer, opened=True)
+            for call_id in due:
+                sent = await notify(call_id, mailer, opened=True)
+                if sent >= 0:
+                    async with session_scope() as session:
+                        await mark_open_notice(session, call_id)
         except Exception:
             logger.exception("grant call watch failed")
         await asyncio.sleep(WATCH_SECONDS)

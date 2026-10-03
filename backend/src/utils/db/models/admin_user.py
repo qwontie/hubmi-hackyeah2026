@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import CheckConstraint, Column, String, Text, text
+from sqlalchemy import CheckConstraint, Column, Integer, String, Text, text
 from sqlmodel import Field as SQLField
 from sqlmodel import SQLModel
 
@@ -36,4 +36,7 @@ class AdminUser(SQLModel, table=True):
         default=None, sa_column=Column(Text, nullable=True)
     )
     email: str | None = SQLField(default=None, sa_column=Column(Text, nullable=True))
+    token_version: int = SQLField(
+        default=0, sa_column=Column(Integer, nullable=False, server_default=text("0"))
+    )
     created_at: datetime | None = created_at_col()

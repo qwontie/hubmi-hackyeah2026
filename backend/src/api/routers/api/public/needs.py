@@ -5,7 +5,7 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends, Header, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.errors import not_found
+from api.errors import invalid, not_found
 from api.limits import rate_limit
 from services.ai import AiBudgetExceededError, AiUnavailableError
 from services.needs import (
@@ -31,10 +31,18 @@ async def create(body: NeedIn, session: FromDishka[AsyncSession]) -> NeedOut:
         raise CONSENT_MISSING
     try:
         outcome = await create_need(
-            session, body.text, powiat=body.powiat, contact_email=body.contact_email
+            session,
+            body.text,
+            powiat=body.powiat,
+            contact_email=body.contact_email,
+            shown_innovation_slugs=body.shown_innovation_slugs,
         )
     except (TextRejectedError, AiUnavailableError, AiBudgetExceededError) as e:
         raise translate(e) from e
+    except ValueError as e:
+        field = "shown_innovation_slugs"
+        message = "Wybierz rozwiązania z wyników wyszukiwania."
+        raise invalid(field, message) from e
     cluster = outcome.cluster
     return NeedOut(
         id=outcome.need.id,
@@ -57,12 +65,17 @@ async def patch(
     if body.contact_email and not body.contact_consent:
         raise CONSENT_MISSING
     try:
+        fields = body.model_fields_set
         need = await update_need(
             session,
             need_id,
             token,
             powiat=body.powiat,
             contact_email=body.contact_email,
+            contact_email_provided="contact_email" in fields,
+            contact_consent=body.contact_consent
+            if "contact_consent" in fields
+            else None,
             nothing_fits=body.nothing_fits,
         )
     except NeedNotFoundError as e:

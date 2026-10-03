@@ -11,9 +11,11 @@ from .service import (
     FormOutcome,
     MatchOutcome,
     NeedNotFoundError,
+    SearchOutcome,
     TextRejectedError,
     create_need,
     match_need,
+    search_need,
     update_need,
 )
 from .tokens import hash_token, token_matches
@@ -23,6 +25,7 @@ __all__ = [
     "FormOutcome",
     "MatchOutcome",
     "NeedNotFoundError",
+    "SearchOutcome",
     "TextRejectedError",
     "cluster_payload",
     "cluster_ref",
@@ -33,6 +36,7 @@ __all__ = [
     "need_payload",
     "refresh_cluster_summary",
     "schedule_summary",
+    "search_need",
     "similar_count",
     "split_cluster",
     "token_matches",

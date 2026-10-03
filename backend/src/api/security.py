@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from starlette.requests import HTTPConnection
 
-from services.auth.crypto import session_admin_id
+from services.auth.crypto import session_claims
 from utils.db import session_scope
 from utils.db.models import AdminRole, AdminUser
 from utils.env import env
@@ -12,11 +12,14 @@ from utils.env import env
 async def admin_from_secret(secret: str | None) -> AdminUser | None:
     if not secret:
         return None
-    admin_id = session_admin_id(secret)
-    if admin_id is None:
+    claims = session_claims(secret)
+    if claims is None:
         return None
     async with session_scope() as session:
-        return await session.get(AdminUser, admin_id)
+        admin = await session.get(AdminUser, claims.admin_id)
+        if admin is None or admin.token_version != claims.token_version:
+            return None
+        return admin
 
 
 async def current_staff(conn: HTTPConnection) -> AdminUser:
