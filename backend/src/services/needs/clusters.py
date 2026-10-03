@@ -24,6 +24,7 @@ SIMILAR_NEED = 0.80
 CLUSTER_LOCK_KEY = 0x48554D32
 SUMMARY_SIZES = frozenset({1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144})
 SUMMARY_SAMPLE = 25
+SUMMARY_ATTEMPTS = 3
 
 
 class ClusterSummary(BaseModel):
@@ -50,6 +51,7 @@ summary_agent: Agent[None, ClusterSummary] = Agent(
 )
 
 _tasks: set[asyncio.Task[None]] = set()
+_locks: dict[uuid.UUID, asyncio.Lock] = {}
 
 
 async def similar_count(
@@ -126,36 +128,60 @@ async def recompute(session: AsyncSession, cluster: NeedCluster) -> None:
     session.add(cluster)
 
 
-async def refresh_cluster_summary(cluster_id: uuid.UUID) -> NeedCluster | None:
+async def _members(session: AsyncSession, cluster_id: uuid.UUID) -> list[Need]:
+    return list(
+        (
+            await session.exec(
+                select(Need)
+                .where(col(Need.cluster_id) == cluster_id)
+                .order_by(col(Need.created_at).desc())
+            )
+        ).all()
+    )
+
+
+async def _summarize(cluster_id: uuid.UUID) -> tuple[bool, NeedCluster | None]:
+    async with session_scope() as session:
+        if await session.get(NeedCluster, cluster_id) is None:
+            return True, None
+        members = await _members(session, cluster_id)
+    if not members:
+        return True, None
+    snapshot = {need.id for need in members}
+    prompt = "\n".join(f"<need>{n.text}</need>" for n in members[:SUMMARY_SAMPLE])
+    try:
+        result = await run_agent(summary_agent, prompt, kind="cluster_summary")
+    except AiUnavailableError:
+        logger.warning("cluster summary failed for %s", cluster_id)
+        return True, None
     async with session_scope() as session:
         cluster = await session.get(NeedCluster, cluster_id)
         if cluster is None:
-            return None
-        texts = (
-            await session.exec(
-                select(Need.text)
-                .where(col(Need.cluster_id) == cluster_id)
-                .order_by(col(Need.created_at).desc())
-                .limit(SUMMARY_SAMPLE)
-            )
-        ).all()
-        if not texts:
-            return cluster
-        prompt = "\n".join(f"<need>{t}</need>" for t in texts)
-        try:
-            result = await run_agent(summary_agent, prompt, kind="cluster_summary")
-        except AiUnavailableError:
-            logger.warning("cluster summary failed for %s", cluster_id)
-            return cluster
+            return True, None
+        if {need.id for need in await _members(session, cluster_id)} != snapshot:
+            return False, cluster
         cluster.title = result.title.strip()[:80] or cluster.title
         cluster.summary = result.summary.strip()
-        cluster.summary_size = cluster.size
+        cluster.summary_size = len(snapshot)
         cluster.summary_stale = False
         session.add(cluster)
         await session.commit()
         await session.refresh(cluster)
         bus.publish("cluster.updated", cluster_payload(cluster))
-        return cluster
+        return True, cluster
+
+
+async def refresh_cluster_summary(cluster_id: uuid.UUID) -> NeedCluster | None:
+    lock = _locks.setdefault(cluster_id, asyncio.Lock())
+    async with lock:
+        cluster = None
+        for _ in range(SUMMARY_ATTEMPTS):
+            done, cluster = await _summarize(cluster_id)
+            if done:
+                break
+        else:
+            logger.info("cluster %s kept changing, summary left stale", cluster_id)
+    return cluster
 
 
 def schedule_summary(cluster_id: uuid.UUID) -> None:
