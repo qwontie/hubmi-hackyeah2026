@@ -204,6 +204,27 @@ async def deliver(message_id: uuid.UUID, mailer: Mailer) -> None:
         logger.exception("reply delivery crashed for %s", message_id)
 
 
+async def resume_pending(mailer: Mailer) -> int:
+    try:
+        async with session_scope() as session:
+            result = await session.exec(
+                entity_select(Message.id).where(
+                    col(Message.delivery_status) == MessageDelivery.PENDING
+                )
+            )
+            pending = list(result.all())
+    except Exception:
+        logger.exception("cannot resume pending reply emails")
+        return 0
+    for message_id in pending:
+        task = asyncio.create_task(deliver(message_id, mailer))
+        pending_deliveries.add(task)
+        task.add_done_callback(pending_deliveries.discard)
+    if pending:
+        logger.info("resuming %d pending reply emails", len(pending))
+    return len(pending)
+
+
 async def unanswered_count(session: AsyncSession, need_id: uuid.UUID) -> int:
     last_reply = (
         select(func.max(col(Message.sent_at)))
