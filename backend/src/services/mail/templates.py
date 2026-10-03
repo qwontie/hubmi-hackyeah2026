@@ -26,6 +26,7 @@ class StaffItemKind(StrEnum):
     APPLICATION = "application"
     VOLUNTEER = "volunteer"
     VOLUNTEER_REPORT = "volunteer_report"
+    EXPERT_ANSWER = "expert_answer"
 
 
 STAFF_ITEM_LABELS = {
@@ -37,6 +38,7 @@ STAFF_ITEM_LABELS = {
     StaffItemKind.APPLICATION: "Nowy wniosek złożony w naborze",
     StaffItemKind.VOLUNTEER: "Nowe zgłoszenie wolontariusza do testu",
     StaffItemKind.VOLUNTEER_REPORT: "Nowy raport wolontariusza z testu",
+    StaffItemKind.EXPERT_ANSWER: "Odpowiedź eksperta",
 }
 
 
@@ -286,6 +288,51 @@ def expert_assigned(  # noqa: PLR0913
         f"{html_quote(title)}"
         f"{note_html}"
         f"{html_button(url, 'Otwórz sprawę w panelu')}"
+        f"{html_paragraphs(SIGNATURE)}",
+    )
+    return Email(to=to, subject=subject, text=text, html=html, idempotency_key=key)
+
+
+def expert_forwarded(  # noqa: PLR0913
+    *,
+    to: str,
+    expert_name: str | None,
+    title: str,
+    note: str | None,
+    url: str,
+    key: str,
+) -> Email:
+    subject = "HubMi: prośba ROPS o Twoją opinię"
+    title = excerpt(title, 200)
+    greeting = f"Dzień dobry, {expert_name}" if expert_name else "Dzień dobry"
+    intro = (
+        "Zespół ROPS w Krakowie prosi o Twoją opinię w sprawie zgłoszonej w HubMi. "
+        "Nie trzeba zakładać konta: sprawę i formularz odpowiedzi otworzysz "
+        "z linku poniżej. Odpowiedź trafi tylko do zespołu ROPS."
+    )
+    note_text = f"Pytanie od ROPS:\n{note}\n\n" if note else ""
+    text = (
+        f"{greeting},\n\n{intro}\n\n"
+        f"Sprawa:\n„{title}”\n\n"
+        f"{note_text}"
+        f"Otwórz sprawę i odpowiedz:\n{url}\n\n"
+        f"{SIGNATURE}"
+    )
+    note_html = (
+        '<h2 style="font-size:16px;margin:0 0 8px">Pytanie od ROPS</h2>'
+        f"{html_paragraphs(note)}"
+        if note
+        else ""
+    )
+    html = html_document(
+        subject,
+        f"{H1}Prośba o opinię</h1>"
+        f'<p style="margin:0 0 16px">{escape(greeting)}.</p>'
+        f'<p style="margin:0 0 16px">{escape(intro)}</p>'
+        '<h2 style="font-size:16px;margin:0 0 8px">Sprawa</h2>'
+        f"{html_quote(title)}"
+        f"{note_html}"
+        f"{html_button(url, 'Otwórz sprawę i odpowiedz')}"
         f"{html_paragraphs(SIGNATURE)}",
     )
     return Email(to=to, subject=subject, text=text, html=html, idempotency_key=key)

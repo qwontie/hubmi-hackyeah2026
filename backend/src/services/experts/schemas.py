@@ -30,9 +30,10 @@ class ExpertOut(BaseModel):
 
 
 class ExpertBrief(BaseModel):
-    id: uuid.UUID
+    id: uuid.UUID | None
     display_name: str | None
     expertise: str | None
+    email: str | None = None
 
 
 class AssignmentOut(BaseModel):
@@ -46,6 +47,7 @@ class AssignmentOut(BaseModel):
     status: AssignmentStatus
     assigned_by: str
     opinions_count: int
+    delivery_status: str | None = None
     created_at: datetime
     answered_at: datetime | None
 
@@ -99,3 +101,34 @@ class OpinionOut(BaseModel):
     message: AdminMessage | None
     private_note: NoteOut | None
     assignment: AssignmentOut
+
+
+class ForwardBody(Strict):
+    email: Annotated[str, Trimmed, Field(max_length=254)]
+    name: Annotated[str, Trimmed, Field(max_length=200)] | None = None
+    expertise: Annotated[str, Trimmed, Field(max_length=200)] | None = None
+    note: Annotated[str, Trimmed, Field(max_length=NOTE_MAX)] | None = None
+
+
+class ExpertContact(BaseModel):
+    email: str
+    name: str | None
+    expertise: str | None
+    assignments: int
+    last_at: datetime
+
+
+class AnswerIn(Strict):
+    body: str = Field(max_length=OPINION_MAX * 2)
+    website: str | None = Field(default=None, max_length=500)
+
+
+class ExpertAnswerView(BaseModel):
+    id: uuid.UUID
+    kind: Literal["need", "idea"]
+    title: str
+    item: AuthorIdea | NeedItem
+    note: str | None
+    expert: ExpertBrief
+    status: AssignmentStatus
+    answers: list[NoteOut]

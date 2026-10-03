@@ -103,6 +103,13 @@ async def item_of(session: AsyncSession, assignment: Assignment) -> Item | None:
 
 
 async def opinions_count(session: AsyncSession, assignment: Assignment) -> int:
+    if assignment.expert_id is None:
+        answers = await session.scalar(
+            select(func.count())
+            .select_from(ExpertNote)
+            .where(col(ExpertNote.assignment_id) == assignment.id)
+        )
+        return int(answers or 0)
     owner = (
         col(Message.idea_id) == assignment.idea_id
         if assignment.idea_id
@@ -116,8 +123,23 @@ async def opinions_count(session: AsyncSession, assignment: Assignment) -> int:
     return int(total or 0)
 
 
-async def out(session: AsyncSession, assignment: Assignment) -> AssignmentOut:
+async def brief(session: AsyncSession, assignment: Assignment) -> ExpertBrief:
+    if assignment.expert_id is None:
+        return ExpertBrief(
+            id=None,
+            display_name=assignment.expert_name,
+            expertise=assignment.expert_field,
+            email=assignment.expert_email,
+        )
     expert = await session.get(AdminUser, assignment.expert_id)
+    return ExpertBrief(
+        id=assignment.expert_id,
+        display_name=expert.display_name if expert else None,
+        expertise=expert.expertise if expert else None,
+    )
+
+
+async def out(session: AsyncSession, assignment: Assignment) -> AssignmentOut:
     item = await item_of(session, assignment)
     return AssignmentOut(
         id=assignment.id,
@@ -125,15 +147,12 @@ async def out(session: AsyncSession, assignment: Assignment) -> AssignmentOut:
         need_id=assignment.need_id,
         idea_id=assignment.idea_id,
         title=item_title(item) if item else "",
-        expert=ExpertBrief(
-            id=assignment.expert_id,
-            display_name=expert.display_name if expert else None,
-            expertise=expert.expertise if expert else None,
-        ),
+        expert=await brief(session, assignment),
         note=assignment.note,
         status=assignment.status,
         assigned_by=assignment.assigned_by,
         opinions_count=await opinions_count(session, assignment),
+        delivery_status=assignment.delivery_status,
         created_at=assignment.created_at,
         answered_at=assignment.answered_at,
     )

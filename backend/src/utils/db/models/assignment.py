@@ -29,6 +29,9 @@ class Assignment(SQLModel, table=True):
             "num_nonnulls(need_id, idea_id) = 1", name="ck_assignment_one_item"
         ),
         CheckConstraint("status IN ('open', 'answered')", name="ck_assignment_status"),
+        CheckConstraint(
+            "num_nonnulls(expert_id, expert_email) = 1", name="ck_assignment_one_expert"
+        ),
         Index(
             "ux_assignment_expert_need",
             "expert_id",
@@ -46,13 +49,24 @@ class Assignment(SQLModel, table=True):
     )
 
     id: uuid.UUID = uuid_pk()
-    expert_id: uuid.UUID = Field(
+    expert_id: uuid.UUID | None = Field(
+        default=None,
         sa_column=Column(
             postgresql.UUID(as_uuid=True),
             ForeignKey("admin_user.id", ondelete="CASCADE"),
-            nullable=False,
+            nullable=True,
             index=True,
-        )
+        ),
+    )
+    expert_email: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
+    expert_name: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    expert_field: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
+    delivery_status: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
     )
     need_id: uuid.UUID | None = Field(default=None, sa_column=owner_fk("need.id"))
     idea_id: uuid.UUID | None = Field(default=None, sa_column=owner_fk("idea.id"))

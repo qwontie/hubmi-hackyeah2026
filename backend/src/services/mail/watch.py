@@ -12,7 +12,9 @@ from .staff import StaffNotifier
 from .templates import StaffItem, StaffItemKind
 
 NEED_TOPICS = frozenset({"need.created", "need.updated"})
-VOLUNTEER_TOPICS = frozenset({"volunteer.created", "volunteer.reported"})
+MODULE_TOPICS = frozenset(
+    {"volunteer.created", "volunteer.reported", "assignment.answered"}
+)
 
 
 def admin_application_url(application_id: str) -> str:
@@ -45,6 +47,20 @@ def volunteer_item(topic: str, data: Mapping[str, Any]) -> StaffItem | None:
             url=admin_volunteer_url(data["id"]),
         )
     return None
+
+
+def module_item(topic: str, data: Mapping[str, Any]) -> StaffItem | None:
+    if topic != "assignment.answered":
+        return volunteer_item(topic, data)
+    if not (data.get("expert") or {}).get("email"):
+        return None
+    idea_id = data.get("idea_id")
+    return StaffItem(
+        kind=StaffItemKind.EXPERT_ANSWER,
+        key=f"expert-answer:{data['id']}:{data.get('opinions_count')}",
+        text=str(data.get("title", "")),
+        url=admin_idea_url(idea_id) if idea_id else admin_need_url(data["need_id"]),
+    )
 
 
 def payload(data: object) -> Mapping[str, Any]:
@@ -85,8 +101,8 @@ def staff_item(message: Message) -> StaffItem | None:
             text=f"Wniosek nr {data.get('number')}: {idea.get('title', '')}",
             url=admin_application_url(data["id"]),
         )
-    if message.topic in VOLUNTEER_TOPICS and "id" in data:
-        return volunteer_item(message.topic, data)
+    if message.topic in MODULE_TOPICS and "id" in data:
+        return module_item(message.topic, data)
     if message.topic == "message.created" and data.get("direction") == "from_author":
         idea_id = data.get("idea_id")
         return StaffItem(
