@@ -8,7 +8,12 @@ import {
   useMemo,
   useState,
 } from "react";
-import { AccessibilityInfo, useWindowDimensions } from "react-native";
+import {
+  AccessibilityInfo,
+  Platform,
+  useColorScheme,
+  useWindowDimensions,
+} from "react-native";
 import {
   baseType,
   type Palette,
@@ -36,12 +41,28 @@ const defaults: Settings = {
 interface Theme {
   borderWidth: number;
   colors: Palette;
+  dark: boolean;
   highContrast: boolean;
   lineHeight: (size: number) => number;
   reduceMotion: boolean;
+  reduceTransparency: boolean;
   type: Record<TypeRole, number>;
   wide: boolean;
 }
+
+const REDUCED_TRANSPARENCY = "(prefers-reduced-transparency: reduce)";
+
+const webReducedTransparency = () =>
+  Platform.OS === "web" &&
+  typeof window !== "undefined" &&
+  window.matchMedia?.(REDUCED_TRANSPARENCY).matches === true;
+
+const pickPalette = (highContrast: boolean, dark: boolean) => {
+  if (highContrast) {
+    return palettes.contrast;
+  }
+  return dark ? palettes.dark : palettes.standard;
+};
 
 interface SettingsContextValue {
   settings: Settings;
@@ -75,7 +96,11 @@ const parse = (raw: string | null): Settings => {
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaults);
   const [systemReduceMotion, setSystemReduceMotion] = useState(false);
+  const [reduceTransparency, setReduceTransparency] = useState(
+    webReducedTransparency
+  );
   const { width } = useWindowDimensions();
+  const dark = useColorScheme() === "dark";
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
@@ -90,6 +115,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const subscription = AccessibilityInfo.addEventListener(
       "reduceMotionChanged",
       setSystemReduceMotion
+    );
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") {
+      return;
+    }
+    AccessibilityInfo.isReduceTransparencyEnabled()
+      .then(setReduceTransparency)
+      .catch(() => setReduceTransparency(false));
+    const subscription = AccessibilityInfo.addEventListener(
+      "reduceTransparencyChanged",
+      setReduceTransparency
     );
     return () => subscription.remove();
   }, []);
@@ -117,14 +156,16 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     ) as Record<TypeRole, number>;
     return {
       borderWidth: settings.highContrast ? 2 : 1,
-      colors: settings.highContrast ? palettes.contrast : palettes.standard,
+      colors: pickPalette(settings.highContrast, dark),
+      dark: dark && !settings.highContrast,
       highContrast: settings.highContrast,
-      lineHeight: (size: number) => Math.round(size * 1.42),
+      lineHeight: (size: number) => Math.round(size * 1.45),
       reduceMotion: settings.reduceMotion || systemReduceMotion,
+      reduceTransparency: reduceTransparency || settings.highContrast,
       type,
       wide,
     };
-  }, [settings, systemReduceMotion, width]);
+  }, [settings, systemReduceMotion, reduceTransparency, dark, width]);
 
   const value = useMemo(
     () => ({ settings, theme, update }),

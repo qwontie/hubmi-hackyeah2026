@@ -16,11 +16,17 @@ export interface SelectProps {
   emptyLabel?: string;
   error?: string | null;
   label: string;
+  night?: boolean;
   onChange: (value: string) => void;
   optional?: boolean;
   options: SelectOption[];
   value: string;
 }
+
+const fieldEdge = (
+  error: string | null | undefined,
+  colors: { bad: string; ruleStrong: string }
+) => (error ? colors.bad : colors.ruleStrong);
 
 export function Select({
   label,
@@ -30,8 +36,11 @@ export function Select({
   onChange,
   emptyLabel,
   error,
+  night = false,
 }: SelectProps) {
   const { colors, borderWidth } = useTheme();
+  const ink = night ? colors.onNight : colors.ink;
+  const soft = night ? colors.onNightSoft : colors.inkSoft;
   const [open, setOpen] = useState(false);
   const all = emptyLabel
     ? [{ label: emptyLabel, value: "" }, ...options]
@@ -39,9 +48,9 @@ export function Select({
   const selected = all.find((option) => option.value === value);
   return (
     <View style={styles.wrap}>
-      <Txt variant="label" weight="600">
+      <Txt style={{ color: ink }} variant="label" weight="600">
         {label}
-        {optional ? <Txt tone="soft"> (nieobowiązkowo)</Txt> : null}
+        {optional ? <Txt style={{ color: soft }}> (nieobowiązkowo)</Txt> : null}
       </Txt>
       <Pressable
         accessibilityHint="Otwiera listę do wyboru"
@@ -51,14 +60,14 @@ export function Select({
         style={[
           styles.trigger,
           {
-            backgroundColor: colors.sunk,
-            borderColor: error ? colors.bad : colors.ruleStrong,
-            borderWidth: error ? 2 : borderWidth,
+            backgroundColor: night ? colors.nightDeep : colors.sunk,
+            borderColor: night ? soft : fieldEdge(error, colors),
+            borderWidth: error ? 2 : Math.max(borderWidth, 1.5),
           },
         ]}
       >
-        <Txt>{selected?.label ?? "Wybierz"}</Txt>
-        <ChevronDown aria-hidden color={colors.inkSoft} size={22} />
+        <Txt style={{ color: ink }}>{selected?.label ?? "Wybierz"}</Txt>
+        <ChevronDown aria-hidden color={soft} size={22} />
       </Pressable>
       {error ? (
         <Txt tone="bad" weight="500">
@@ -139,7 +148,7 @@ const styles = StyleSheet.create({
   },
   trigger: {
     alignItems: "center",
-    borderRadius: radius.md,
+    borderRadius: radius.button,
     flexDirection: "row",
     justifyContent: "space-between",
     minHeight: minTarget + 8,

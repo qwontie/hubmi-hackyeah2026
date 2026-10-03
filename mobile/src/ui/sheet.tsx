@@ -29,9 +29,9 @@ export function Sheet({
         styles.sheet,
         {
           backgroundColor: colors.paper,
-          borderColor: colors.rule,
-          borderWidth: highContrast ? 2 : StyleSheet.hairlineWidth,
-          padding: wide ? space.xxl : space.lg + 2,
+          borderColor: highContrast ? colors.ink : colors.tone,
+          borderWidth: highContrast ? 2 : 1,
+          padding: wide ? space.xxl + 2 : space.xl - 2,
         },
         raised && !highContrast && styles.raised,
         style,
@@ -47,15 +47,15 @@ const styles = StyleSheet.create({
   raised: Platform.select({
     default: { elevation: 4 },
     ios: {
-      shadowColor: "#2a2350",
-      shadowOffset: { height: 12, width: 0 },
-      shadowOpacity: 0.12,
+      shadowColor: "#2a2073",
+      shadowOffset: { height: 16, width: 0 },
+      shadowOpacity: 0.14,
       shadowRadius: 24,
     },
     web: {
-      boxShadow: "0 0 0 1px #dddde3, 0 24px 48px -30px rgba(42, 35, 80, 0.35)",
+      boxShadow: "0 30px 50px -34px rgba(42, 32, 115, 0.5)",
     },
-  }),
+  }) as ViewStyle,
   sheet: {
     borderRadius: radius.sheet,
     gap: space.xl,

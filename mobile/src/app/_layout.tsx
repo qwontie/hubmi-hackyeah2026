@@ -10,24 +10,24 @@ import { Stack } from "expo-router";
 import Head from "expo-router/head";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { APP_NAME, ORGANIZATION_NAME } from "@/config";
+import { ChromeProvider, useChromeTone } from "@/theme/chrome";
 import { SettingsProvider, useTheme } from "@/theme/settings";
-import { radius } from "@/theme/tokens";
-import { BottomBar, TopBar, useLastTabActive } from "@/ui/shell";
+import { SkipLink, WideChrome } from "@/ui/shell";
 import { applyWebGlobals } from "@/ui/web-globals";
 
 function Shell() {
-  const { colors, reduceMotion, wide, highContrast } = useTheme();
-  const lastTabActive = useLastTabActive();
+  const { colors, dark, reduceMotion } = useTheme();
+  const night = useChromeTone() === "night";
 
   useEffect(() => {
-    applyWebGlobals(colors, reduceMotion);
-  }, [colors, reduceMotion]);
+    applyWebGlobals(colors, reduceMotion, night);
+  }, [colors, reduceMotion, night]);
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.desk }]}>
+    <View style={[styles.root, { backgroundColor: colors.ground }]}>
       <Head>
         <title>{`${APP_NAME}: gotowe rozwiązania problemów społecznych`}</title>
         <meta
@@ -35,38 +35,16 @@ function Shell() {
           name="description"
         />
       </Head>
-      <StatusBar style="dark" />
-      <TopBar />
-      <View
-        style={[
-          styles.stack,
-          {
-            backgroundColor: colors.board,
-            borderColor: colors.ink,
-            borderWidth: highContrast ? 2 : 0,
-          },
-          wide
-            ? {
-                borderRadius: radius.board,
-                borderTopRightRadius: lastTabActive ? 0 : radius.board,
-                marginBottom: 14,
-                marginHorizontal: 14,
-              }
-            : {
-                borderTopLeftRadius: radius.sheet,
-                borderTopRightRadius: radius.sheet,
-              },
-        ]}
-      >
-        <Stack
-          screenOptions={{
-            animation: reduceMotion ? "none" : "default",
-            contentStyle: { backgroundColor: colors.board },
-            headerShown: false,
-          }}
-        />
-      </View>
-      <BottomBar />
+      <StatusBar style={night || dark ? "light" : "dark"} />
+      <SkipLink />
+      <Stack
+        screenOptions={{
+          animation: reduceMotion ? "none" : "default",
+          contentStyle: { backgroundColor: colors.ground },
+          headerShown: false,
+        }}
+      />
+      {Platform.OS === "web" ? <WideChrome /> : null}
     </View>
   );
 }
@@ -87,7 +65,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <SettingsProvider>
-        <Shell />
+        <ChromeProvider>
+          <Shell />
+        </ChromeProvider>
       </SettingsProvider>
     </SafeAreaProvider>
   );
@@ -96,9 +76,5 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-  },
-  stack: {
-    flex: 1,
-    overflow: "hidden",
   },
 });

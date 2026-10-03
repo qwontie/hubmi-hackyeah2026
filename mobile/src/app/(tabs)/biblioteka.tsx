@@ -1,7 +1,9 @@
+import { router } from "expo-router";
 import Head from "expo-router/head";
-import { Search, X } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import { Compass, FileText, Search, X } from "lucide-react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
+import { categoryIcon } from "@/features/category-icon";
 import { InnovationRow } from "@/features/innovation-row";
 import { useLibrary } from "@/hooks/use-library";
 import { useTheme } from "@/theme/settings";
@@ -11,6 +13,7 @@ import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
 import { Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
+import { AccessButton } from "@/ui/shell";
 import { Heading, Txt } from "@/ui/text";
 
 export default function LibraryScreen() {
@@ -32,7 +35,7 @@ export default function LibraryScreen() {
   } = useLibrary();
 
   return (
-    <Screen width={900}>
+    <Screen tabs trailing={<AccessButton />} width={900}>
       <Head>
         <title>{`Biblioteka innowacji · ${APP_NAME}`}</title>
       </Head>
@@ -70,18 +73,41 @@ export default function LibraryScreen() {
           </View>
         </View>
         {categories.length > 0 ? (
-          <View aria-label="Kategorie" role="group" style={styles.categories}>
+          <ScrollView
+            aria-label="Kategorie"
+            contentContainerStyle={wide ? styles.categories : styles.strip}
+            horizontal={!wide}
+            role="group"
+            showsHorizontalScrollIndicator={false}
+            style={wide ? undefined : styles.bleed}
+          >
             {categories.map((item) => (
               <Button
+                icon={categoryIcon(item.slug)}
                 key={item.slug}
                 label={`${item.name} (${item.count})`}
                 onPress={() => selectCategory(item.slug)}
                 pressed={item.slug === category}
               />
             ))}
-          </View>
+          </ScrollView>
         ) : null}
       </Sheet>
+
+      <View style={styles.more}>
+        <Button
+          icon={Compass}
+          label="Wyzwania Małopolski"
+          onPress={() => router.push("/wiedza")}
+          role="link"
+        />
+        <Button
+          icon={FileText}
+          label="Raporty i materiały"
+          onPress={() => router.push("/materialy")}
+          role="link"
+        />
+      </View>
 
       <Sheet>
         {list.error ? null : (
@@ -127,6 +153,9 @@ export default function LibraryScreen() {
 }
 
 const styles = StyleSheet.create({
+  bleed: {
+    marginHorizontal: -(space.xl - 2),
+  },
   categories: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -134,6 +163,11 @@ const styles = StyleSheet.create({
   },
   errorBody: {
     gap: space.md,
+  },
+  more: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space.sm,
   },
   search: {
     gap: space.md,
@@ -148,6 +182,10 @@ const styles = StyleSheet.create({
   searchWide: {
     alignItems: "flex-end",
     flexDirection: "row",
+  },
+  strip: {
+    gap: space.sm,
+    paddingHorizontal: space.xl - 2,
   },
   tall: {
     minHeight: minTarget + 8,

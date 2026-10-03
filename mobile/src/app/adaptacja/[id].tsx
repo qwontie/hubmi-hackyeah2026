@@ -173,7 +173,7 @@ export default function AdaptationScreen() {
   const { state: load } = useAdaptation(id);
 
   return (
-    <Screen>
+    <Screen back="Wróć" backFallback="/biblioteka">
       <Head>
         <title>
           {load.kind === "done"

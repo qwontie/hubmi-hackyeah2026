@@ -1,6 +1,6 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
-import { ArrowLeft, FileText } from "lucide-react-native";
+import { FileText } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
 import { useAdaptForm } from "@/hooks/use-adaptation";
@@ -35,20 +35,10 @@ export default function AdaptScreen() {
   } = useAdaptForm(slug);
 
   return (
-    <Screen>
+    <Screen back="Opis rozwiązania" backFallback="/biblioteka">
       <Head>
         <title>{`Dostosuj rozwiązanie · ${APP_NAME}`}</title>
       </Head>
-      <View>
-        <Button
-          icon={ArrowLeft}
-          label="Wróć do opisu"
-          onPress={() =>
-            router.canGoBack() ? router.back() : router.replace("/biblioteka")
-          }
-          variant="quiet"
-        />
-      </View>
       <Sheet raised>
         <View style={styles.group}>
           <Heading level={1}>Plan usługi dla Twojej instytucji</Heading>

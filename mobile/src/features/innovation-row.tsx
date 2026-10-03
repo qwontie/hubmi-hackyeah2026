@@ -3,8 +3,9 @@ import { ChevronRight } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { InnovationSummary } from "@/api/types";
+import { CategoryIcon, CategoryTile } from "@/features/category-icon";
 import { useTheme } from "@/theme/settings";
-import { radius, space } from "@/theme/tokens";
+import { space } from "@/theme/tokens";
 import { Txt } from "@/ui/text";
 
 interface InnovationRowProps {
@@ -24,6 +25,12 @@ export const metaLine = (innovation: InnovationSummary) =>
     .filter(Boolean)
     .join(" · ");
 
+export const innovationHref = (slug: string, needId?: string) =>
+  ({
+    params: needId ? { potrzeba: needId, slug } : { slug },
+    pathname: "/innowacje/[slug]",
+  }) as const;
+
 export function InnovationRow({
   innovation,
   index,
@@ -37,38 +44,29 @@ export function InnovationRow({
   return (
     <View
       role="listitem"
-      style={[
-        styles.item,
-        !last && {
-          borderBottomColor: highContrast ? colors.ink : colors.rule,
-          borderBottomWidth: highContrast ? 2 : 1,
-          borderStyle: "dashed",
-        },
-      ]}
+      style={
+        last
+          ? undefined
+          : {
+              borderBottomColor: highContrast ? colors.ink : colors.rule,
+              borderBottomWidth: highContrast ? 2 : 1,
+            }
+      }
     >
-      <Link
-        asChild
-        href={{
-          params: needId
-            ? { potrzeba: needId, slug: innovation.slug }
-            : { slug: innovation.slug },
-          pathname: "/innowacje/[slug]",
-        }}
-      >
+      <Link asChild href={innovationHref(innovation.slug, needId)}>
         <Pressable
           onHoverIn={() => setHovered(true)}
           onHoverOut={() => setHovered(false)}
           role="link"
-          style={StyleSheet.flatten([
-            styles.row,
-            { backgroundColor: hovered ? colors.stampWash : "transparent" },
-          ])}
+          style={styles.row}
         >
-          {index === undefined ? null : (
+          {index === undefined ? (
+            <CategoryTile size={48} slug={innovation.category.slug} />
+          ) : (
             <Txt
               aria-hidden
               mono
-              style={[styles.number, { fontSize: type.h3 }]}
+              style={[styles.number, { fontSize: type.number }]}
               tone="stamp"
             >
               {index}
@@ -77,30 +75,41 @@ export function InnovationRow({
           <View style={styles.body}>
             <Txt
               style={{
+                color: hovered ? colors.stamp : colors.ink,
                 fontSize: type.h3,
-                lineHeight: Math.round(type.h3 * 1.3),
+                letterSpacing: type.h3 * -0.02,
+                lineHeight: Math.round(type.h3 * 1.2),
               }}
               weight="600"
             >
               {innovation.title}
             </Txt>
-            {reason ? <Txt>{reason}</Txt> : null}
-            {reason ? null : (
-              <Txt tone="soft" variant="detail">
-                {innovation.lead}
-              </Txt>
-            )}
+            <Txt tone="soft" variant="label">
+              {reason ?? innovation.lead}
+            </Txt>
             {meta ? (
-              <Txt tone="soft" variant="detail">
-                {meta}
-              </Txt>
+              <View style={styles.meta}>
+                {index === undefined ? null : (
+                  <CategoryIcon
+                    color={colors.inkSoft}
+                    size={18}
+                    slug={innovation.category.slug}
+                  />
+                )}
+                <Txt style={styles.metaText} tone="soft" variant="small">
+                  {meta}
+                </Txt>
+              </View>
             ) : null}
           </View>
           <ChevronRight
             aria-hidden
-            color={hovered ? colors.stamp : colors.inkSoft}
+            color={colors.stamp}
             size={24}
-            style={styles.chevron}
+            style={StyleSheet.flatten([
+              styles.chevron,
+              { transform: [{ translateX: hovered ? 4 : 0 }] },
+            ])}
           />
         </Pressable>
       </Link>
@@ -116,19 +125,23 @@ const styles = StyleSheet.create({
   chevron: {
     marginTop: 2,
   },
-  item: {
-    paddingVertical: space.xs,
+  meta: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.sm,
+    marginTop: 2,
+  },
+  metaText: {
+    flex: 1,
   },
   number: {
-    minWidth: 24,
+    minWidth: 26,
+    paddingTop: 4,
   },
   row: {
     alignItems: "flex-start",
-    borderRadius: radius.lg,
     flexDirection: "row",
     gap: space.md,
-    marginHorizontal: -space.sm,
-    paddingHorizontal: space.sm,
-    paddingVertical: space.md,
+    paddingVertical: space.lg + 4,
   },
 });

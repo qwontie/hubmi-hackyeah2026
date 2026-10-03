@@ -33,7 +33,7 @@ export default function ChallengesScreen() {
   } = useChallenges();
 
   return (
-    <Screen width={900}>
+    <Screen back="Biblioteka" backFallback="/biblioteka" width={900}>
       <Head>
         <title>{`Wyzwania Małopolski · ${APP_NAME}`}</title>
       </Head>

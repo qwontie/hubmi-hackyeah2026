@@ -83,7 +83,7 @@ export const TextField = function TextField({
           {
             backgroundColor: colors.sunk,
             borderColor: fieldBorder(focused, Boolean(error), colors),
-            borderWidth: error || focused ? 2 : borderWidth,
+            borderWidth: error || focused ? 2 : Math.max(borderWidth, 1.5),
             color: colors.ink,
             fontSize,
             lineHeight: lineHeight(fontSize),
@@ -155,7 +155,7 @@ export function Checkbox({ checked, onChange, label, error }: CheckboxProps) {
 const styles = StyleSheet.create({
   box: {
     alignItems: "center",
-    borderRadius: 8,
+    borderRadius: 10,
     height: 30,
     justifyContent: "center",
     marginTop: 1,
@@ -172,9 +172,9 @@ const styles = StyleSheet.create({
     paddingVertical: space.xs,
   },
   input: {
-    borderRadius: radius.md,
-    paddingHorizontal: space.lg,
-    paddingVertical: space.md,
+    borderRadius: radius.button,
+    paddingHorizontal: space.lg + 4,
+    paddingVertical: space.lg,
   },
   wrap: {
     gap: space.sm,

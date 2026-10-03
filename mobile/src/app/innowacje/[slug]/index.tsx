@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
 import {
-  ArrowLeft,
   BookOpen,
   Building2,
   Download,
@@ -10,7 +9,8 @@ import {
 } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
-import { ReadAloudButton } from "@/features/read-aloud-button";
+import { CategoryTile } from "@/features/category-icon";
+import { ReadAloudPill } from "@/features/read-aloud-button";
 import { RichText } from "@/features/rich-text";
 import {
   ImprovementBlock,
@@ -34,14 +34,6 @@ import { Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
-const goBack = () => {
-  if (router.canGoBack()) {
-    router.back();
-  } else {
-    router.replace("/");
-  }
-};
-
 export default function InnovationScreen() {
   const { slug, potrzeba } = useLocalSearchParams<{
     slug: string;
@@ -50,17 +42,32 @@ export default function InnovationScreen() {
   const { colors, wide } = useTheme();
   const { state, retry, titleRef } = useInnovation(slug);
 
-  return (
-    <Screen>
-      <View>
-        <Button
-          icon={ArrowLeft}
-          label="Wróć"
-          onPress={goBack}
-          variant="quiet"
-        />
+  const hero =
+    state.kind === "done" ? (
+      <View style={styles.header}>
+        <CategoryTile size={64} slug={state.data.category.slug} />
+        <Heading level={1} ref={titleRef}>
+          {state.data.title}
+        </Heading>
+        <Txt tone="soft" variant="lead">
+          {state.data.lead}
+        </Txt>
+        <Txt tone="soft" variant="detail">
+          {innovationMeta(state.data)}
+        </Txt>
       </View>
+    ) : undefined;
 
+  return (
+    <Screen
+      back="Wróć"
+      hero={hero}
+      trailing={
+        state.kind === "done" ? (
+          <ReadAloudPill text={innovationSpeech(state.data)} />
+        ) : undefined
+      }
+    >
       {state.kind === "loading" ? (
         <Txt aria-live="polite" tone="soft">
           Wczytuję opis rozwiązania…
@@ -101,21 +108,6 @@ export default function InnovationScreen() {
             <title>{`${state.data.title} · ${APP_NAME}`}</title>
             <meta content={state.data.lead} name="description" />
           </Head>
-          <Sheet raised>
-            <View style={styles.header}>
-              <Heading level={1} ref={titleRef}>
-                {state.data.title}
-              </Heading>
-              <Txt tone="soft" variant="lead">
-                {state.data.lead}
-              </Txt>
-              <Txt tone="soft" variant="detail">
-                {innovationMeta(state.data)}
-              </Txt>
-            </View>
-            <ReadAloudButton text={innovationSpeech(state.data)} />
-          </Sheet>
-
           {state.data.video_url ? (
             <Sheet>
               <Heading level={2}>Film</Heading>

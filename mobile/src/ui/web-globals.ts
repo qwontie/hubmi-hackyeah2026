@@ -3,7 +3,11 @@ import type { Palette } from "@/theme/tokens";
 
 const STYLE_ID = "hubmi-globals";
 
-export const applyWebGlobals = (colors: Palette, reduceMotion: boolean) => {
+export const applyWebGlobals = (
+  colors: Palette,
+  reduceMotion: boolean,
+  night = false
+) => {
   if (Platform.OS !== "web" || typeof document === "undefined") {
     return;
   }
@@ -15,15 +19,17 @@ export const applyWebGlobals = (colors: Palette, reduceMotion: boolean) => {
     document.head.appendChild(style);
   }
   style.textContent = `
-html, body { background: ${colors.desk}; color: ${colors.ink}; }
+html, body { background: ${night ? colors.night : colors.ground}; color: ${colors.ink}; }
 body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 ::selection { background: ${colors.stampWash}; color: ${colors.ink}; }
 input, textarea { caret-color: ${colors.stamp}; }
-textarea::placeholder, input::placeholder { color: ${colors.inkSoft}; opacity: 1; }
+textarea::placeholder, input::placeholder { opacity: 1; }
 *:focus { outline: none; }
-*:focus-visible { outline: 2px solid ${colors.ring} !important; outline-offset: 2px !important; }
+*:focus-visible { outline: 2px solid ${colors.ring} !important; outline-offset: 3px !important; }
+[data-night] *:focus-visible, [data-night]:focus-visible { outline-color: ${colors.onNight} !important; }
 [tabindex="-1"]:focus-visible { outline: none !important; }
 [role="heading"], h1, h2, h3 { scroll-margin-top: 24px; }
+[role="heading"][aria-level="1"], #results-title { scroll-margin-top: 100vh; }
 textarea:focus-visible, input:focus-visible { outline: none !important; }
 select:focus-visible { outline-offset: 1px !important; }
 a { text-underline-offset: 0.18em; text-decoration-thickness: 1px; }

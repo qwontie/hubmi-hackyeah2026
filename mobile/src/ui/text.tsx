@@ -9,7 +9,15 @@ import { bindShortWords } from "@/lib/typography";
 import { useTheme } from "@/theme/settings";
 import { fonts, type TypeRole, type Weight } from "@/theme/tokens";
 
-type Tone = "default" | "soft" | "stamp" | "bad" | "ok" | "onStamp";
+export type Tone =
+  | "default"
+  | "soft"
+  | "stamp"
+  | "bad"
+  | "ok"
+  | "onStamp"
+  | "onNight"
+  | "onNightSoft";
 
 interface TxtProps extends TextProps {
   mono?: boolean;
@@ -35,6 +43,8 @@ export const Txt = function Txt({
     bad: colors.bad,
     default: colors.ink,
     ok: colors.ok,
+    onNight: colors.onNight,
+    onNightSoft: colors.onNightSoft,
     onStamp: colors.onStamp,
     soft: colors.inkSoft,
     stamp: colors.stamp,
@@ -61,6 +71,8 @@ export const Txt = function Txt({
 
 interface HeadingProps extends TextProps {
   level: 1 | 2 | 3;
+  night?: boolean;
+  size?: TypeRole;
   style?: StyleProp<TextStyle>;
 }
 
@@ -68,13 +80,16 @@ const headingRole = { 1: "h1", 2: "h2", 3: "h3" } as const;
 
 export const Heading = function Heading({
   level,
+  night = false,
+  size: role,
   style,
   ref,
   children,
   ...rest
 }: HeadingProps & { ref?: Ref<Text> }) {
   const { colors, type } = useTheme();
-  const size = type[headingRole[level]];
+  const size = type[role ?? headingRole[level]];
+  const tight = size >= 30;
   return (
     <Text
       aria-level={level}
@@ -82,11 +97,11 @@ export const Heading = function Heading({
       role="heading"
       style={[
         {
-          color: colors.ink,
-          fontFamily: level === 1 ? fonts["700"] : fonts["600"],
+          color: night ? colors.onNight : colors.ink,
+          fontFamily: fonts["600"],
           fontSize: size,
-          letterSpacing: size * (level === 1 ? -0.025 : -0.015),
-          lineHeight: Math.round(size * (level === 1 ? 1.15 : 1.25)),
+          letterSpacing: size * (tight ? -0.032 : -0.02),
+          lineHeight: Math.round(size * (tight ? 1.08 : 1.22)),
         },
         style,
       ]}

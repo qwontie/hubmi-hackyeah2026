@@ -11,9 +11,9 @@ import {
 } from "react-native";
 import { useTheme } from "@/theme/settings";
 import { minTarget, type Palette, radius, space } from "@/theme/tokens";
-import { Txt } from "./text";
+import { type Tone, Txt } from "./text";
 
-type Variant = "primary" | "secondary" | "quiet";
+type Variant = "primary" | "secondary" | "quiet" | "light";
 
 const buttonPalette = ({
   colors,
@@ -28,10 +28,16 @@ const buttonPalette = ({
 }) =>
   ({
     choice: {
-      background: hot ? colors.tabHover : colors.tab,
-      border: highContrast ? colors.ink : colors.tab,
+      background: hot ? colors.toneHover : colors.tone,
+      border: highContrast ? colors.ink : "transparent",
       icon: colors.stamp,
-      text: "default" as const,
+      text: "stamp" as const,
+    },
+    light: {
+      background: hot ? colors.onNightSoft : colors.onNight,
+      border: highContrast ? colors.onNight : "transparent",
+      icon: colors.night,
+      text: "night" as const,
     },
     primary: {
       background: hot ? colors.stampPress : colors.stamp,
@@ -40,18 +46,25 @@ const buttonPalette = ({
       text: "onStamp" as const,
     },
     quiet: {
-      background: hot ? colors.sunk : "transparent",
+      background: hot ? colors.tone : "transparent",
       border: "transparent",
       icon: colors.stamp,
       text: "stamp" as const,
     },
     secondary: {
-      background: hot ? colors.sunk : colors.paper,
-      border: colors.ruleStrong,
+      background: hot ? colors.toneHover : colors.tone,
+      border: highContrast ? colors.ink : "transparent",
       icon: colors.stamp,
-      text: "default" as const,
+      text: "stamp" as const,
     },
   })[kind];
+
+const labelTone = (selected: boolean, text: Tone | "night"): Tone => {
+  if (selected) {
+    return "onStamp";
+  }
+  return text === "night" ? "default" : text;
+};
 
 interface ButtonProps extends Omit<PressableProps, "style" | "children"> {
   busy?: boolean;
@@ -106,12 +119,12 @@ export const Button = function Button({
         {
           backgroundColor: selected ? colors.stamp : palette.background,
           borderColor: selected ? colors.stamp : palette.border,
-          borderWidth: variant === "quiet" ? 0 : borderWidth,
-          minHeight: size === "large" ? 64 : minTarget,
+          borderWidth: highContrast && variant !== "quiet" ? borderWidth : 0,
+          minHeight: size === "large" ? 64 : minTarget + 8,
           opacity: inactive && !busy ? 0.55 : 1,
-          paddingHorizontal: size === "large" ? space.xl : space.lg,
+          paddingHorizontal: size === "large" ? space.xxl : space.xl,
           transform:
-            pressed && !reduceMotion ? [{ scale: 0.98 }] : [{ scale: 1 }],
+            pressed && !reduceMotion ? [{ scale: 0.97 }] : [{ scale: 1 }],
         },
         fill && styles.fill,
         style,
@@ -120,7 +133,7 @@ export const Button = function Button({
     >
       {busy ? (
         <ActivityIndicator
-          color={variant === "primary" ? colors.onStamp : colors.stamp}
+          color={variant === "primary" ? colors.onStamp : palette.icon}
         />
       ) : null}
       {!busy && Icon ? (
@@ -132,8 +145,11 @@ export const Button = function Button({
         />
       ) : null}
       <Txt
-        style={styles.label}
-        tone={selected ? "onStamp" : palette.text}
+        style={[
+          styles.label,
+          palette.text === "night" && !selected && { color: colors.night },
+        ]}
+        tone={labelTone(selected, palette.text)}
         variant={size === "large" ? "lead" : "label"}
         weight="600"
       >
@@ -147,9 +163,9 @@ const styles = StyleSheet.create({
   base: {
     alignItems: "center",
     alignSelf: "flex-start",
-    borderRadius: radius.md,
+    borderRadius: radius.button,
     flexDirection: "row",
-    gap: space.sm,
+    gap: space.sm + 2,
     justifyContent: "center",
     maxWidth: "100%",
   },

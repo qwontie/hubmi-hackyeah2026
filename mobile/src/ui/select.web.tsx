@@ -13,16 +13,22 @@ export function Select({
   onChange,
   emptyLabel,
   error,
+  night = false,
 }: SelectProps) {
   const { colors, type, borderWidth } = useTheme();
+  const ink = night ? colors.onNight : colors.ink;
+  const soft = night ? colors.onNightSoft : colors.inkSoft;
+  const edge = night ? soft : colors.ruleStrong;
   const id = useId();
   const errorId = `${id}-error`;
   return (
     <View style={styles.wrap}>
       <label htmlFor={id}>
-        <Txt variant="label" weight="600">
+        <Txt style={{ color: ink }} variant="label" weight="600">
           {label}
-          {optional ? <Txt tone="soft"> (nieobowiązkowo)</Txt> : null}
+          {optional ? (
+            <Txt style={{ color: soft }}> (nieobowiązkowo)</Txt>
+          ) : null}
         </Txt>
       </label>
       <select
@@ -32,15 +38,15 @@ export function Select({
         onChange={(event) => onChange(event.target.value)}
         style={{
           appearance: "auto",
-          background: colors.sunk,
-          border: `${error ? 2 : borderWidth}px solid ${error ? colors.bad : colors.ruleStrong}`,
-          borderRadius: radius.md,
-          color: colors.ink,
+          background: night ? colors.nightDeep : colors.sunk,
+          border: `${error ? 2 : Math.max(borderWidth, 1.5)}px solid ${error ? colors.bad : edge}`,
+          borderRadius: radius.button,
+          color: ink,
           fontFamily: fonts["400"],
           fontSize: type.body,
           maxWidth: 480,
           minHeight: minTarget + 8,
-          padding: `0 ${space.md}px`,
+          padding: `0 ${space.lg}px`,
           width: "100%",
         }}
         value={value}

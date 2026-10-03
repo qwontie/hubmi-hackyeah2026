@@ -1,6 +1,6 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
-import { ArrowLeft, FileText } from "lucide-react-native";
+import { FileText } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
 import { InnovationRow } from "@/features/innovation-row";
@@ -19,15 +19,7 @@ export default function ChallengeScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { state, retry } = useChallenge(slug);
   return (
-    <Screen>
-      <View>
-        <Button
-          icon={ArrowLeft}
-          label="Wyzwania Małopolski"
-          onPress={() => router.navigate("/wiedza")}
-          variant="quiet"
-        />
-      </View>
+    <Screen back="Wyzwania" backFallback="/wiedza">
       {state.kind === "loading" ? (
         <Txt aria-live="polite" tone="soft">
           Wczytuję opis wyzwania…

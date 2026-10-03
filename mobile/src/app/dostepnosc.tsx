@@ -13,7 +13,7 @@ export default function AccessibilityScreen() {
   const { settings, update, theme } = useSettings();
   const { wide } = theme;
   return (
-    <Screen>
+    <Screen back="Wróć">
       <Head>
         <title>{`Dostępność · ${APP_NAME}`}</title>
       </Head>

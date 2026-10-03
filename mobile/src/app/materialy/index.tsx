@@ -36,7 +36,7 @@ export default function MaterialsScreen() {
   } = useMaterials();
 
   return (
-    <Screen width={900}>
+    <Screen back="Biblioteka" backFallback="/biblioteka" width={900}>
       <Head>
         <title>{`Raporty i materiały ROPS · ${APP_NAME}`}</title>
       </Head>

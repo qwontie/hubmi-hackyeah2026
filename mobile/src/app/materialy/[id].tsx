@@ -1,6 +1,6 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
-import { ArrowLeft, Download, Landmark } from "lucide-react-native";
+import { Download, Landmark } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
 import { InnovationRow } from "@/features/innovation-row";
@@ -19,15 +19,7 @@ export default function MaterialScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { state, retry } = useMaterial(id);
   return (
-    <Screen>
-      <View>
-        <Button
-          icon={ArrowLeft}
-          label="Raporty i materiały"
-          onPress={() => router.navigate("/materialy")}
-          variant="quiet"
-        />
-      </View>
+    <Screen back="Materiały" backFallback="/materialy">
       {state.kind === "loading" ? (
         <Txt aria-live="polite" tone="soft">
           Wczytuję opis materiału…

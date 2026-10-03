@@ -16,6 +16,7 @@ import { Notice } from "@/ui/notice";
 import { Screen } from "@/ui/screen";
 import { Select } from "@/ui/select";
 import { Sheet } from "@/ui/sheet";
+import { AccessButton } from "@/ui/shell";
 import { Heading, Txt } from "@/ui/text";
 
 function Created({
@@ -110,7 +111,7 @@ export default function IdeaScreen() {
   } = useIdeaForm();
 
   return (
-    <Screen>
+    <Screen tabs trailing={<AccessButton />}>
       <Head>
         <title>{`Zgłoś pomysł · ${APP_NAME}`}</title>
       </Head>

@@ -1,115 +1,109 @@
 import { Link, usePathname } from "expo-router";
 import {
-  Accessibility,
+  ALargeSmall,
   Library,
   Lightbulb,
   type LucideIcon,
+  Map as MapIcon,
   MessageSquareText,
   Search,
 } from "lucide-react-native";
 import { useState } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { APP_NAME, ORGANIZATION_NAME } from "@/config";
+import { APP_NAME } from "@/config";
+import { useChromeTone } from "@/theme/chrome";
 import { useTheme } from "@/theme/settings";
-import { fonts, minTarget, radius, space } from "@/theme/tokens";
+import { minTarget, radius, space } from "@/theme/tokens";
+import { Glass } from "./glass";
+import { nightAttr } from "./night";
 import { Txt } from "./text";
 
-interface NavItem {
-  href: "/" | "/biblioteka" | "/pomysl" | "/zgloszenia" | "/dostepnosc";
+type TabHref = "/" | "/mapa" | "/biblioteka" | "/pomysl" | "/zgloszenia";
+
+export interface TabItem {
+  href: TabHref;
   icon: LucideIcon;
   label: string;
-  short: string;
+  name: string;
+  sf: { default: string; selected: string };
 }
 
-const NAV: NavItem[] = [
-  { href: "/", icon: Search, label: "Szukaj rozwiązania", short: "Szukaj" },
+export const TABS: TabItem[] = [
+  {
+    href: "/",
+    icon: Search,
+    label: "Szukaj",
+    name: "index",
+    sf: { default: "magnifyingglass", selected: "magnifyingglass" },
+  },
+  {
+    href: "/mapa",
+    icon: MapIcon,
+    label: "Mapa",
+    name: "mapa",
+    sf: { default: "map", selected: "map.fill" },
+  },
   {
     href: "/biblioteka",
     icon: Library,
     label: "Biblioteka",
-    short: "Biblioteka",
+    name: "biblioteka",
+    sf: { default: "books.vertical", selected: "books.vertical.fill" },
   },
   {
     href: "/pomysl",
     icon: Lightbulb,
-    label: "Zgłoś pomysł",
-    short: "Pomysł",
+    label: "Pomysł",
+    name: "pomysl",
+    sf: { default: "lightbulb", selected: "lightbulb.fill" },
   },
   {
     href: "/zgloszenia",
     icon: MessageSquareText,
-    label: "Moje zgłoszenia",
-    short: "Zgłoszenia",
-  },
-  {
-    href: "/dostepnosc",
-    icon: Accessibility,
-    label: "Dostępność",
-    short: "Dostępność",
+    label: "Zgłoszenia",
+    name: "zgloszenia",
+    sf: { default: "text.bubble", selected: "text.bubble.fill" },
   },
 ];
 
-const isActive = (pathname: string, href: string) =>
-  href === "/"
-    ? pathname === "/" || pathname.startsWith("/innowacje")
-    : pathname.startsWith(href);
-
-const tabBackground = (
-  colors: { board: string; tab: string; tabHover: string },
-  active: boolean,
-  hovered: boolean
-) => {
-  if (active) {
-    return colors.board;
+const isActive = (pathname: string, href: string) => {
+  if (href === "/") {
+    return pathname === "/" || pathname.startsWith("/innowacje");
   }
-  return hovered ? colors.tabHover : colors.tab;
+  if (href === "/biblioteka") {
+    return (
+      pathname.startsWith("/biblioteka") ||
+      pathname.startsWith("/wiedza") ||
+      pathname.startsWith("/materialy")
+    );
+  }
+  if (href === "/zgloszenia") {
+    return pathname.startsWith("/zgloszeni");
+  }
+  return pathname.startsWith(href);
 };
 
-function FolderTab({ item }: { item: NavItem }) {
-  const { colors, highContrast } = useTheme();
-  const pathname = usePathname();
-  const [hovered, setHovered] = useState(false);
-  const active = isActive(pathname, item.href);
-  const Icon = item.icon;
-  return (
-    <Link asChild href={item.href}>
-      <Pressable
-        aria-current={active ? "page" : undefined}
-        onHoverIn={() => setHovered(true)}
-        onHoverOut={() => setHovered(false)}
-        role="link"
-        style={StyleSheet.flatten([
-          styles.folderTab,
-          {
-            backgroundColor: tabBackground(colors, active, hovered),
-            borderBottomWidth: 0,
-            borderColor: highContrast ? colors.ink : "transparent",
-            borderWidth: highContrast ? 2 : 0,
-            marginTop: active || hovered ? 0 : 6,
-            minHeight: active || hovered ? 56 : 50,
-          },
-        ])}
-      >
-        <Icon
-          aria-hidden
-          color={active ? colors.stamp : colors.tabInkSoft}
-          size={20}
-          strokeWidth={active ? 2.4 : 2}
-        />
-        <Txt variant="label" weight={active ? "600" : "500"}>
-          {item.label}
-        </Txt>
-      </Pressable>
-    </Link>
-  );
-}
+const useChromeInk = () => {
+  const { colors } = useTheme();
+  const tone = useChromeTone();
+  const night = tone === "night";
+  return {
+    active: night ? colors.onNight : colors.stamp,
+    brandNight: tone !== "day",
+    night,
+    rest: night ? colors.onNightSoft : colors.inkSoft,
+    wash: night ? "rgba(252, 252, 255, 0.16)" : colors.tone,
+  };
+};
 
-function BarLink({ item }: { item: NavItem }) {
-  const { colors, type } = useTheme();
+function BarLink({ item }: { item: TabItem }) {
+  const { highContrast } = useTheme();
+  const ink = useChromeInk();
   const pathname = usePathname();
   const active = isActive(pathname, item.href);
   const Icon = item.icon;
+  const color = active ? ink.active : ink.rest;
   return (
     <Link asChild href={item.href}>
       <Pressable
@@ -118,36 +112,211 @@ function BarLink({ item }: { item: NavItem }) {
         role="link"
         style={StyleSheet.flatten([
           styles.barLink,
-          { backgroundColor: active ? colors.stampWash : "transparent" },
+          {
+            backgroundColor: active ? ink.wash : "transparent",
+            borderColor: active && highContrast ? color : "transparent",
+            borderWidth: highContrast ? 2 : 0,
+          },
         ])}
       >
         <Icon
           aria-hidden
-          color={active ? colors.stamp : colors.inkSoft}
+          color={color}
           size={24}
           strokeWidth={active ? 2.4 : 2}
         />
         <Txt
+          maxFontSizeMultiplier={1.15}
           numberOfLines={1}
-          style={{ fontSize: Math.min(type.small - 3, 14), lineHeight: 17 }}
-          tone={active ? "stamp" : "default"}
-          variant="small"
-          weight={active ? "600" : "500"}
+          style={[styles.barLabel, { color }]}
+          weight="600"
         >
-          {item.short}
+          {item.label}
         </Txt>
       </Pressable>
     </Link>
   );
 }
 
-export const useLastTabActive = () => {
-  const pathname = usePathname();
-  const last = NAV.at(-1);
-  return last ? isActive(pathname, last.href) : false;
-};
+export function TabBar() {
+  const { wide } = useTheme();
+  const { night } = useChromeInk();
+  const insets = useSafeAreaInsets();
+  if (wide) {
+    return null;
+  }
+  return (
+    <View
+      pointerEvents="box-none"
+      style={[styles.dock, { bottom: Math.max(insets.bottom, 14) }]}
+    >
+      <Glass
+        aria-label="Menu główne"
+        night={night}
+        role="navigation"
+        style={styles.bar}
+        {...nightAttr(night)}
+      >
+        {TABS.map((item) => (
+          <BarLink item={item} key={item.href} />
+        ))}
+      </Glass>
+    </View>
+  );
+}
 
-function SkipLink() {
+export function Brand({ night = false }: { night?: boolean }) {
+  const { colors } = useTheme();
+  return (
+    <Link asChild href="/">
+      <Pressable
+        aria-label={`${APP_NAME}, strona główna`}
+        role="link"
+        style={styles.brand}
+      >
+        <View
+          style={[
+            styles.seal,
+            { backgroundColor: night ? colors.onNight : colors.stamp },
+          ]}
+        >
+          <Txt
+            style={[
+              styles.sealText,
+              { color: night ? colors.stamp : colors.onStamp },
+            ]}
+            weight="700"
+          >
+            Hm
+          </Txt>
+        </View>
+        <Txt
+          style={[
+            styles.brandName,
+            { color: night ? colors.onNight : colors.ink },
+          ]}
+          weight="600"
+        >
+          {APP_NAME}
+        </Txt>
+        <Txt
+          style={[
+            styles.brandOrg,
+            { color: night ? colors.onNightSoft : colors.inkSoft },
+          ]}
+        >
+          ROPS Kraków
+        </Txt>
+      </Pressable>
+    </Link>
+  );
+}
+
+export function AccessButton({ night = false }: { night?: boolean }) {
+  const { colors, wide } = useTheme();
+  if (wide) {
+    return null;
+  }
+  return (
+    <Link asChild href="/dostepnosc">
+      <Pressable
+        aria-label="Dostępność: wielkość tekstu i kontrast"
+        role="link"
+        style={styles.round}
+      >
+        <Glass interactive night={night} style={styles.roundGlass}>
+          <ALargeSmall
+            aria-hidden
+            color={night ? colors.onNight : colors.ink}
+            size={26}
+            strokeWidth={2}
+          />
+        </Glass>
+      </Pressable>
+    </Link>
+  );
+}
+
+function WideLink({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: TabHref | "/dostepnosc";
+  icon: LucideIcon;
+  label: string;
+}) {
+  const { highContrast } = useTheme();
+  const ink = useChromeInk();
+  const pathname = usePathname();
+  const [hovered, setHovered] = useState(false);
+  const active = isActive(pathname, href);
+  const color = active || hovered ? ink.active : ink.rest;
+  return (
+    <Link asChild href={href}>
+      <Pressable
+        aria-current={active ? "page" : undefined}
+        onHoverIn={() => setHovered(true)}
+        onHoverOut={() => setHovered(false)}
+        role="link"
+        style={StyleSheet.flatten([
+          styles.wideLink,
+          {
+            backgroundColor: active ? ink.wash : "transparent",
+            borderColor: active && highContrast ? color : "transparent",
+            borderWidth: highContrast ? 2 : 0,
+          },
+        ])}
+      >
+        <Icon
+          aria-hidden
+          color={color}
+          size={20}
+          strokeWidth={active ? 2.4 : 2}
+        />
+        <Txt style={[styles.wideLabel, { color }]} weight="600">
+          {label}
+        </Txt>
+      </Pressable>
+    </Link>
+  );
+}
+
+export function WideChrome() {
+  const { wide } = useTheme();
+  const { night, brandNight } = useChromeInk();
+  if (!wide) {
+    return null;
+  }
+  return (
+    <View
+      pointerEvents="box-none"
+      role="banner"
+      style={styles.wide}
+      {...nightAttr(night)}
+    >
+      <Brand night={brandNight} />
+      <Glass
+        aria-label="Menu główne"
+        night={night}
+        role="navigation"
+        style={styles.wideNav}
+      >
+        {TABS.map((item) => (
+          <WideLink
+            href={item.href}
+            icon={item.icon}
+            key={item.href}
+            label={item.label}
+          />
+        ))}
+        <WideLink href="/dostepnosc" icon={ALargeSmall} label="Dostępność" />
+      </Glass>
+    </View>
+  );
+}
+
+export function SkipLink() {
   const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
   if (Platform.OS !== "web") {
@@ -158,8 +327,8 @@ function SkipLink() {
       onBlur={() => setVisible(false)}
       onFocus={() => setVisible(true)}
       onPress={() => {
-        const main = document.querySelector("main");
-        const heading = main?.querySelector("h1");
+        const main = document.querySelector('[role="main"]');
+        const heading = document.querySelector('[role="heading"]');
         const target = (heading ?? main) as HTMLElement | null;
         if (target) {
           target.setAttribute("tabindex", "-1");
@@ -182,144 +351,67 @@ function SkipLink() {
   );
 }
 
-function Brand() {
-  const { colors, wide } = useTheme();
-  return (
-    <Link asChild href="/">
-      <Pressable
-        aria-label={`${APP_NAME}, strona główna`}
-        role="link"
-        style={styles.brand}
-      >
-        <View style={[styles.seal, { backgroundColor: colors.stamp }]}>
-          <Txt
-            style={{ fontFamily: fonts["700"], fontSize: 15, lineHeight: 18 }}
-            tone="onStamp"
-          >
-            Hm
-          </Txt>
-        </View>
-        <View>
-          <Txt
-            style={{ fontSize: 20, letterSpacing: -0.3, lineHeight: 22 }}
-            weight="700"
-          >
-            {APP_NAME}
-          </Txt>
-          {wide ? (
-            <Txt style={{ fontSize: 14, lineHeight: 18 }} tone="soft">
-              {ORGANIZATION_NAME}
-            </Txt>
-          ) : null}
-        </View>
-      </Pressable>
-    </Link>
-  );
-}
-
-export function TopBar() {
-  const { colors, wide, borderWidth } = useTheme();
-  const insets = useSafeAreaInsets();
-  return (
-    <View
-      role="banner"
-      style={[
-        styles.top,
-        {
-          backgroundColor: colors.desk,
-          borderBottomColor: colors.rule,
-          borderBottomWidth: borderWidth === 1 ? 0 : borderWidth,
-          paddingBottom: wide ? 0 : space.sm,
-          paddingLeft: wide ? space.xxl : space.md,
-          paddingRight: wide ? 14 : space.md,
-          paddingTop: insets.top + space.sm,
-        },
-      ]}
-    >
-      <SkipLink />
-      <Brand />
-      {wide ? (
-        <View aria-label="Menu główne" role="navigation" style={styles.navRow}>
-          {NAV.map((item) => (
-            <FolderTab item={item} key={item.href} />
-          ))}
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
-export function BottomBar() {
-  const { colors, wide, highContrast } = useTheme();
-  const insets = useSafeAreaInsets();
-  if (wide) {
-    return null;
-  }
-  return (
-    <View
-      aria-label="Menu główne"
-      role="navigation"
-      style={[
-        styles.bottom,
-        {
-          backgroundColor: colors.paper,
-          borderTopColor: highContrast ? colors.ink : colors.rule,
-          borderTopWidth: highContrast ? 2 : StyleSheet.hairlineWidth,
-          paddingBottom: Math.max(insets.bottom, space.xs),
-        },
-      ]}
-    >
-      {NAV.map((item) => (
-        <BarLink item={item} key={item.href} />
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
+  bar: {
+    borderRadius: 34,
+    flexDirection: "row",
+    height: 68,
+    padding: 5,
+    width: "100%",
+  },
+  barLabel: {
+    fontSize: 12.5,
+    letterSpacing: -0.2,
+    lineHeight: 16,
+  },
   barLink: {
     alignItems: "center",
-    borderRadius: radius.md,
+    borderRadius: 29,
     flex: 1,
     gap: 2,
     justifyContent: "center",
-    minHeight: 60,
-    paddingHorizontal: 0,
-  },
-  bottom: {
-    flexDirection: "row",
-    paddingHorizontal: space.xs,
-    paddingTop: space.xs,
+    minHeight: minTarget,
   },
   brand: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.md,
+    gap: space.sm + 2,
     minHeight: minTarget,
-    paddingRight: space.sm,
   },
-  folderTab: {
+  brandName: {
+    fontSize: 19,
+    letterSpacing: -0.2,
+    lineHeight: 24,
+  },
+  brandOrg: {
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  dock: {
+    left: space.md,
+    position: "absolute",
+    right: space.md,
+  },
+  round: {
+    borderRadius: radius.pill,
+  },
+  roundGlass: {
     alignItems: "center",
-    borderTopLeftRadius: radius.tab,
-    borderTopRightRadius: radius.tab,
-    flexDirection: "row",
-    gap: space.sm,
-    paddingHorizontal: 18,
-  },
-  navRow: {
-    alignItems: "flex-end",
-    alignSelf: "flex-end",
-    flexDirection: "row",
-    flexShrink: 1,
-    gap: 6,
-    justifyContent: "flex-end",
+    borderRadius: radius.pill,
+    height: minTarget + 4,
+    justifyContent: "center",
+    width: minTarget + 4,
   },
   seal: {
     alignItems: "center",
     borderRadius: 10,
-    height: 36,
+    height: 34,
     justifyContent: "center",
-    width: 36,
+    width: 34,
+  },
+  sealText: {
+    fontSize: 14,
+    lineHeight: 18,
   },
   skip: {
     borderRadius: radius.md,
@@ -327,13 +419,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
     paddingVertical: space.md,
     position: "absolute",
-    zIndex: 10,
+    zIndex: 30,
   },
-  top: {
+  wide: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.lg,
     justifyContent: "space-between",
-    paddingBottom: space.sm,
+    left: 0,
+    paddingHorizontal: 40,
+    position: "absolute",
+    right: 0,
+    top: 24,
+    zIndex: 20,
+  },
+  wideLabel: {
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  wideLink: {
+    alignItems: "center",
+    borderRadius: 23,
+    flexDirection: "row",
+    gap: space.sm,
+    minHeight: minTarget,
+    paddingHorizontal: space.lg + 2,
+  },
+  wideNav: {
+    borderRadius: 28,
+    flexDirection: "row",
+    padding: 5,
   },
 });

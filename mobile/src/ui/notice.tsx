@@ -32,7 +32,7 @@ export function Notice({ tone, title, children, live = true }: NoticeProps) {
         {
           backgroundColor: colors.paper,
           borderColor: scheme.color,
-          borderWidth,
+          borderWidth: Math.max(borderWidth, 1.5),
         },
       ]}
     >
@@ -56,9 +56,9 @@ const styles = StyleSheet.create({
   },
   box: {
     alignItems: "flex-start",
-    borderRadius: radius.md,
+    borderRadius: radius.button,
     flexDirection: "row",
     gap: space.md,
-    padding: space.lg,
+    padding: space.lg + 2,
   },
 });
