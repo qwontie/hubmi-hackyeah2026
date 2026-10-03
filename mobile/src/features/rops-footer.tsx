@@ -83,7 +83,8 @@ export function RopsFooter() {
   const demo = useDemoData();
   return (
     <View
-      role="contentinfo"
+      aria-label="O serwisie"
+      role="group"
       style={[
         styles.footer,
         { borderTopColor: highContrast ? colors.ink : colors.rule },

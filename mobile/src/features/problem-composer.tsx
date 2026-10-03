@@ -215,7 +215,6 @@ function Words({ match }: { match: Match }) {
         ref={inputRef}
         selectionColor={colors.onNightSoft}
         style={[
-          ease,
           styles.input,
           {
             borderBottomColor: focused ? colors.onNight : colors.glassNightEdge,

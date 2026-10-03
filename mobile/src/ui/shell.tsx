@@ -1,6 +1,7 @@
 import { Link, usePathname } from "expo-router";
 import {
   ALargeSmall,
+  FlaskConical,
   Library,
   Lightbulb,
   type LucideIcon,
@@ -26,7 +27,13 @@ import { Glass } from "./glass";
 import { nightAttr } from "./night";
 import { Txt } from "./text";
 
-type TabHref = "/" | "/mapa" | "/biblioteka" | "/pomysl" | "/zgloszenia";
+type TabHref =
+  | "/"
+  | "/mapa"
+  | "/biblioteka"
+  | "/pomysl"
+  | "/zgloszenia"
+  | "/testy";
 
 export interface TabItem {
   href: TabHref;
@@ -230,27 +237,24 @@ export function AccessButton({ night = false }: { night?: boolean }) {
 }
 
 function WideA11y() {
-  const ink = useChromeInk();
+  const { colors } = useTheme();
+  const { night } = useChromeInk();
   const [open, setOpen] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const color = open || hovered ? ink.active : ink.rest;
+  const ink = night ? colors.onNight : colors.ink;
   return (
     <>
       <Pressable
         aria-expanded={open}
-        onHoverIn={() => setHovered(true)}
-        onHoverOut={() => setHovered(false)}
         onPress={() => setOpen(true)}
         role="button"
-        style={[
-          styles.wideLink,
-          { backgroundColor: open ? ink.wash : "transparent" },
-        ]}
+        style={styles.a11yPress}
       >
-        <ALargeSmall aria-hidden color={color} size={20} strokeWidth={2} />
-        <Txt style={[styles.wideLabel, { color }]} weight="600">
-          Dostępność
-        </Txt>
+        <Glass interactive night={night} style={styles.a11y}>
+          <ALargeSmall aria-hidden color={ink} size={22} strokeWidth={2} />
+          <Txt style={[styles.wideLabel, { color: ink }]} weight="600">
+            Dostępność
+          </Txt>
+        </Glass>
       </Pressable>
       <A11yPanel onClose={() => setOpen(false)} open={open} />
     </>
@@ -314,22 +318,25 @@ export function WideChrome() {
   return (
     <View pointerEvents="box-none" style={styles.wide} {...nightAttr(night)}>
       <Brand night={brandNight} />
-      <Glass
-        aria-label="Menu główne"
-        night={night}
-        role="navigation"
-        style={styles.wideNav}
-      >
-        {TABS.map((item) => (
-          <WideLink
-            href={item.href}
-            icon={item.icon}
-            key={item.href}
-            label={item.label}
-          />
-        ))}
+      <View style={styles.wideRight}>
         <WideA11y />
-      </Glass>
+        <Glass
+          aria-label="Menu główne"
+          night={night}
+          role="navigation"
+          style={styles.wideNav}
+        >
+          {TABS.map((item) => (
+            <WideLink
+              href={item.href}
+              icon={item.icon}
+              key={item.href}
+              label={item.label}
+            />
+          ))}
+          <WideLink href="/testy" icon={FlaskConical} label="Testy" />
+        </Glass>
+      </View>
     </View>
   );
 }
@@ -370,6 +377,17 @@ export function SkipLink() {
 }
 
 const styles = StyleSheet.create({
+  a11y: {
+    alignItems: "center",
+    borderRadius: 28,
+    flexDirection: "row",
+    gap: space.sm,
+    minHeight: 58,
+    paddingHorizontal: space.lg + 2,
+  },
+  a11yPress: {
+    borderRadius: 28,
+  },
   bar: {
     borderRadius: 34,
     flexDirection: "row",
@@ -473,5 +491,11 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     overflow: "hidden",
     padding: 5,
+  },
+  wideRight: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 1,
+    gap: space.md,
   },
 });

@@ -1,20 +1,15 @@
 import { Link } from "expo-router";
-import { ArrowRight, CircleAlert } from "lucide-react-native";
 import { type Ref, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  type Text,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, type Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { MatchResponse } from "@/api/types";
 import { A11yButton } from "@/features/a11y-controls";
 import { ContactForm } from "@/features/contact-form";
 import { CardGrid, InnovationCard } from "@/features/innovation-card";
 import { ReadAloudPill } from "@/features/read-aloud-button";
+import { RopsFooter } from "@/features/rops-footer";
 import { Stamp } from "@/features/stamp";
+import { type Registration, Unsolved } from "@/features/unsolved";
 import { matchSpeech, resultsTitle, similarSentence } from "@/hooks/use-match";
 import { useTheme } from "@/theme/settings";
 import { minTarget, motion, radius, space, tabBarSpace } from "@/theme/tokens";
@@ -27,76 +22,6 @@ import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
 type SearchNeed = NonNullable<MatchResponse["need"]>;
-
-export interface Registration {
-  busy: boolean;
-  error: string | null;
-  need: { at: Date; number: number | null } | null;
-  onRegister: () => void;
-}
-
-function Unsolved({ registration }: { registration: Registration }) {
-  const { colors, wide } = useTheme();
-  const { busy, error, need, onRegister } = registration;
-  return (
-    <View
-      aria-live="polite"
-      style={[styles.unsolved, { backgroundColor: colors.night }]}
-      {...nightAttr(true)}
-    >
-      {need ? (
-        <View style={[styles.unsolvedDone, wide && styles.unsolvedDoneWide]}>
-          <Stamp at={need.at} number={need.number} word="PRZYJĘTO" />
-          <View style={styles.unsolvedText}>
-            <Heading level={3} night>
-              ROPS przyjął Twoje zgłoszenie
-            </Heading>
-            <Txt tone="onNightSoft">
-              Pracownik urzędu przeczyta opis. Odpowiedź znajdziesz w zakładce
-              Zgłoszenia, tam też możesz podać e-mail.
-            </Txt>
-            <Link asChild href="/zgloszenia">
-              <Pressable role="link" style={styles.unsolvedLink}>
-                <Txt tone="onNight" variant="label" weight="600">
-                  Przejdź do zgłoszeń
-                </Txt>
-                <ArrowRight aria-hidden color={colors.onNight} size={22} />
-              </Pressable>
-            </Link>
-          </View>
-        </View>
-      ) : (
-        <>
-          <View style={styles.unsolvedText}>
-            <Heading level={3} night size="h2">
-              Żadne z tych rozwiązań nie pomaga?
-            </Heading>
-            <Txt tone="onNightSoft" variant="lead">
-              Przekaż swój problem do ROPS. Pracownik urzędu przeczyta go i
-              odpowie.
-            </Txt>
-          </View>
-          {error ? (
-            <View style={styles.unsolvedError}>
-              <CircleAlert aria-hidden color={colors.onNight} size={24} />
-              <Txt style={styles.metaText} tone="onNight" weight="600">
-                {error}
-              </Txt>
-            </View>
-          ) : null}
-          <Button
-            busy={busy}
-            fill={!wide}
-            label="Mój problem nie został rozwiązany"
-            onPress={onRegister}
-            size="large"
-            variant="light"
-          />
-        </>
-      )}
-    </View>
-  );
-}
 
 function NothingFits({ need, empty }: { need: SearchNeed; empty: boolean }) {
   const { colors } = useTheme();
@@ -280,6 +205,7 @@ export function MatchResults({
       ) : (
         <Unsolved registration={registration} />
       )}
+      <RopsFooter />
     </View>
   );
 
@@ -428,33 +354,5 @@ const styles = StyleSheet.create({
     bottom: 64,
     position: "absolute",
     right: -64,
-  },
-  unsolved: {
-    borderRadius: radius.sheet,
-    gap: space.xl,
-    padding: space.xl,
-  },
-  unsolvedDone: {
-    gap: space.xl,
-  },
-  unsolvedDoneWide: {
-    alignItems: "center",
-    flexDirection: "row",
-  },
-  unsolvedError: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: space.sm + 2,
-  },
-  unsolvedLink: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    gap: space.sm,
-    minHeight: minTarget,
-  },
-  unsolvedText: {
-    flex: 1,
-    gap: space.sm + 2,
   },
 });

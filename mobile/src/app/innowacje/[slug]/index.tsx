@@ -5,6 +5,7 @@ import {
   Building2,
   Download,
   FileText,
+  FlaskConical,
   Landmark,
 } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
@@ -12,11 +13,7 @@ import { APP_NAME } from "@/config";
 import { CategoryTile } from "@/features/category-icon";
 import { ReadAloudPill } from "@/features/read-aloud-button";
 import { RichText } from "@/features/rich-text";
-import {
-  ImprovementBlock,
-  TestSignupBlock,
-  VoteBlock,
-} from "@/features/tester";
+import { ImprovementBlock, VoteBlock } from "@/features/tester";
 import { Video } from "@/features/video";
 import {
   innovationMeta,
@@ -158,7 +155,15 @@ export default function InnovationScreen() {
           </Sheet>
 
           <Sheet>
-            <TestSignupBlock slug={state.data.slug} />
+            <View style={styles.header}>
+              <Heading level={2}>Chcesz to przetestować?</Heading>
+              <Button
+                icon={FlaskConical}
+                label="Zgłoś się do testów"
+                onPress={() => router.push("/testy")}
+                role="link"
+              />
+            </View>
             <View style={[styles.divider, { backgroundColor: colors.rule }]} />
             <ImprovementBlock slug={state.data.slug} />
           </Sheet>

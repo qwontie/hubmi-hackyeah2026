@@ -10,9 +10,10 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntryChoice } from "@/features/entry-choice";
-import { MatchResults, type Registration } from "@/features/match-results";
+import { MatchResults } from "@/features/match-results";
 import { ProblemComposer } from "@/features/problem-composer";
 import { Sky, skyHeight } from "@/features/sky";
+import type { Registration } from "@/features/unsolved";
 import { useMatch } from "@/hooks/use-match";
 import { useSetChromeTone } from "@/theme/chrome";
 import { useTheme } from "@/theme/settings";
@@ -120,8 +121,8 @@ const Fit = Platform.OS === "ios" ? View : ScrollView;
 const registrationOf = (match: ReturnType<typeof useMatch>): Registration => ({
   busy: match.registering,
   error: match.registrationError,
+  fields: match.registrationFields,
   need: match.registeredNeed,
-  onRegister: () => match.registrationFields.setOpen(true),
 });
 
 const chromeTone = (
