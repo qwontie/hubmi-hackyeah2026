@@ -15,4 +15,4 @@ RUN bun --bun svelte-kit sync
 RUN bun --bun run build
 
 ENTRYPOINT ["bun"]
-CMD ["build/index.js"]
+CMD ["serve.js"]
