@@ -23,6 +23,7 @@ NOTHING = "nothing"
 CANDIDATES = 12
 HTTP_PAUSE = 7.0
 HTTP_RETRIES = 3
+RETRY_CODES = (429, 502, 503)
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,10 +192,10 @@ def post_match(url: str, text: str) -> dict:
             with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310
                 return json.load(response)
         except urllib.error.HTTPError as e:
-            if e.code != 429:  # noqa: PLR2004
+            if e.code not in RETRY_CODES:
                 raise
             time.sleep(int(e.headers.get("Retry-After") or 30) + 1)
-    message = "rate limited three times in a row"
+    message = "no answer after three tries"
     raise RuntimeError(message)
 
 
