@@ -14,6 +14,8 @@ const TOPICS = [
   "innovation.updated",
   "message.created",
   "message.updated",
+  "idea.created",
+  "idea.updated",
 ] as const;
 
 export type Topic = (typeof TOPICS)[number];

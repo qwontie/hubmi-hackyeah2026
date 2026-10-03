@@ -60,7 +60,8 @@ export interface Message {
   delivery_status: "pending" | "sent" | "skipped" | "failed" | null;
   direction: "to_author" | "from_author";
   id: string;
-  need_id: string;
+  idea_id?: string | null;
+  need_id: string | null;
   read_at?: string | null;
   sent_at: string;
 }
@@ -247,3 +248,63 @@ export const runImport = () =>
 
 export const listImportRuns = () =>
   api.get<ImportRun[]>("/admin/import/runs", { limit: 5 });
+
+export type IdeaStatus = "new" | "in_review" | "accepted" | "rejected";
+
+export interface AdminIdea {
+  canvas: Record<string, string> | null;
+  contact_email: string | null;
+  created_at: string;
+  essence: string;
+  for_whom: string;
+  has_contact?: boolean;
+  id: string;
+  number: number;
+  powiat: string | null;
+  stage: string;
+  status: IdeaStatus;
+  title: string;
+  updated_at?: string;
+}
+
+export interface AdminIdeaDetail extends AdminIdea {
+  similar_ideas: {
+    essence: string;
+    id: string;
+    number: number;
+    similarity: number;
+    stage: string;
+    title: string;
+  }[];
+  similar_innovations: {
+    lead: string | null;
+    similarity: number;
+    slug: string;
+    title: string;
+  }[];
+}
+
+export interface IdeaOptions {
+  canvas_fields: { field: string; name: string }[];
+  stages: { name: string; slug: string }[];
+}
+
+export const listIdeas = () =>
+  api.get<Page<AdminIdea>>("/admin/ideas", { per_page: 100 });
+
+export const getIdea = (id: string, signal?: AbortSignal) =>
+  api.get<AdminIdeaDetail>(`/admin/ideas/${id}`, undefined, signal);
+
+export const setIdeaStatus = (id: string, status: IdeaStatus) =>
+  api.patch<AdminIdeaDetail>(`/admin/ideas/${id}`, { status });
+
+export const ideaOptions = () => api.get<IdeaOptions>("/ideas/options");
+
+export const listIdeaMessages = (id: string) =>
+  api.get<Message[]>(`/admin/ideas/${id}/messages`);
+
+export const replyToIdea = (id: string, body: string) =>
+  api.post<Message>(`/admin/ideas/${id}/reply`, { body });
+
+export const markIdeaRead = (id: string) =>
+  api.post<void>(`/admin/ideas/${id}/read`);
