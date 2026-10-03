@@ -54,6 +54,16 @@ class AuthSettings(Section):
     session_days: int = 30
 
 
+class MailSettings(Section):
+    resend_api_key: SecretStr = SecretStr("")
+    sender: str = "HubMi <hubmi@kotikot.com>"
+    reply_to: str | None = None
+    staff_email: str | None = None
+    staff_digest_seconds: int = 600
+    timeout_seconds: float = 10.0
+    public_url: str = "https://hubmi.qwontie.dev"
+
+
 class LlmSettings(Section):
     model: str = "google-gla:gemini-2.5-flash"
     gemini_api_key: SecretStr = SecretStr("")
@@ -65,6 +75,7 @@ class Settings(BaseSettings):
     api: ApiSettings = Field(default_factory=ApiSettings)
     auth: AuthSettings = Field(default_factory=AuthSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
+    mailer: MailSettings = Field(default_factory=MailSettings)
 
     model_config = SettingsConfigDict(
         case_sensitive=False,

@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api import routers
 from dependencies.container import container
+from services.mail import StaffNotifier
 from utils.db import init_db
 from utils.env import env
 from utils.logging import setup_logging
@@ -16,6 +17,7 @@ from utils.logging import setup_logging
 async def lifespan(app_: FastAPI) -> AsyncGenerator[None]:
     setup_logging()
     await init_db()
+    await app_.state.dishka_container.get(StaffNotifier)
     yield
     await app_.state.dishka_container.close()
 
