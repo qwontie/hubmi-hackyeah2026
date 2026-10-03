@@ -5,7 +5,9 @@
   import { page } from "$app/state";
   import {
     type Adaptation,
+    type AdaptationVolunteers,
     type AdminAdaptation,
+    adaptationVolunteers,
     getAdaptation,
     listAdaptations,
   } from "$lib/api/admin";
@@ -13,6 +15,8 @@
   import { dayWords, nbsp, plural, powiatName, when } from "$lib/format";
   import { powiats } from "$lib/live/powiats.svelte";
   import { live } from "$lib/live/stream.svelte";
+  import { whoLabel } from "$lib/opinions";
+  import { volunteerLabel } from "$lib/volunteers";
 
   const WEEK = 7 * 86_400_000;
 
@@ -21,6 +25,7 @@
   let loaded = $state(false);
   let loadError = $state<Error | null>(null);
   let detail = $state<Adaptation | null>(null);
+  let helpers = $state<AdaptationVolunteers | null>(null);
   let detailError = $state<Error | null>(null);
   let wide = $state(true);
   let controller: AbortController | null = null;
@@ -50,9 +55,13 @@
     controller = new AbortController();
     detailError = null;
     try {
-      const next = await getAdaptation(target, controller.signal);
+      const [next, people] = await Promise.all([
+        getAdaptation(target, controller.signal),
+        adaptationVolunteers(target, controller.signal).catch(() => null),
+      ]);
       if (target === id) {
         detail = next;
+        helpers = people;
       }
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") {
@@ -70,6 +79,7 @@
     const target = id;
     untrack(() => {
       detail = null;
+      helpers = null;
       detailError = null;
       if (target) {
         loadDetail(target);
@@ -316,6 +326,48 @@
                 <h3 class="h3" id="ctx-h">Co napisała instytucja</h3>
                 <p class="quote">{nbsp(detail.context)}</p>
               </section>
+
+              {#if helpers}
+                <section aria-labelledby="vol-h">
+                  <h3 class="h3" id="vol-h">
+                    Wolontariusze dla tej innowacji w&nbsp;tym powiecie
+                    <span class="font-normal text-hm-ink-soft tabular"
+                      >{helpers.count}</span
+                    >
+                  </h3>
+                  {#if !detail.powiat}
+                    <p class="text-[13px] text-hm-ink-soft">
+                      Instytucja nie podała powiatu, więc nie da się dopasować
+                      wolontariuszy.
+                    </p>
+                  {:else if helpers.items.length === 0}
+                    <p class="text-[13px] text-hm-ink-soft">
+                      Nikt z&nbsp;tego powiatu nie zgłosił się do tej innowacji.
+                      <a
+                        class="link"
+                        href="{resolve('/volunteers/[[id]]', {})}?innovation={detail.innovation.slug}"
+                        >Wszyscy wolontariusze tej innowacji</a
+                      >
+                    </p>
+                  {:else}
+                    <ol class="plan">
+                      {#each helpers.items as v (v.id)}
+                        <li>
+                          <a
+                            class="link"
+                            href={resolve("/volunteers/[[id]]", { id: v.id })}
+                            >{v.organization || v.email}</a
+                          >
+                          <span class="block text-hm-ink-soft text-[13px]">
+                            {whoLabel[v.who]}
+                            · {volunteerLabel[v.status]}
+                          </span>
+                        </li>
+                      {/each}
+                    </ol>
+                  {/if}
+                </section>
+              {/if}
 
               <section aria-labelledby="sum-h">
                 <h3 class="h3" id="sum-h">Usługa</h3>

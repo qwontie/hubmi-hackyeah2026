@@ -1,16 +1,22 @@
 <script lang="ts">
   import { onDestroy, untrack } from "svelte";
+  import { resolve } from "$app/paths";
   import {
     type AdminInnovation,
     type AdminInnovationDetail,
+    type DemandRow,
     getInnovation,
+    listDemand,
     patchInnovation,
     publishInnovation,
+    type VolunteerReports,
+    volunteerReports,
   } from "$lib/api/admin";
   import { ApiError } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
-  import { when } from "$lib/format";
+  import { plural, when } from "$lib/format";
   import { showTip } from "$lib/tip";
+  import { recommendLabel } from "$lib/volunteers";
 
   let {
     slug,
@@ -55,6 +61,23 @@
   };
 
   let detail = $state<AdminInnovationDetail | null>(null);
+  let demand = $state<DemandRow[] | null>(null);
+  let reports = $state<VolunteerReports | null>(null);
+
+  async function loadInterest(target: string) {
+    const [d, r] = await Promise.all([
+      listDemand({ innovation: target }).catch(() => null),
+      volunteerReports(target).catch(() => null),
+    ]);
+    if (target === slug) {
+      demand = d?.items ?? null;
+      reports = r;
+    }
+  }
+
+  const demandTotal = $derived(
+    (demand ?? []).reduce((sum, row) => sum + row.count, 0)
+  );
   let draft = $state<Record<Field, string>>(blank());
   let loadError = $state<Error | null>(null);
   let saving = $state(false);
@@ -121,7 +144,10 @@
     const target = slug;
     untrack(() => {
       detail = null;
+      demand = null;
+      reports = null;
       load(target);
+      loadInterest(target);
     });
   });
 
@@ -290,6 +316,47 @@
         </p>
       {/if}
 
+      <section aria-labelledby="interest-h" class="interest">
+        <h3 class="font-semibold text-[13px]" id="interest-h">
+          Zainteresowanie mieszkańców
+          <span class="font-normal text-hm-ink-soft">od początku</span>
+        </h3>
+        {#if demand === null && reports === null}
+          <p class="text-[13px] text-hm-ink-soft">Wczytywanie…</p>
+        {:else}
+          <p class="text-sm">
+            <b class="font-semibold">"Chcę tego u&nbsp;siebie"</b>:
+            {demandTotal}
+            {plural(demandTotal, "zgłoszenie", "zgłoszenia", "zgłoszeń")}{demand && demand.length > 0 ? ` · ${demand.map((d) => `${d.powiat_name} ${d.count}`).join(", ")}` : ""}
+          </p>
+          {#if reports}
+            <p class="text-sm">
+              <b class="font-semibold">Wolontariusze</b>:
+              {reports.items.length}
+              {plural(reports.items.length, "zgłoszenie", "zgłoszenia", "zgłoszeń")},
+              {reports.reports}
+              {plural(reports.reports, "raport", "raporty", "raportów")}{reports.reports > 0 ? `, ${reports.participants} ${plural(reports.participants, "uczestnik", "uczestników", "uczestników")}; poleca: tak ${reports.recommend.yes}, po zmianach ${reports.recommend.after_changes}, nie ${reports.recommend.no}` : ""}
+              ·
+              <a
+                class="link"
+                href="{resolve('/volunteers/[[id]]', {})}?innovation={slug}"
+                >otwórz zgłoszenia</a
+              >
+            </p>
+            {#each reports.items.filter((v) => v.report) as v (v.id)}
+              <p class="text-[13px] text-hm-ink-soft">
+                <a
+                  class="link"
+                  href={resolve("/volunteers/[[id]]", { id: v.id })}
+                  >{v.organization || v.email}</a
+                >, {v.powiat_name}:
+                {v.report ? recommendLabel[v.report.recommend] : ""}{v.report?.worked ? ` · ${v.report.worked}` : ""}
+              </p>
+            {/each}
+          {/if}
+        {/if}
+      </section>
+
       <div class="foot">
         <button
           class="ghost cladd-clickable"
@@ -382,6 +449,15 @@
     box-shadow:
       inset 0 0 0 1.5px var(--hm-ring),
       var(--shadow-cladd-cut-outline);
+  }
+
+  .interest {
+    display: grid;
+    gap: 6px;
+    padding: 12px 14px;
+    background: var(--hm-sunk);
+    border-radius: 12px;
+    box-shadow: var(--shadow-cladd-cut-outline);
   }
 
   .foot {

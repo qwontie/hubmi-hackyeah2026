@@ -1,7 +1,13 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
-  import { type AdminNeed, listAllNeeds, listCategories } from "$lib/api/admin";
+  import {
+    type AdminNeed,
+    type DemandRow,
+    listAllNeeds,
+    listCategories,
+    listDemand,
+  } from "$lib/api/admin";
   import { api } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
   import DayChart from "$lib/components/hub/day-chart.svelte";
@@ -91,6 +97,7 @@
   let loadError = $state<Error | null>(null);
   let allNeeds = $state<AdminNeed[] | null>(null);
   let categoryNames = $state<Map<string, string>>(new Map());
+  let demand = $state<DemandRow[] | null>(null);
 
   async function loadBreakdown() {
     try {
@@ -102,6 +109,11 @@
       categoryNames = new Map(cats.map((c) => [c.slug, c.name]));
     } catch {
       allNeeds = null;
+    }
+    try {
+      demand = (await listDemand()).items;
+    } catch {
+      demand = null;
     }
   }
 
@@ -172,6 +184,8 @@
     stats ? stats.searches.unclear + stats.searches.no_match : 0
   );
 
+  const demandNote = (d: DemandRow) =>
+    d.with_email > 0 ? `, ${d.with_email} z e-mailem` : "";
   const topOf = (list: Ranked[]) => list.slice(0, 8);
   const maxOf = (list: Ranked[]) => Math.max(1, ...list.map((r) => r.count));
 </script>
@@ -248,7 +262,7 @@
         </dd>
       </div>
       <div>
-        <dt>Zgłoszenia do testów</dt>
+        <dt>Zgłoszenia wolontariuszy</dt>
         <dd class="tabular">{stats.feedback.test_signups}</dd>
         <dd class="note">
           {window}, {stats.feedback.improvements}
@@ -353,6 +367,32 @@
                   >{i.matches} {plural(i.matches, "raz", "razy", "razy")},
                   {i.top_matches}
                   na pierwszym miejscu</span
+                >
+              </li>
+            {/each}
+          </ol>
+        {/if}
+      </section>
+
+      <section aria-labelledby="dem-h" class="panel">
+        <h2 class="h" id="dem-h">
+          "Chcę tego u&nbsp;siebie" <span class="win">od początku</span>
+        </h2>
+        {#if demand === null}
+          <p class="empty">Wczytywanie…</p>
+        {:else if demand.length === 0}
+          <p class="empty">
+            Nikt jeszcze nie zaznaczył, że chce innowacji u&nbsp;siebie.
+          </p>
+        {:else}
+          <ol class="list">
+            {#each demand.slice(0, 8) as d (`${d.innovation.slug}:${d.powiat}`)}
+              <li>
+                <a href="{resolve('/library')}/{d.innovation.slug}"
+                  >{d.innovation.title}</a
+                >
+                <span class="tabular"
+                  >{d.powiat_name}: <b>{d.count}</b>{demandNote(d)}</span
                 >
               </li>
             {/each}
