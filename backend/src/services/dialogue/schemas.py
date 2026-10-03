@@ -191,6 +191,7 @@ class ContactNeed(BaseModel):
     id: uuid.UUID
     number: int | None
     title: str | None
+    text: str
     status: NeedStatus
     powiat: str | None
     created_at: datetime
@@ -230,3 +231,7 @@ class ContactProfile(BaseModel):
     ideas: list[ContactIdea]
     test_signups: list[ContactSignup]
     feedback: list[ContactFeedback]
+
+
+class ContactProfileRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=254)

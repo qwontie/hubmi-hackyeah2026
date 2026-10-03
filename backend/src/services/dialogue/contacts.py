@@ -14,13 +14,24 @@ from .schemas import (
 )
 
 
+def contact_feedback(feedback: Feedback, innovation: Innovation) -> ContactFeedback:
+    need_id = feedback.need_id
+    assert need_id is not None
+    return ContactFeedback(
+        id=feedback.id,
+        innovation=ContactInnovation(slug=innovation.slug, title=innovation.title),
+        need_id=need_id,
+        kind=feedback.kind,
+        created_at=feedback.created_at,
+    )
+
+
 async def profile(session: AsyncSession, email: str) -> ContactProfile:
-    normalized = email.strip().casefold()
     needs = list(
         (
             await session.exec(
                 select(Need)
-                .where(func.lower(col(Need.contact_email)) == normalized)
+                .where(func.lower(col(Need.contact_email)) == email)
                 .order_by(col(Need.created_at).desc())
             )
         ).all()
@@ -29,7 +40,7 @@ async def profile(session: AsyncSession, email: str) -> ContactProfile:
         (
             await session.exec(
                 select(Idea)
-                .where(func.lower(col(Idea.contact_email)) == normalized)
+                .where(func.lower(col(Idea.contact_email)) == email)
                 .order_by(col(Idea.created_at).desc())
             )
         ).all()
@@ -39,7 +50,7 @@ async def profile(session: AsyncSession, email: str) -> ContactProfile:
             await session.exec(
                 select(TestSignup, Innovation)
                 .join(Innovation, col(Innovation.id) == col(TestSignup.innovation_id))
-                .where(func.lower(col(TestSignup.contact_email)) == normalized)
+                .where(func.lower(col(TestSignup.contact_email)) == email)
                 .order_by(col(TestSignup.created_at).desc())
             )
         ).all()
@@ -50,18 +61,19 @@ async def profile(session: AsyncSession, email: str) -> ContactProfile:
                 select(Feedback, Innovation)
                 .join(Need, col(Need.id) == col(Feedback.need_id))
                 .join(Innovation, col(Innovation.id) == col(Feedback.innovation_id))
-                .where(func.lower(col(Need.contact_email)) == normalized)
+                .where(func.lower(col(Need.contact_email)) == email)
                 .order_by(col(Feedback.created_at).desc())
             )
         ).all()
     )
     return ContactProfile(
-        email=normalized,
+        email=email,
         needs=[
             ContactNeed(
                 id=need.id,
                 number=need.number,
                 title=need.title,
+                text=need.text,
                 status=need.status,
                 powiat=need.powiat,
                 created_at=need.created_at,
@@ -94,17 +106,5 @@ async def profile(session: AsyncSession, email: str) -> ContactProfile:
             )
             for signup, innovation in signup_rows
         ],
-        feedback=[
-            ContactFeedback(
-                id=feedback.id,
-                innovation=ContactInnovation(
-                    slug=innovation.slug, title=innovation.title
-                ),
-                need_id=feedback.need_id,
-                kind=feedback.kind,
-                created_at=feedback.created_at,
-            )
-            for feedback, innovation in feedback_rows
-            if feedback.need_id is not None
-        ],
+        feedback=[contact_feedback(*row) for row in feedback_rows],
     )
