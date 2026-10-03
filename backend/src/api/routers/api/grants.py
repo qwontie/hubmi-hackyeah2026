@@ -40,7 +40,8 @@ read_limit = rate_limit("grant_read", per_minute=120)
 draft_limit = rate_limit("grant_draft", per_minute=2, per_day=10)
 edit_limit = rate_limit("grant_edit", per_minute=30, per_day=500)
 start_limit = persistent_rate_limit("grant_start", per_minute=3, per_day=30)
-subscribe_limit = rate_limit("grant_subscribe", per_minute=3, per_day=10)
+subscribe_limit = persistent_rate_limit("grant_subscribe", per_minute=3, per_day=10)
+recipient_limit = persistent_rate_limit("grant_confirm_mail", per_day=2)
 token_limit = rate_limit("grant_token", per_minute=10, per_day=100)
 
 CALL_MISSING = "Nie znaleziono naboru."
@@ -139,9 +140,10 @@ async def subscribe(
     if not body.consent:
         error = invalid("consent", CONSENT)
         raise error
-    subscribe_limit.check(client_ip(request))
+    await subscribe_limit.check(client_ip(request))
+    mail = await recipient_limit.allows(body.email.strip().lower())
     try:
-        await notify.subscribe(session, body.email, mailer)
+        await notify.subscribe(session, body.email, mailer, mail=mail)
     except notify.InvalidEmailError:
         error = invalid("email", EMAIL)
         raise error from None

@@ -223,3 +223,11 @@ async def test_no_group_is_named_with_the_residents_own_words(
     monkeypatch.setattr(enrich, "SWEEP_MIN_AGE", timedelta(0))
     monkeypatch.setattr(enrich, "SWEEP_BATCH", 10_000)
     assert outcome.need.id in await enrich.pending_needs()
+
+
+async def test_recipient_cap_allows_two_letters_a_day() -> None:
+    limiter = PersistentRateLimiter(f"test-{uuid.uuid4().hex}", Rule(2, 86400))
+    address = f"{uuid.uuid4().hex}@hubmi.test"
+    assert await limiter.allows(address)
+    assert await limiter.allows(address)
+    assert not await limiter.allows(address)

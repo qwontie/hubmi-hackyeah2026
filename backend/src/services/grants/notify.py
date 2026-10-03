@@ -154,7 +154,7 @@ def call_email(
 
 
 async def subscribe(
-    session: AsyncSession, email: str, mailer: Mailer
+    session: AsyncSession, email: str, mailer: Mailer, *, mail: bool = True
 ) -> GrantSubscriber | None:
     address = normalize_email(email)
     if address is None:
@@ -181,7 +181,8 @@ async def subscribe(
     session.add(subscriber)
     await session.commit()
     await session.refresh(subscriber)
-    await mailer.send(confirm_email(subscriber))
+    if mail:
+        await mailer.send(confirm_email(subscriber))
     return subscriber
 
 

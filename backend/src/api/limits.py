@@ -94,6 +94,13 @@ class PersistentRateLimiter:
         self.window = max(rule.seconds for rule in rules)
         self.calls = 0
 
+    async def allows(self, key: str) -> bool:
+        try:
+            await self.check(key)
+        except ApiError:
+            return False
+        return True
+
     async def check(self, key: str) -> None:
         self.calls += 1
         retry = 0
