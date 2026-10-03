@@ -376,9 +376,11 @@ export interface MapPowiat {
 export interface MapData {
   geojson_url: string;
   indicators: MapIndicator[];
+  needs_answered?: number;
+  needs_open?: number;
   needs_without_powiat?: number;
   powiats: MapPowiat[];
-  totals?: { needs_open: number; needs_answered: number };
+  problem_min_needs?: number;
 }
 
 export interface PowiatFeature {
