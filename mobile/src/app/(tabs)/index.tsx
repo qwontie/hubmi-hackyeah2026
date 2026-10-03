@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
+  Platform,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -114,6 +115,8 @@ const useDawn = (loading: boolean, done: boolean) => {
   return { dawn, dawning: done && !dawned && !reduceMotion, rise };
 };
 
+const Fit = Platform.OS === "ios" ? View : ScrollView;
+
 const chromeTone = (
   asking: boolean,
   done: boolean,
@@ -169,23 +172,24 @@ export default function MatchScreen() {
 
   if (!asking) {
     return (
-      <ScrollView
-        contentContainerStyle={styles.fill}
+      <View
         role="main"
-        style={{ backgroundColor: colors.night }}
+        style={[styles.root, { backgroundColor: colors.night }]}
       >
-        <EntryChoice
-          onProblem={() => setChosen(true)}
-          top={
-            wide ? null : (
-              <View style={styles.top}>
-                <Brand night />
-                <AccessButton night />
-              </View>
-            )
-          }
-        />
-      </ScrollView>
+        <Fit contentContainerStyle={styles.fill} style={styles.root}>
+          <EntryChoice
+            onProblem={() => setChosen(true)}
+            top={
+              wide ? null : (
+                <View style={styles.top}>
+                  <Brand night />
+                  <AccessButton night />
+                </View>
+              )
+            }
+          />
+        </Fit>
+      </View>
     );
   }
 
