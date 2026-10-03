@@ -14,6 +14,7 @@ from services.ai.embeddings import normalize
 from services.bus import bus
 from services.search.vector import cosine_distance
 from utils.db import session_scope
+from utils.db.models.idea import Idea
 from utils.db.models.need import Need, NeedCluster
 from utils.logging import logger
 
@@ -197,6 +198,34 @@ async def _safe_summary(cluster_id: uuid.UUID) -> None:
         logger.exception("cluster summary task failed for %s", cluster_id)
 
 
+async def _linked_ideas(session: AsyncSession, cluster_id: uuid.UUID) -> list[Idea]:
+    return list(
+        (
+            await session.exec(select(Idea).where(col(Idea.problem_id) == cluster_id))
+        ).all()
+    )
+
+
+def _similarity(a: list[float] | None, b: list[float] | None) -> float:
+    if a is None or b is None:
+        return -1.0
+    return sum(x * y for x, y in zip(a, b, strict=True))
+
+
+async def _follow_split(
+    session: AsyncSession, source: NeedCluster, created: NeedCluster
+) -> None:
+    for idea in await _linked_ideas(session, source.id):
+        if idea.embedding is None:
+            continue
+        vector = list(idea.embedding)
+        old = list(source.centroid) if source.centroid is not None else None
+        new = list(created.centroid) if created.centroid is not None else None
+        if _similarity(vector, new) > _similarity(vector, old):
+            idea.problem_id = created.id
+            session.add(idea)
+
+
 async def merge_clusters(
     session: AsyncSession, source_id: uuid.UUID, into_id: uuid.UUID
 ) -> NeedCluster:
@@ -214,6 +243,9 @@ async def merge_clusters(
     for need in needs:
         need.cluster_id = into_id
         session.add(need)
+    for idea in await _linked_ideas(session, source_id):
+        idea.problem_id = into_id
+        session.add(idea)
     await session.flush()
     await session.delete(source)
     await recompute(session, target)
@@ -251,6 +283,7 @@ async def split_cluster(
     await session.flush()
     await recompute(session, source)
     await recompute(session, created)
+    await _follow_split(session, source, created)
     await session.commit()
     await session.refresh(source)
     await session.refresh(created)

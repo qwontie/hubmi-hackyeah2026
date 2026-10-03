@@ -1,5 +1,5 @@
 import uuid
-from collections.abc import Collection
+from collections.abc import Collection, Iterable, Mapping
 from datetime import UTC, datetime
 from typing import Any
 
@@ -13,6 +13,7 @@ from services.modules import Page, offset
 from services.search import nearest_innovations
 from services.search.vector import cosine_distance
 from utils.db.models.idea import Idea, IdeaStage, IdeaStatus
+from utils.db.models.need import NeedCluster
 from utils.logging import logger
 
 from .schemas import (
@@ -20,6 +21,7 @@ from .schemas import (
     AdminIdeaDetail,
     AuthorIdea,
     Canvas,
+    ProblemRef,
     PublicIdea,
     SimilarIdea,
     SimilarInnovation,
@@ -98,6 +100,7 @@ async def create(  # noqa: PLR0913
     stage: IdeaStage,
     canvas: Canvas,
     powiat: str | None,
+    problem_id: uuid.UUID | None,
     contact_email: str | None,
     token_hash: str,
 ) -> Idea:
@@ -108,6 +111,7 @@ async def create(  # noqa: PLR0913
         stage=stage,
         canvas=canvas.model_dump(exclude_none=True),
         powiat=powiat,
+        problem_id=problem_id,
         contact_email=contact_email,
         contact_consent=contact_email is not None,
         consent_at=datetime.now(UTC) if contact_email else None,
@@ -143,6 +147,7 @@ def public_view(idea: Idea) -> PublicIdea:
         stage=idea.stage,
         canvas=Canvas.model_validate(idea.canvas),
         powiat=idea.powiat,
+        problem_id=idea.problem_id,
         created_at=idea.created_at,
     )
 
@@ -156,8 +161,30 @@ def author_view(idea: Idea) -> AuthorIdea:
     )
 
 
-def admin_view(idea: Idea) -> AdminIdea:
-    return AdminIdea(**author_view(idea).model_dump(), contact_email=idea.contact_email)
+async def problem_refs(
+    session: AsyncSession, ideas: Iterable[Idea]
+) -> dict[uuid.UUID, ProblemRef]:
+    ids = {idea.problem_id for idea in ideas if idea.problem_id is not None}
+    if not ids:
+        return {}
+    rows = await session.exec(
+        select(NeedCluster.id, NeedCluster.title).where(col(NeedCluster.id).in_(ids))
+    )
+    return {
+        cluster_id: ProblemRef(id=cluster_id, title=title) for cluster_id, title in rows
+    }
+
+
+def admin_view(idea: Idea, problems: Mapping[uuid.UUID, ProblemRef]) -> AdminIdea:
+    return AdminIdea(
+        **author_view(idea).model_dump(),
+        contact_email=idea.contact_email,
+        problem=problems.get(idea.problem_id) if idea.problem_id else None,
+    )
+
+
+async def admin_out(session: AsyncSession, idea: Idea) -> AdminIdea:
+    return admin_view(idea, await problem_refs(session, [idea]))
 
 
 async def admin_detail(session: AsyncSession, idea: Idea) -> AdminIdeaDetail:
@@ -168,18 +195,25 @@ async def admin_detail(session: AsyncSession, idea: Idea) -> AdminIdeaDetail:
         ideas = await similar_ideas(session, vector, exclude_id=idea.id, statuses=None)
         innovations = await similar_innovations(session, vector)
     return AdminIdeaDetail(
-        **admin_view(idea).model_dump(),
+        **(await admin_out(session, idea)).model_dump(),
         similar_ideas=ideas,
         similar_innovations=innovations,
     )
 
 
 async def list_public(
-    session: AsyncSession, *, stage: IdeaStage | None, page: int, per_page: int
+    session: AsyncSession,
+    *,
+    stage: IdeaStage | None,
+    problem_id: uuid.UUID | None,
+    page: int,
+    per_page: int,
 ) -> Page[PublicIdea]:
     filters: list[Any] = [col(Idea.status).in_(list(PUBLIC_STATUSES))]
     if stage is not None:
         filters.append(Idea.stage == stage)
+    if problem_id is not None:
+        filters.append(Idea.problem_id == problem_id)
     total = await session.scalar(select(func.count()).select_from(Idea).where(*filters))
     rows = await session.exec(
         select(Idea)
@@ -202,11 +236,14 @@ async def list_admin(  # noqa: PLR0913
     status: IdeaStatus | None,
     stage: IdeaStage | None,
     powiat: str | None,
+    problem_id: uuid.UUID | None,
     q: str | None,
     page: int,
     per_page: int,
 ) -> Page[AdminIdea]:
     filters: list[Any] = []
+    if problem_id is not None:
+        filters.append(Idea.problem_id == problem_id)
     if status is not None:
         filters.append(Idea.status == status)
     if stage is not None:
@@ -229,8 +266,10 @@ async def list_admin(  # noqa: PLR0913
         .offset(offset(page, per_page))
         .limit(per_page)
     )
+    ideas = list(rows)
+    problems = await problem_refs(session, ideas)
     return Page(
-        items=[admin_view(idea) for idea in rows],
+        items=[admin_view(idea, problems) for idea in ideas],
         total=total or 0,
         page=page,
         per_page=per_page,

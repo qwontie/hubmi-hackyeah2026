@@ -12,7 +12,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from services.needs import POWIATS
 from services.sql import fetch, unaccent_like
-from utils.db.models import Category, Need, NeedCluster, NeedStatus
+from utils.db.models import Category, Idea, Need, NeedCluster, NeedStatus
 
 from .queries import TIMEZONE
 
@@ -35,6 +35,7 @@ class AdminCluster(BaseModel):
     category_name: str | None
     size: int
     waiting: int
+    ideas_count: int
     new_last_7d: int
     daily: list[int]
     powiats: list[PowiatCount]
@@ -154,6 +155,13 @@ async def enrich(
         .group_by(col(Need.cluster_id)),
     )
     waiting = {row.cluster_id: row.n for row in waiting_rows}
+    idea_rows = await fetch(
+        session,
+        select(col(Idea.problem_id), func.count().label("n"))
+        .where(col(Idea.problem_id).in_(ids))
+        .group_by(col(Idea.problem_id)),
+    )
+    ideas = {row.problem_id: row.n for row in idea_rows}
     slugs = {cluster.category_slug for cluster in clusters if cluster.category_slug}
     names = {}
     if slugs:
@@ -175,6 +183,7 @@ async def enrich(
             category_name=names.get(cluster.category_slug or ""),
             size=cluster.size,
             waiting=waiting.get(cluster.id, 0),
+            ideas_count=ideas.get(cluster.id, 0),
             new_last_7d=sum(daily[cluster.id][-RECENT_DAYS:]),
             daily=daily[cluster.id],
             powiats=powiats[cluster.id],

@@ -36,6 +36,7 @@ from services.kreator import (
 )
 from services.modules import Page, clean, clean_line, is_meaningful
 from services.needs.tokens import new_token, token_matches
+from services.problems import get_problem
 from services.search import nearest_innovations
 from utils.db.models.idea import Idea, IdeaStage, IdeaStatus
 
@@ -67,6 +68,7 @@ ASSIST_CANDIDATES = 5
 OFF_TOPIC = "Opisz pomysł, który pomoże ludziom albo społeczności."
 EMAIL_NEEDED = "Podaj adres e-mail, abyśmy mogli odpisać."
 IDEA_MISSING = "Nie znaleziono tego pomysłu."
+PROBLEM_MISSING = "Wybierz problem z listy."
 LOCKED = "Ten pomysł jest już rozpatrzony. Napisz do nas, jeśli chcesz coś zmienić."
 
 IdeaToken = Annotated[str | None, Header(alias="X-Idea-Token")]
@@ -114,6 +116,22 @@ def set_contact(idea: Idea, body: IdeaPatch) -> None:
     idea.contact_consent = email is not None
 
 
+async def check_problem(session: AsyncSession, problem_id: uuid.UUID | None) -> None:
+    if problem_id is not None and await get_problem(session, problem_id) is None:
+        error = invalid("problem_id", PROBLEM_MISSING)
+        raise error
+
+
+async def set_links(session: AsyncSession, idea: Idea, body: IdeaPatch) -> None:
+    fields = body.model_fields_set
+    if "powiat" in fields:
+        powiat_name("powiat", body.powiat)
+        idea.powiat = body.powiat
+    if "problem_id" in fields:
+        await check_problem(session, body.problem_id)
+        idea.problem_id = body.problem_id
+
+
 async def owned_idea(
     session: AsyncSession, idea_id: uuid.UUID, token: str | None
 ) -> Idea | None:
@@ -144,6 +162,7 @@ async def create_idea(
     for_whom = required_text("for_whom", body.for_whom, minimum=FOR_WHOM_MIN)
     canvas = clean_canvas(body.canvas)
     powiat_name("powiat", body.powiat)
+    await check_problem(session, body.problem_id)
     email = optional_email(body.contact_email, body.contact_consent)
     create_limit.check(client_ip(request))
     token, token_hash = new_token()
@@ -155,6 +174,7 @@ async def create_idea(
         stage=body.stage,
         canvas=canvas,
         powiat=body.powiat,
+        problem_id=body.problem_id,
         contact_email=email,
         token_hash=token_hash,
     )
@@ -166,7 +186,7 @@ async def create_idea(
             session, vector, exclude_id=idea.id
         )
         similar_innovations = await repository.similar_innovations(session, vector)
-    bus.publish("idea.created", repository.admin_view(idea))
+    bus.publish("idea.created", await repository.admin_out(session, idea))
     return IdeaCreated(
         id=idea.id,
         number=idea.number or 0,
@@ -228,11 +248,12 @@ async def list_ideas(
     session: FromDishka[AsyncSession],
     _: ReadLimited,
     stage: IdeaStage | None = None,
+    problem_id: uuid.UUID | None = None,
     page: PageNumber = 1,
     per_page: PerPage = 20,
 ) -> Page[PublicIdea]:
     return await repository.list_public(
-        session, stage=stage, page=page, per_page=per_page
+        session, stage=stage, problem_id=problem_id, page=page, per_page=per_page
     )
 
 
@@ -282,13 +303,11 @@ async def patch_idea(
         idea.stage = body.stage
     if "canvas" in fields:
         idea.canvas = clean_canvas(body.canvas).model_dump(exclude_none=True)
-    if "powiat" in fields:
-        powiat_name("powiat", body.powiat)
-        idea.powiat = body.powiat
+    await set_links(session, idea, body)
     if "contact_email" in fields or "contact_consent" in fields:
         set_contact(idea, body)
     idea = await repository.save(session, idea, reembed=reembed)
-    bus.publish("idea.updated", repository.admin_view(idea))
+    bus.publish("idea.updated", await repository.admin_out(session, idea))
     return repository.author_view(idea)
 
 
@@ -300,6 +319,7 @@ async def admin_list_ideas(  # noqa: PLR0913
     status: IdeaStatus | None = None,
     stage: IdeaStage | None = None,
     powiat: PowiatFilter = None,
+    problem_id: uuid.UUID | None = None,
     q: SearchFilter = None,
     page: PageNumber = 1,
     per_page: PerPage = 20,
@@ -309,6 +329,7 @@ async def admin_list_ideas(  # noqa: PLR0913
         status=status,
         stage=stage,
         powiat=powiat,
+        problem_id=problem_id,
         q=q,
         page=page,
         per_page=per_page,
@@ -337,5 +358,5 @@ async def admin_patch_idea(
         raise not_found(IDEA_MISSING)
     idea.status = body.status
     idea = await repository.save(session, idea, reembed=False)
-    bus.publish("idea.updated", repository.admin_view(idea))
+    bus.publish("idea.updated", await repository.admin_out(session, idea))
     return await repository.admin_detail(session, idea)

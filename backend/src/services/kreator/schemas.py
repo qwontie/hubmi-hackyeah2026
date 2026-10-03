@@ -55,6 +55,7 @@ class IdeaIn(Strict):
     stage: IdeaStage
     canvas: Canvas | None = None
     powiat: str | None = Field(default=None, pattern=POWIAT_PATTERN)
+    problem_id: uuid.UUID | None = None
     contact_email: str | None = Field(default=None, max_length=254)
     contact_consent: bool = False
 
@@ -66,6 +67,7 @@ class IdeaPatch(Strict):
     stage: IdeaStage | None = None
     canvas: Canvas | None = None
     powiat: str | None = Field(default=None, pattern=POWIAT_PATTERN)
+    problem_id: uuid.UUID | None = None
     contact_email: str | None = Field(default=None, max_length=254)
     contact_consent: bool | None = None
 
@@ -137,6 +139,7 @@ class PublicIdea(BaseModel):
     stage: IdeaStage
     canvas: Canvas
     powiat: str | None
+    problem_id: uuid.UUID | None
     created_at: datetime
 
 
@@ -146,8 +149,14 @@ class AuthorIdea(PublicIdea):
     updated_at: datetime
 
 
+class ProblemRef(BaseModel):
+    id: uuid.UUID
+    title: str
+
+
 class AdminIdea(AuthorIdea):
     contact_email: str | None
+    problem: ProblemRef | None
 
 
 class AdminIdeaDetail(AdminIdea):
