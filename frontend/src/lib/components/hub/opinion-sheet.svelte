@@ -101,7 +101,7 @@
       {#if votes > 0}
         <div class="scale">
           <span aria-hidden="true" class="rail"
-            ><i style:width="{share * 100}%"></i></span
+            ><i style:transform="scaleX({share})"></i></span
           >
           <span class="text-hm-ink-soft text-xs tabular">
             {Math.round(share * 100)}% z&nbsp;{votes}
@@ -266,8 +266,8 @@
     display: block;
     height: 100%;
     background: var(--hm-stamp);
-    border-radius: 6px;
-    transition: width 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform-origin: left;
+    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .list {
