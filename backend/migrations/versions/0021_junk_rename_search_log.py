@@ -57,6 +57,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.execute("UPDATE need SET status = 'closed' WHERE status = 'junk'")
     op.drop_index("ix_search_log_created_at", table_name="search_log")
     op.drop_table("search_log")
     op.drop_column("need_cluster", "title_embedding")

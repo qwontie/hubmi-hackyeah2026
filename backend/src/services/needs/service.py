@@ -28,6 +28,7 @@ from services.search import (
     peek_query_embedding,
     word_count,
 )
+from services.signing import signed_key
 from utils.db.models.innovation import Innovation, InnovationStatus
 from utils.db.models.match_result import MatchResult
 from utils.db.models.need import Need, NeedCluster, NeedOrigin
@@ -43,12 +44,12 @@ from .intake import (
     intake_text,
 )
 from .payloads import need_payload
-from .tokens import new_token, token_matches
+from .tokens import hash_token, new_token, token_matches
 
 MIN_SEARCH_TEXT = 5
 MIN_LETTERS = 0.6
 CANDIDATES = 12
-DUPLICATE_WINDOW = timedelta(hours=24)
+DUPLICATE_WINDOW = timedelta(minutes=10)
 type SearchReason = Literal["unclear", "no_match"]
 UNCLEAR: SearchReason = "unclear"
 NO_MATCH: SearchReason = "no_match"
@@ -256,12 +257,16 @@ def _set_contact(need: Need, contact_email: str | None) -> None:
     need.consent_at = datetime.now(UTC)
 
 
+def duplicate_token(key: str, need_id: uuid.UUID) -> str:
+    return signed_key("need-edit", key, need_id)
+
+
 async def _reissue(
-    session: AsyncSession, need: Need, contact_email: str | None
+    session: AsyncSession, need: Need, key: str, contact_email: str | None
 ) -> FormOutcome:
-    token, token_hash = new_token()
-    need.edit_token_hash = token_hash
-    _set_contact(need, contact_email)
+    token = duplicate_token(key, need.id)
+    if not need.contact_email:
+        _set_contact(need, contact_email)
     session.add(need)
     await session.commit()
     await session.refresh(need)
@@ -328,11 +333,17 @@ async def create_need(  # noqa: PLR0913
     if key is not None:
         existing = await _recent_duplicate(session, key)
         if existing is not None:
-            return await _reissue(session, existing, contact_email)
+            return await _reissue(session, existing, key, contact_email)
     vector = vector or peek_query_embedding(text)
     shown = shown_innovation_slugs or []
-    token, token_hash = new_token()
+    need_id = uuid.uuid4()
+    if key is None:
+        token, token_hash = new_token()
+    else:
+        token = duplicate_token(key, need_id)
+        token_hash = hash_token(token)
     need = Need(
+        id=need_id,
         text=text,
         title=first_words(text),
         origin=NeedOrigin.FORM,

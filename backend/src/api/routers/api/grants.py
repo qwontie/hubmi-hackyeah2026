@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import STATUS_MESSAGES, ApiError, invalid, not_found
-from api.limits import client_ip, rate_limit
+from api.limits import client_ip, persistent_rate_limit, rate_limit
 from api.routers.api.modules.common import ai_guard
 from services.bus import bus
 from services.dialogue.service import token_opens
@@ -39,6 +39,7 @@ router = APIRouter(route_class=DishkaRoute, tags=["grants"])
 read_limit = rate_limit("grant_read", per_minute=120)
 draft_limit = rate_limit("grant_draft", per_minute=2, per_day=10)
 edit_limit = rate_limit("grant_edit", per_minute=30, per_day=500)
+start_limit = persistent_rate_limit("grant_start", per_minute=3, per_day=30)
 subscribe_limit = rate_limit("grant_subscribe", per_minute=3, per_day=10)
 token_limit = rate_limit("grant_token", per_minute=10, per_day=100)
 
@@ -168,7 +169,7 @@ async def unsubscribe(
 @router.post(
     "/grant-calls/{call_id}/applications",
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(edit_limit)],
+    dependencies=[Depends(start_limit)],
 )
 async def start_application(
     *,

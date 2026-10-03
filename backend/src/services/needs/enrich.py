@@ -167,7 +167,7 @@ async def enrich_need(need_id: uuid.UUID) -> bool:
     return need.cluster_id is not None or need.status == NeedStatus.JUNK
 
 
-async def _guarded(need_id: uuid.UUID) -> bool:
+async def _guarded(need_id: uuid.UUID) -> bool | None:
     if need_id in _running:
         return True
     _running.add(need_id)
@@ -175,7 +175,7 @@ async def _guarded(need_id: uuid.UUID) -> bool:
         return await enrich_need(need_id)
     except Exception:
         logger.exception("need enrichment failed for %s", need_id)
-        return False
+        return None
     finally:
         _running.discard(need_id)
 
@@ -218,9 +218,11 @@ async def pending_needs() -> list[uuid.UUID]:
 async def sweep() -> int:
     done = 0
     for need_id in await pending_needs():
-        if not await _guarded(need_id):
+        result = await _guarded(need_id)
+        if result is False:
             break
-        done += 1
+        if result:
+            done += 1
     return done
 
 

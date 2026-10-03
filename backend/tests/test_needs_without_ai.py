@@ -8,6 +8,7 @@ from api.limits import PersistentRateLimiter, Rule
 from services.ai import AiBudgetExceededError, AiUnavailableError
 from services.bus import bus
 from services.needs import create_need, enrich, search_need, service
+from services.needs.tokens import token_matches
 from utils.db import session_scope
 from utils.db.models.innovation import EMBEDDING_DIMENSIONS
 from utils.db.models.need import Need
@@ -120,7 +121,7 @@ async def test_same_text_from_same_client_returns_the_existing_need(
             session,
             f"  {text.upper()} ",
             powiat=None,
-            contact_email=None,
+            contact_email="drugi@hubmi.test",
             client="10.0.0.2",
         )
     async with session_scope() as session:
@@ -130,7 +131,12 @@ async def test_same_text_from_same_client_returns_the_existing_need(
         created_needs.append(other.need.id)
     assert again.duplicate is True
     assert again.need.id == first.need.id
-    assert again.token != first.token
+    assert again.token == first.token
+    async with session_scope() as session:
+        stored = await session.get(Need, first.need.id)
+        assert stored is not None
+        assert token_matches(first.token, stored.edit_token_hash)
+        assert stored.contact_email == "drugi@hubmi.test"
     assert other.duplicate is False
     assert other.need.id != first.need.id
     assert no_background == [first.need.id, other.need.id]
@@ -166,3 +172,32 @@ async def test_persistent_rate_limit_counts_in_postgres() -> None:
     assert caught.value.status_code == 429
     assert caught.value.code == "rate_limited"
     await limiter.check("10.0.0.10")
+
+
+async def test_duplicate_never_overwrites_the_first_contact(
+    created_needs: list[uuid.UUID], no_background: list[uuid.UUID]
+) -> None:
+    text = unique_text()
+    async with session_scope() as session:
+        first = await create_need(
+            session,
+            text,
+            powiat=None,
+            contact_email="pierwszy@hubmi.test",
+            client="10.0.0.4",
+        )
+        created_needs.append(first.need.id)
+    async with session_scope() as session:
+        again = await create_need(
+            session,
+            text,
+            powiat=None,
+            contact_email="drugi@hubmi.test",
+            client="10.0.0.4",
+        )
+    assert again.duplicate is True
+    assert no_background == [first.need.id]
+    async with session_scope() as session:
+        stored = await session.get(Need, first.need.id)
+        assert stored is not None
+        assert stored.contact_email == "pierwszy@hubmi.test"
