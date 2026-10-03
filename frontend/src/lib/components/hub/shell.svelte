@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import { goto } from "$app/navigation";
-  import { resolve } from "$app/paths";
+  import { asset, resolve } from "$app/paths";
   import { page } from "$app/state";
   import { logout } from "$lib/api/auth";
   import { api } from "$lib/api/client";
@@ -103,10 +103,16 @@
     class="flex flex-wrap items-center gap-x-7 gap-y-2.5 px-3 py-2.5 min-[900px]:h-15 min-[900px]:px-5 min-[900px]:py-0"
   >
     <a
-      class="flex items-center gap-2.5 rounded-xl"
+      class="flex items-center gap-2 rounded-xl"
       href={expert ? expertPath : needsPath}
     >
-      <span aria-hidden="true" class="seal">Hm</span>
+      <img
+        alt=""
+        class="signet"
+        height="63"
+        src={asset("/brand/rops-signet.svg")}
+        width="82"
+      >
       <span class="leading-tight">
         <b class="block font-semibold text-[15px] tracking-tight">HubMi</b>
         <span class="text-hm-ink-soft text-xs">ROPS Kraków</span>
@@ -178,21 +184,9 @@
 </div>
 
 <style>
-  .seal {
-    display: grid;
-    place-items: center;
-    width: 30px;
+  .signet {
+    width: auto;
     height: 30px;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--hm-stamp);
-    letter-spacing: -0.02em;
-    background: var(--hm-paper);
-    border-radius: 9px;
-    box-shadow:
-      inset 0 0 0 1.5px var(--hm-stamp),
-      inset 0 0 0 3px var(--hm-paper),
-      inset 0 0 0 4px var(--hm-stamp);
   }
 
   .nav {

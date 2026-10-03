@@ -32,7 +32,7 @@
         alt="Regionalny Ośrodek Polityki Społecznej w Krakowie, instytucja Województwa Małopolskiego"
         class="rops"
         height="72"
-        src={asset("/brand/rops.svg")}
+        src={asset("/brand/rops-logo.svg")}
         width="230"
       >
       <span class="sr-only">(otwiera się w nowej karcie)</span>
@@ -75,8 +75,7 @@
   }
 
   .bar {
-    min-height: 48px;
-    padding: 0 22px 8px 24px;
+    padding: 2px 22px 6px 24px;
   }
 
   .stack {
@@ -88,7 +87,7 @@
 
   .marks {
     display: flex;
-    gap: 14px;
+    gap: 16px;
     align-items: center;
   }
 
@@ -106,26 +105,26 @@
   }
 
   .rops {
-    width: auto;
-    height: 34px;
+    width: 180px;
+    height: auto;
   }
 
   .mp {
-    width: auto;
-    height: 12px;
+    width: 130px;
+    height: auto;
   }
 
   .stack .rops {
-    height: 40px;
+    width: 200px;
   }
 
   .stack .mp {
-    height: 15px;
+    width: 140px;
   }
 
   .rule {
     width: 1px;
-    height: 20px;
+    height: 32px;
     background: var(--hm-rule);
   }
 
@@ -155,6 +154,17 @@
   .links a:hover {
     color: var(--hm-ink);
     text-decoration-color: currentColor;
+  }
+
+  @media (max-width: 480px) {
+    .stack .marks {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stack .rule {
+      display: none;
+    }
   }
 
   @media (max-width: 899px) {

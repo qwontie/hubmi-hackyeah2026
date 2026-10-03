@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { resolve } from "$app/paths";
+  import { asset, resolve } from "$app/paths";
   import { page } from "$app/state";
   import { login } from "$lib/api/auth";
   import { ApiError } from "$lib/api/client";
@@ -58,7 +58,13 @@
     onsubmit={submit}
   >
     <div class="flex items-center gap-3">
-      <span aria-hidden="true" class="seal">Hm</span>
+      <img
+        alt=""
+        class="signet"
+        height="63"
+        src={asset("/brand/rops-signet.svg")}
+        width="82"
+      >
       <div>
         <h1 class="font-semibold text-hm-xl tracking-tight">HubMi</h1>
         <p class="text-balance text-hm-ink-soft text-hm-sm">
@@ -114,21 +120,9 @@
     box-shadow: var(--hm-raised);
   }
 
-  .seal {
-    display: grid;
-    place-items: center;
-    width: 40px;
+  .signet {
+    width: auto;
     height: 40px;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--hm-stamp);
-    letter-spacing: -0.02em;
-    background: var(--hm-paper);
-    border-radius: 11px;
-    box-shadow:
-      inset 0 0 0 1.5px var(--hm-stamp),
-      inset 0 0 0 3.5px var(--hm-paper),
-      inset 0 0 0 4.5px var(--hm-stamp);
   }
 
   .primary {
