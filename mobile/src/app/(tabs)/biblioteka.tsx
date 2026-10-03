@@ -1,9 +1,9 @@
 import { router } from "expo-router";
 import Head from "expo-router/head";
 import { Compass, FileText, Search, X } from "lucide-react-native";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
-import { categoryIcon } from "@/features/category-icon";
+import { CategoryFilter } from "@/features/category-filter";
 import { CardGrid, InnovationCard } from "@/features/innovation-card";
 import { useLibrary } from "@/hooks/use-library";
 import { useTheme } from "@/theme/settings";
@@ -72,26 +72,12 @@ export default function LibraryScreen() {
             ) : null}
           </View>
         </View>
-        {categories.length > 0 ? (
-          <ScrollView
-            aria-label="Kategorie"
-            contentContainerStyle={wide ? styles.categories : styles.strip}
-            horizontal={!wide}
-            role="group"
-            showsHorizontalScrollIndicator={false}
-            style={wide ? undefined : styles.bleed}
-          >
-            {categories.map((item) => (
-              <Button
-                icon={categoryIcon(item.slug)}
-                key={item.slug}
-                label={`${item.name} (${item.count})`}
-                onPress={() => selectCategory(item.slug)}
-                pressed={item.slug === category}
-              />
-            ))}
-          </ScrollView>
-        ) : null}
+        <CategoryFilter
+          items={categories}
+          label="Kategorie"
+          onSelect={selectCategory}
+          value={category}
+        />
       </PageHead>
 
       <View style={styles.more}>

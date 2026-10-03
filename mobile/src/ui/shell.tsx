@@ -9,7 +9,13 @@ import {
   Search,
 } from "lucide-react-native";
 import { useState } from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { APP_NAME } from "@/config";
 import { useChromeTone } from "@/theme/chrome";
@@ -167,6 +173,7 @@ export function TabBar() {
 
 export function Brand({ night = false }: { night?: boolean }) {
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
   return (
     <Link asChild href="/">
       <Pressable
@@ -199,14 +206,16 @@ export function Brand({ night = false }: { night?: boolean }) {
         >
           {APP_NAME}
         </Txt>
-        <Txt
-          style={[
-            styles.brandOrg,
-            { color: night ? colors.onNightSoft : colors.inkSoft },
-          ]}
-        >
-          ROPS Kraków
-        </Txt>
+        {width >= 1040 || width < 900 ? (
+          <Txt
+            style={[
+              styles.brandOrg,
+              { color: night ? colors.onNightSoft : colors.inkSoft },
+            ]}
+          >
+            ROPS Kraków
+          </Txt>
+        ) : null}
       </Pressable>
     </Link>
   );
@@ -247,6 +256,8 @@ function WideLink({
   label: string;
 }) {
   const { highContrast } = useTheme();
+  const { width } = useWindowDimensions();
+  const tight = width < 1200;
   const ink = useChromeInk();
   const pathname = usePathname();
   const [hovered, setHovered] = useState(false);
@@ -261,6 +272,7 @@ function WideLink({
         role="link"
         style={StyleSheet.flatten([
           styles.wideLink,
+          tight && styles.wideLinkTight,
           {
             backgroundColor: active ? ink.wash : "transparent",
             borderColor: active && highContrast ? color : "transparent",
@@ -419,6 +431,7 @@ const styles = StyleSheet.create({
   wide: {
     alignItems: "center",
     flexDirection: "row",
+    gap: space.lg,
     justifyContent: "space-between",
     left: 0,
     paddingHorizontal: 40,
@@ -439,9 +452,15 @@ const styles = StyleSheet.create({
     minHeight: minTarget,
     paddingHorizontal: space.lg + 2,
   },
+  wideLinkTight: {
+    gap: 6,
+    paddingHorizontal: space.sm + 2,
+  },
   wideNav: {
     borderRadius: 28,
     flexDirection: "row",
+    flexShrink: 1,
+    overflow: "hidden",
     padding: 5,
   },
 });

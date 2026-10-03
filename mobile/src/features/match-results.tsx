@@ -89,7 +89,7 @@ export function MatchResults({
   onReset,
   settle,
 }: MatchResultsProps) {
-  const { colors, type, wide } = useTheme();
+  const { colors, type, wide, roomy } = useTheme();
   const insets = useSafeAreaInsets();
   const count = response.results.length;
   const empty = count === 0;
@@ -108,6 +108,7 @@ export function MatchResults({
         wide
           ? styles.bandWide
           : { paddingTop: insets.top + space.sm, zIndex: 2 },
+        roomy && styles.bandRoomy,
       ]}
       {...nightAttr(true)}
     >
@@ -141,7 +142,13 @@ export function MatchResults({
   );
 
   const list = (
-    <View style={[styles.body, wide ? styles.bodyWide : styles.bodyNarrow]}>
+    <View
+      style={[
+        styles.body,
+        wide ? styles.bodyWide : styles.bodyNarrow,
+        roomy && styles.bodyRoomy,
+      ]}
+    >
       <Heading
         level={2}
         nativeID="results-title"
@@ -243,6 +250,9 @@ const styles = StyleSheet.create({
   bandBarWide: {
     marginBottom: space.xxl,
   },
+  bandRoomy: {
+    width: 560,
+  },
   bandWide: {
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 44,
@@ -264,6 +274,9 @@ const styles = StyleSheet.create({
   bodyNarrow: {
     paddingHorizontal: space.lg,
     paddingTop: 64,
+  },
+  bodyRoomy: {
+    maxWidth: 1180,
   },
   bodyWide: {
     alignSelf: "center",

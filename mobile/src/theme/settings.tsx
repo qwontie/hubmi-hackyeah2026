@@ -46,6 +46,7 @@ interface Theme {
   lineHeight: (size: number) => number;
   reduceMotion: boolean;
   reduceTransparency: boolean;
+  roomy: boolean;
   type: Record<TypeRole, number>;
   wide: boolean;
 }
@@ -162,6 +163,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       lineHeight: (size: number) => Math.round(size * 1.45),
       reduceMotion: settings.reduceMotion || systemReduceMotion,
       reduceTransparency: reduceTransparency || settings.highContrast,
+      roomy: width >= 1600,
       type,
       wide,
     };

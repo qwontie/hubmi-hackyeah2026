@@ -1,161 +1,26 @@
-import { Link } from "expo-router";
-import { CircleAlert, Mic, Square } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { api } from "@/api/client";
-import type { Category } from "@/api/types";
-import { TEXT_MAX } from "@/config";
-import { CategoryIcon } from "@/features/category-icon";
 import { EntryChoice } from "@/features/entry-choice";
 import { MatchResults } from "@/features/match-results";
+import { ProblemComposer } from "@/features/problem-composer";
 import { Sky, skyHeight } from "@/features/sky";
-import { charactersLeft, useMatch } from "@/hooks/use-match";
-import { usePowiats } from "@/hooks/use-powiats";
-import { useResource } from "@/hooks/use-resource";
-import type { Recognition } from "@/speech/recognition";
+import { useMatch } from "@/hooks/use-match";
 import { useSetChromeTone } from "@/theme/chrome";
 import { useTheme } from "@/theme/settings";
-import {
-  fonts,
-  minTarget,
-  motion,
-  radius,
-  space,
-  tabBarSpace,
-} from "@/theme/tokens";
-import { Button } from "@/ui/button";
-import { Glass } from "@/ui/glass";
+import { motion, space, tabBarSpace } from "@/theme/tokens";
 import { nightAttr } from "@/ui/night";
-import { Notice } from "@/ui/notice";
 import { nativeDriver } from "@/ui/rise";
 import { BackPill, WIDE_TOP } from "@/ui/screen";
-import { Select } from "@/ui/select";
 import { AccessButton, Brand } from "@/ui/shell";
-import { Heading, Txt } from "@/ui/text";
-
-const TITLE_ID = "problem-title";
-const ERROR_ID = "problem-error";
-const WASH = "rgba(252, 252, 255, 0.14)";
-
-const loadCategories = (_key: string, signal: AbortSignal) =>
-  api.categories(signal);
-
-function Voice({ recognition }: { recognition: Recognition }) {
-  const { colors, reduceMotion } = useTheme();
-  if (!recognition.supported) {
-    return null;
-  }
-  const { listening } = recognition;
-  const Icon = listening ? Square : Mic;
-  return (
-    <Pressable
-      aria-pressed={listening}
-      onPress={listening ? recognition.stop : recognition.start}
-      role="button"
-      style={({ pressed }) => [
-        styles.voice,
-        { transform: [{ scale: pressed && !reduceMotion ? 0.96 : 1 }] },
-      ]}
-    >
-      <View
-        style={[
-          styles.voiceDot,
-          { backgroundColor: listening ? colors.onNight : WASH },
-        ]}
-      >
-        <Icon
-          aria-hidden
-          color={listening ? colors.night : colors.onNight}
-          size={listening ? 20 : 24}
-          strokeWidth={2.2}
-        />
-      </View>
-      <Txt tone="onNight" variant="label" weight="600">
-        {listening ? "Zakończ dyktowanie" : "Powiedz"}
-      </Txt>
-    </Pressable>
-  );
-}
-
-function KeyboardDictation() {
-  const { colors } = useTheme();
-  if (Platform.OS === "web") {
-    return <View />;
-  }
-  return (
-    <View style={styles.hint}>
-      <Mic aria-hidden color={colors.onNightSoft} size={22} />
-      <Txt style={styles.errorText} tone="onNightSoft" variant="small">
-        Można dyktować z klawiatury
-      </Txt>
-    </View>
-  );
-}
-
-function Topics({ categories }: { categories: Category[] }) {
-  const { colors, wide, highContrast } = useTheme();
-  if (categories.length === 0) {
-    return null;
-  }
-  const chips = categories.map((category) => (
-    <Link
-      asChild
-      href={{ params: { kategoria: category.slug }, pathname: "/biblioteka" }}
-      key={category.slug}
-    >
-      <Pressable
-        role="link"
-        style={StyleSheet.flatten([
-          styles.chip,
-          {
-            backgroundColor: highContrast ? colors.nightDeep : WASH,
-            borderColor: colors.glassNightEdge,
-          },
-        ])}
-      >
-        <CategoryIcon color={colors.onNight} size={22} slug={category.slug} />
-        <Txt tone="onNight" variant="label" weight="500">
-          {category.name}
-        </Txt>
-      </Pressable>
-    </Link>
-  ));
-  return (
-    <View style={styles.topics}>
-      <Txt
-        style={wide ? styles.center : undefined}
-        tone="onNightSoft"
-        variant="label"
-        weight="600"
-      >
-        Albo wybierz temat
-      </Txt>
-      {wide ? (
-        <View style={styles.chipsWide}>{chips}</View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={styles.chips}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.chipsBleed}
-        >
-          {chips}
-        </ScrollView>
-      )}
-    </View>
-  );
-}
+import { Heading } from "@/ui/text";
 
 function Dawn({ dawn, rise }: { dawn: Animated.Value; rise: Animated.Value }) {
   const { colors, wide } = useTheme();
@@ -250,206 +115,6 @@ const useDawn = (loading: boolean, done: boolean) => {
   return { dawn, dawning: done && !dawned && !reduceMotion, rise };
 };
 
-type Match = ReturnType<typeof useMatch>;
-
-function ProblemField({ match }: { match: Match }) {
-  const { colors, wide, type, lineHeight } = useTheme();
-  const [focused, setFocused] = useState(false);
-  const powiats = usePowiats();
-  const {
-    fieldError,
-    inputRef,
-    loading,
-    powiat,
-    recognition,
-    setPowiat,
-    setText,
-    text,
-  } = match;
-  const inputSize = wide ? type.h3 : type.lead;
-  return (
-    <View
-      style={[
-        styles.fieldRing,
-        { borderColor: focused ? colors.onNight : "transparent" },
-      ]}
-    >
-      <Glass night style={styles.field}>
-        <TextInput
-          accessibilityLabel="Opis problemu"
-          aria-describedby={fieldError ? ERROR_ID : undefined}
-          aria-invalid={fieldError ? true : undefined}
-          aria-labelledby={TITLE_ID}
-          editable={!loading}
-          maxLength={TEXT_MAX + 200}
-          multiline
-          onBlur={() => setFocused(false)}
-          onChangeText={setText}
-          onFocus={() => setFocused(true)}
-          placeholder="Na przykład: mama z demencją wychodzi z domu i się gubi."
-          placeholderTextColor={colors.onNightSoft}
-          ref={inputRef}
-          selectionColor={colors.onNightSoft}
-          style={[
-            styles.input,
-            {
-              color: colors.onNight,
-              fontFamily: fonts["400"],
-              fontSize: inputSize,
-              lineHeight: lineHeight(inputSize),
-              minHeight: lineHeight(inputSize) * 3 + space.md,
-            },
-          ]}
-          value={text}
-        />
-        <View style={styles.fieldFoot}>
-          {recognition.supported ? (
-            <Voice recognition={recognition} />
-          ) : (
-            <KeyboardDictation />
-          )}
-          {powiats.options.length > 0 ? (
-            <View style={styles.powiat}>
-              <Select
-                compact
-                emptyLabel="Powiat: dowolny"
-                label="Powiat"
-                night
-                onChange={setPowiat}
-                optional
-                options={powiats.options}
-                value={powiat}
-              />
-            </View>
-          ) : null}
-        </View>
-      </Glass>
-    </View>
-  );
-}
-
-function FieldFeedback({ match }: { match: Match }) {
-  const { colors } = useTheme();
-  const { fieldError, recognition, text } = match;
-  const left = charactersLeft(text.length);
-  return (
-    <View aria-live="polite">
-      {left ? (
-        <Txt
-          tone={left.over ? "onNight" : "onNightSoft"}
-          variant="small"
-          weight={left.over ? "600" : "400"}
-        >
-          {left.text}
-        </Txt>
-      ) : null}
-      {fieldError ? (
-        <View style={styles.error}>
-          <CircleAlert aria-hidden color={colors.onNight} size={24} />
-          <Txt
-            nativeID={ERROR_ID}
-            style={styles.errorText}
-            tone="onNight"
-            weight="600"
-          >
-            {fieldError}
-          </Txt>
-        </View>
-      ) : null}
-      {recognition.listening ? (
-        <Txt tone="onNight" weight="500">
-          Słucham. Mów po polsku, tekst pojawi się w polu.
-        </Txt>
-      ) : null}
-      {recognition.error ? (
-        <Txt tone="onNight" weight="600">
-          {recognition.error}
-        </Txt>
-      ) : null}
-    </View>
-  );
-}
-
-const introTitle = (asking: boolean, wide: boolean) => {
-  if (!asking) {
-    return "Z czym przychodzisz?";
-  }
-  return wide
-    ? "Opowiedz,\nco się dzieje."
-    : "Opowiedz, co\u00a0się\u00a0dzieje.";
-};
-
-function Intro({ asking, loading }: { asking: boolean; loading: boolean }) {
-  const { wide, type } = useTheme();
-  const { width } = useWindowDimensions();
-  const display = wide
-    ? Math.round(type.display * 1.6)
-    : Math.min(type.display, Math.floor((width - 44) / 6.5));
-  return (
-    <View style={styles.intro}>
-      <Heading
-        level={1}
-        nativeID={TITLE_ID}
-        night
-        style={[
-          {
-            fontSize: display,
-            letterSpacing: display * -0.035,
-            lineHeight: Math.round(display * 1.04),
-          },
-          wide && styles.center,
-        ]}
-      >
-        {introTitle(asking, wide)}
-      </Heading>
-      <View aria-live="polite">
-        {asking ? (
-          <Txt
-            style={wide ? styles.center : undefined}
-            tone="onNightSoft"
-            variant="lead"
-          >
-            {loading
-              ? "Szukamy w bibliotece ROPS. To trwa zwykle kilka sekund."
-              : "Znajdziemy rozwiązania, które już działają w Małopolsce."}
-          </Txt>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
-function Actions({ match }: { match: Match }) {
-  const { wide } = useTheme();
-  const { blocked, loading, state, submit } = match;
-  return (
-    <>
-      <View style={[styles.actions, wide && styles.actionsWide]}>
-        <Button
-          busy={loading}
-          disabled={blocked}
-          fill={!wide}
-          label={loading ? "Szukam rozwiązań" : "Znajdź rozwiązania"}
-          onPress={submit}
-          size="large"
-          style={wide ? styles.submitWide : undefined}
-          variant="light"
-        />
-      </View>
-      {state.kind === "error" ? (
-        <Notice tone="error">
-          <View style={styles.errorBody}>
-            <Txt>{state.message}</Txt>
-            {state.retryable ? (
-              <Button label="Spróbuj ponownie" onPress={submit} />
-            ) : null}
-          </View>
-        </Notice>
-      ) : null}
-    </>
-  );
-}
-
 const chromeTone = (done: boolean, dawning: boolean, wide: boolean) => {
   if (!done || dawning) {
     return "night" as const;
@@ -458,15 +123,17 @@ const chromeTone = (done: boolean, dawning: boolean, wide: boolean) => {
 };
 
 export default function MatchScreen() {
-  const { colors, wide, reduceMotion } = useTheme();
+  const { colors, wide, roomy, type, reduceMotion } = useTheme();
   const insets = useSafeAreaInsets();
-  const categories = useResource("categories", loadCategories);
+  const { width } = useWindowDimensions();
   const match = useMatch();
   const { inputRef, loading, powiat, reset, resultsRef, state, text } = match;
   const [chosen, setChosen] = useState(false);
   const done = state.kind === "done";
   const asking =
     chosen || powiat !== "" || text.length > 0 || state.kind !== "idle";
+  const { dawn, dawning, rise } = useDawn(loading, done);
+  useSetChromeTone(chromeTone(done, dawning, wide));
 
   useEffect(() => {
     if (chosen) {
@@ -478,8 +145,6 @@ export default function MatchScreen() {
     setChosen(false);
     reset();
   };
-  const { dawn, dawning, rise } = useDawn(loading, done);
-  useSetChromeTone(chromeTone(done, dawning, wide));
 
   if (state.kind === "done") {
     return (
@@ -498,8 +163,13 @@ export default function MatchScreen() {
     );
   }
 
+  const display = wide
+    ? Math.round(type.display * (roomy ? 2 : 1.6))
+    : Math.min(type.display, Math.floor((width - 44) / 6.5));
+
   return (
     <View
+      role="main"
       style={[styles.root, { backgroundColor: colors.night }]}
       {...nightAttr(true)}
     >
@@ -511,31 +181,47 @@ export default function MatchScreen() {
             paddingBottom: tabBarSpace + insets.bottom + space.lg,
             paddingTop: wide ? WIDE_TOP + space.lg : insets.top + space.sm,
           },
+          wide && styles.contentWide,
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View role="main" style={[styles.column, wide && styles.columnWide]}>
+        <View
+          style={[
+            styles.column,
+            wide && (asking ? styles.columnAsk : styles.columnWide),
+            roomy && (asking ? styles.columnAskRoomy : styles.columnRoomy),
+          ]}
+        >
           {wide ? null : (
             <View style={styles.top}>
               <Brand night />
               <AccessButton night />
             </View>
           )}
-          {asking ? <BackPill label="Wróć" night onPress={leave} /> : null}
-          <Intro asking={asking} loading={loading} />
           {asking ? (
             <>
-              <ProblemField match={match} />
-              <FieldFeedback match={match} />
-              <Actions match={match} />
-              <Topics
-                categories={
-                  categories.state.kind === "done" ? categories.state.data : []
-                }
-              />
+              <BackPill label="Wróć" night onPress={leave} />
+              <ProblemComposer match={match} />
             </>
           ) : (
-            <EntryChoice onProblem={() => setChosen(true)} />
+            <>
+              <Heading
+                level={1}
+                night
+                style={[
+                  styles.question,
+                  {
+                    fontSize: display,
+                    letterSpacing: display * -0.035,
+                    lineHeight: Math.round(display * 1.04),
+                  },
+                  wide && styles.center,
+                ]}
+              >
+                Z czym przychodzisz?
+              </Heading>
+              <EntryChoice onProblem={() => setChosen(true)} />
+            </>
           )}
         </View>
       </ScrollView>
@@ -544,40 +230,23 @@ export default function MatchScreen() {
 }
 
 const styles = StyleSheet.create({
-  actions: {
-    gap: space.lg,
-  },
-  actionsWide: {
-    alignItems: "center",
-  },
   center: {
     textAlign: "center",
-  },
-  chip: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: space.sm + 2,
-    minHeight: minTarget + 4,
-    paddingHorizontal: space.lg + 2,
-  },
-  chips: {
-    gap: space.sm + 2,
-    paddingHorizontal: space.xl - 2,
-  },
-  chipsBleed: {
-    marginHorizontal: -(space.xl - 2),
-  },
-  chipsWide: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: space.sm + 2,
-    justifyContent: "center",
   },
   column: {
     gap: space.lg + 2,
     width: "100%",
+  },
+  columnAsk: {
+    alignSelf: "center",
+    gap: space.xl,
+    maxWidth: 1240,
+  },
+  columnAskRoomy: {
+    maxWidth: 1560,
+  },
+  columnRoomy: {
+    maxWidth: 1080,
   },
   columnWide: {
     alignSelf: "center",
@@ -588,89 +257,22 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: space.xl - 2,
   },
+  contentWide: {
+    paddingHorizontal: 40,
+  },
   dawn: {
     overflow: "hidden",
   },
-  error: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: space.sm + 2,
-  },
-  errorBody: {
-    gap: space.md,
-  },
-  errorText: {
-    flex: 1,
-  },
-  field: {
-    borderRadius: radius.field,
-    paddingBottom: space.sm,
-    paddingHorizontal: space.sm,
-    paddingTop: space.sm,
-  },
-  fieldFoot: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: space.sm,
-    justifyContent: "space-between",
-    paddingBottom: space.sm,
-    paddingHorizontal: space.md + 2,
-  },
-  fieldRing: {
-    borderRadius: radius.field + 4,
-    borderWidth: 2,
-    margin: -4,
-    padding: 2,
-  },
-  hint: {
-    alignItems: "center",
-    flex: 1,
-    flexDirection: "row",
-    gap: space.sm,
-    minHeight: minTarget + 4,
-  },
-  input: {
-    paddingHorizontal: space.md + 2,
-    paddingVertical: space.md,
-    textAlignVertical: "top",
-  },
-  intro: {
-    gap: space.md + 2,
+  question: {
     marginTop: space.md,
-  },
-  powiat: {
-    flexShrink: 1,
-    maxWidth: 200,
-    minWidth: 110,
   },
   root: {
     flex: 1,
-  },
-  submitWide: {
-    minWidth: 300,
+    overflow: "hidden",
   },
   top: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-  },
-  topics: {
-    gap: space.md,
-    marginTop: space.sm,
-  },
-  voice: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    flexDirection: "row",
-    gap: space.sm + 2,
-    minHeight: minTarget + 4,
-    paddingRight: space.md,
-  },
-  voiceDot: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    height: minTarget + 4,
-    justifyContent: "center",
-    width: minTarget + 4,
   },
 });

@@ -3,7 +3,7 @@ import Head from "expo-router/head";
 import { FileText, Search, X } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
-import { categoryIcon } from "@/features/category-icon";
+import { CategoryFilter } from "@/features/category-filter";
 import { ChallengeRow } from "@/features/knowledge";
 import { useChallenges } from "@/hooks/use-knowledge";
 import { pluralPl } from "@/lib/plural";
@@ -74,19 +74,12 @@ export default function ChallengesScreen() {
             ) : null}
           </View>
         </View>
-        {areas.length > 0 ? (
-          <View aria-label="Obszary" role="group" style={styles.chips}>
-            {areas.map((item) => (
-              <Button
-                icon={categoryIcon(item.slug)}
-                key={item.slug}
-                label={`${item.name} (${item.count})`}
-                onPress={() => selectArea(item.slug)}
-                pressed={item.slug === area}
-              />
-            ))}
-          </View>
-        ) : null}
+        <CategoryFilter
+          items={areas}
+          label="Obszary"
+          onSelect={selectArea}
+          value={area}
+        />
         <Button
           icon={FileText}
           label="Raporty i materiały ROPS"

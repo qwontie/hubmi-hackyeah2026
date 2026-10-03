@@ -1,5 +1,6 @@
+import { router } from "expo-router";
 import Head from "expo-router/head";
-import { Check, Clock, MapPin } from "lucide-react-native";
+import { Check, Clock, Lightbulb, MapPin } from "lucide-react-native";
 import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { MapPowiat } from "@/api/types";
@@ -127,6 +128,15 @@ function PowiatPanel({
         onPress={onReport}
         size="large"
         variant="primary"
+      />
+      <Button
+        icon={Lightbulb}
+        label="Problemy z tego powiatu"
+        onPress={() =>
+          router.push({ params: { powiat: powiat.slug }, pathname: "/pomysl" })
+        }
+        role="link"
+        variant="quiet"
       />
     </Sheet>
   );

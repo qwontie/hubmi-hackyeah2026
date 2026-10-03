@@ -87,8 +87,8 @@ function Votes({
   needId?: string;
   slug: string;
 }) {
-  const vote = useVote(slug, needId);
-  const live = (vote as { counts?: Counts | null }).counts ?? initial;
+  const vote = useVote(slug, needId, initial ?? undefined);
+  const live = vote.counts ?? initial;
   const cast = (kind: FeedbackKind) => () => {
     vote.vote(kind).catch(() => undefined);
   };
@@ -141,7 +141,7 @@ export function InnovationCard({
   const { colors, type, wide } = useTheme();
   const [hovered, setHovered] = useState(false);
   const titleSize = featured && wide ? type.h2 : type.h3;
-  const votes = (innovation as { votes?: Counts }).votes ?? null;
+  const votes = innovation.votes ?? null;
   return (
     <Sheet raised={featured} style={styles.card}>
       <View style={styles.head}>

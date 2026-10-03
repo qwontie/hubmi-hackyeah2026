@@ -24,7 +24,8 @@ function ChoiceCard({
   text: string;
   title: string;
 }) {
-  const { colors, reduceMotion, type, wide } = useTheme();
+  const { colors, reduceMotion, roomy, type, wide } = useTheme();
+  const titleSize = roomy ? type.h2 : type.h3;
   return (
     <Pressable
       onPress={onPress}
@@ -35,23 +36,31 @@ function ChoiceCard({
         { transform: [{ scale: pressed && !reduceMotion ? 0.98 : 1 }] },
       ]}
     >
-      <Glass interactive night style={[styles.card, wide && styles.cardWide]}>
+      <Glass
+        interactive
+        night
+        style={[
+          styles.card,
+          wide && styles.cardWide,
+          roomy && styles.cardRoomy,
+        ]}
+      >
         <View style={[styles.icon, { backgroundColor: WASH }]}>
           <Icon aria-hidden color={colors.onNight} size={28} strokeWidth={2} />
         </View>
         <View style={styles.body}>
           <Txt
             style={{
-              fontSize: type.h3,
-              letterSpacing: type.h3 * -0.02,
-              lineHeight: Math.round(type.h3 * 1.2),
+              fontSize: titleSize,
+              letterSpacing: titleSize * -0.02,
+              lineHeight: Math.round(titleSize * 1.2),
             }}
             tone="onNight"
             weight="600"
           >
             {title}
           </Txt>
-          <Txt tone="onNightSoft" variant="label">
+          <Txt tone="onNightSoft" variant={roomy ? "lead" : "label"}>
             {text}
           </Txt>
         </View>
@@ -96,6 +105,11 @@ const styles = StyleSheet.create({
     minHeight: 124,
     paddingHorizontal: space.lg + 4,
     paddingVertical: space.lg + 2,
+  },
+  cardRoomy: {
+    minHeight: 280,
+    paddingHorizontal: 44,
+    paddingVertical: 44,
   },
   cardWide: {
     alignItems: "flex-start",
