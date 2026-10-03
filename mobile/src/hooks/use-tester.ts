@@ -26,7 +26,7 @@ export const votesLine = (summary: FeedbackSummary | null) => {
     summary.testers > 0
       ? ` ${summary.testers} ${pluralPl(summary.testers, "osoba chce", "osoby chcą", "osób chce")} testować.`
       : "";
-  return `Oceny: ${summary.fits} pasuje, ${summary.does_not_fit} nie pasuje.${testers}`;
+  return `Pasuje: ${summary.fits}. Nie pasuje: ${summary.does_not_fit}.${testers}`;
 };
 
 export const useVote = (slug: string, needId?: string, initial?: Votes) => {
@@ -149,7 +149,7 @@ export const useImprovement = (slug: string) => {
   const submit = async () => {
     const trimmed = text.trim();
     if (trimmed.length < 10) {
-      setError("Opisz pomysł w co najmniej 10 znakach.");
+      setError("Opis pomysłu musi mieć co najmniej 10 znaków.");
       return;
     }
     setBusy(true);

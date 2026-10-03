@@ -21,7 +21,7 @@ const validate = (
 ): FormErrors => ({
   context:
     context.length < 20
-      ? "Opisz swoją sytuację w co najmniej 20 znakach: kim są odbiorcy, jaki macie zespół i budżet."
+      ? "Opisz sytuację instytucji (co najmniej 20 znaków): kim są odbiorcy, jaki jest zespół i budżet."
       : null,
   institution: institution ? null : "Wybierz rodzaj instytucji.",
   place:
@@ -29,7 +29,7 @@ const validate = (
 });
 
 export const PLAN_LISTS: { key: keyof AdaptationPlan; title: string }[] = [
-  { key: "staff", title: "Kogo potrzebujecie" },
+  { key: "staff", title: "Kogo potrzeba" },
   { key: "partners", title: "Z kim współpracować" },
   { key: "cost_drivers", title: "Od czego zależy koszt" },
   { key: "measures", title: "Co mierzyć" },

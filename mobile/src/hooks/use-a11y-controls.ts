@@ -33,9 +33,7 @@ export const useA11yControls = () => {
       toggle: () => update({ highContrast: !settings.highContrast }),
     },
     motion: {
-      label: settings.reduceMotion
-        ? "Animacje: ograniczone"
-        : "Ogranicz animacje",
+      label: settings.reduceMotion ? "Mniej ruchu: włączone" : "Mniej ruchu",
       on: settings.reduceMotion,
       toggle: () => update({ reduceMotion: !settings.reduceMotion }),
     },

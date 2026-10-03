@@ -58,7 +58,7 @@ const FALLBACK_MESSAGES: Record<ErrorCode, string> = {
   not_found: "Nie znaleźliśmy tej strony.",
   rate_limited: "Za dużo zapytań w krótkim czasie. Spróbuj za chwilę.",
   text_too_long: "Opis jest za długi. Skróć go do 2000 znaków.",
-  text_too_short: "Opisz problem w co najmniej 5 znakach.",
+  text_too_short: "Opis musi mieć co najmniej 5 znaków.",
   too_many_messages:
     "Wysłano już kilka wiadomości bez odpowiedzi. Poczekaj, aż ROPS odpisze.",
   unauthorized: "Brak dostępu.",

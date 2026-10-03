@@ -108,7 +108,7 @@ export const useGrantApplication = (id?: string, ideaId?: string) => {
     try {
       const stored = await getIdea(ideaId);
       if (!stored) {
-        setError("Nie znaleźliśmy klucza tego pomysłu na tym urządzeniu.");
+        setError("Ten pomysł nie jest zapisany na tym urządzeniu.");
         return;
       }
       setToken(stored.token);

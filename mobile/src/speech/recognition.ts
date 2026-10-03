@@ -62,7 +62,7 @@ export const useRecognition = (onText: (text: string) => void): Recognition => {
     setListening(false);
     setError(
       ERRORS[event.error] ??
-        "Dyktowanie przerwało się. Spróbuj ponownie albo wpisz opis."
+        "Dyktowanie zostało przerwane. Spróbuj ponownie albo wpisz opis."
     );
   });
 

@@ -51,13 +51,13 @@ const validate = (form: Form): Errors => {
     contact_email: email.length > 0 && !isEmail(email) ? EMAIL_INVALID : null,
     essence:
       form.essence.trim().length < 20
-        ? "Opisz pomysł w co najmniej 20 znakach."
+        ? "Opis pomysłu musi mieć co najmniej 20 znaków."
         : null,
     for_whom:
       form.forWhom.trim().length < 3 ? "Napisz, dla kogo jest pomysł." : null,
     title:
       form.title.trim().length < 5
-        ? "Nazwij pomysł w co najmniej 5 znakach."
+        ? "Nazwa pomysłu musi mieć co najmniej 5 znaków."
         : null,
   };
 };

@@ -132,7 +132,9 @@ export const similarSentence = (count: number) => {
 export const matchSpeech = (response: MatchResponse) => {
   const parts = [
     `${resultsTitle(response.results.length)}.`,
-    similarSentence(response.similar_count),
+    response.similar_count > 0
+      ? `${response.similar_count} ${similarSentence(response.similar_count)}`
+      : similarSentence(0),
   ];
   response.results.forEach((result, index) => {
     parts.push(
@@ -145,7 +147,7 @@ export const matchSpeech = (response: MatchResponse) => {
 const validate = (text: string) => {
   const { length } = text.trim();
   if (length < TEXT_MIN) {
-    return `Opisz problem w co najmniej ${TEXT_MIN} znakach. Jedno lub dwa zdania wystarczą.`;
+    return `Opis musi mieć co najmniej ${TEXT_MIN} znaków. Jedno lub dwa zdania wystarczą.`;
   }
   if (length > TEXT_MAX) {
     return `Opis jest za długi. Skróć go do ${TEXT_MAX} znaków.`;
@@ -172,8 +174,18 @@ export const charactersLeft = (length: number) => {
     over: remaining < 0,
     text:
       remaining < 0
-        ? `Za długo o ${-remaining} znaków.`
-        : `Zostało ${remaining} znaków.`,
+        ? `Tekst jest za długi o ${-remaining} ${pluralPl(
+            -remaining,
+            "znak",
+            "znaki",
+            "znaków"
+          )}.`
+        : `${pluralPl(
+            remaining,
+            "Został",
+            "Zostały",
+            "Zostało"
+          )} ${remaining} ${pluralPl(remaining, "znak", "znaki", "znaków")}.`,
   };
 };
 
