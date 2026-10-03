@@ -9,7 +9,7 @@ services:
         required: false
       - path: frontend/.env
         required: false
-    command: [build/index.js]
+    command: [serve.js]
 
   frontend-dev:
     image: oven/bun:alpine
