@@ -140,7 +140,7 @@ export default function SubmissionsScreen() {
               <Txt>Nie masz jeszcze zgłoszeń na tym urządzeniu.</Txt>
               <Button
                 icon={Search}
-                label="Opisz problem"
+                label="Zgłoś problem"
                 onPress={() => router.navigate("/")}
                 variant="primary"
               />

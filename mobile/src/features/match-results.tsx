@@ -1,78 +1,73 @@
 import { Link } from "expo-router";
-import { type Ref, useState } from "react";
-import { ScrollView, StyleSheet, type Text, View } from "react-native";
+import type { Ref } from "react";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  type Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { MatchResponse } from "@/api/types";
 import { A11yButton } from "@/features/a11y-controls";
-import { ContactForm } from "@/features/contact-form";
+import { CrisisHelp } from "@/features/crisis-help";
+import { DemoTag } from "@/features/demo-tag";
 import { CardGrid, InnovationCard } from "@/features/innovation-card";
 import { ReadAloudPill } from "@/features/read-aloud-button";
 import { RopsFooter } from "@/features/rops-footer";
-import { Stamp } from "@/features/stamp";
 import { type Registration, Unsolved } from "@/features/unsolved";
-import { matchSpeech, resultsTitle, similarSentence } from "@/hooks/use-match";
+import {
+  matchSpeech,
+  PROBLEM_PAGE_MIN,
+  resultsTitle,
+  similarCount,
+  similarSentence,
+} from "@/hooks/use-match";
+import { isCrisis } from "@/lib/crisis";
 import { useTheme } from "@/theme/settings";
 import { minTarget, motion, radius, space, tabBarSpace } from "@/theme/tokens";
-import { Button } from "@/ui/button";
 import { nightAttr } from "@/ui/night";
-import { Notice } from "@/ui/notice";
 import { Rise } from "@/ui/rise";
 import { BackPill, WIDE_TOP } from "@/ui/screen";
-import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
-type SearchNeed = NonNullable<MatchResponse["need"]>;
+const AI_NOTE =
+  "Rozwiązania pochodzą z biblioteki ROPS. Zdania o tym, dlaczego pasują, napisała sztuczna inteligencja.";
 
-function NothingFits({ need, empty }: { need: SearchNeed; empty: boolean }) {
-  const { colors } = useTheme();
-  const [open, setOpen] = useState(empty);
-  const [done, setDone] = useState<{ email: string | null } | null>(null);
-
-  if (done) {
-    return (
-      <Notice title="Przekazaliśmy to do ROPS" tone="success">
-        <Txt>
-          {done.email
-            ? `Pracownik ROPS przeczyta opis i odpisze na adres ${done.email}.`
-            : "Pracownik ROPS przeczyta Twój opis. Jeśli chcesz dostać odpowiedź, dodaj e-mail w zakładce Zgłoszenia."}
-        </Txt>
-        <Link href="/zgloszenia" style={{ color: colors.stamp }}>
-          <Txt tone="stamp" weight="600">
-            Przejdź do zgłoszeń
-          </Txt>
-        </Link>
-      </Notice>
-    );
+function Similar({ response }: { response: MatchResponse }) {
+  const group = response.cluster;
+  const similar = similarCount(response);
+  if (similar === 0) {
+    return null;
   }
-
   return (
-    <Sheet>
-      <View style={styles.nothing}>
-        <Heading level={3}>
-          {empty ? "Przekaż problem do ROPS" : "Nic z tego nie pasuje?"}
-        </Heading>
-        <Txt tone="soft">
-          Daj znać pracownikom ROPS. Zostaw e-mail, jeśli chcesz, żeby ktoś
-          odpisał.
-        </Txt>
-      </View>
-      {open ? (
-        <ContactForm
-          needId={need.id}
-          nothingFits
-          onDone={(email) => setDone({ email })}
-          submitLabel="Wyślij do ROPS"
-          token={need.edit_token}
-        />
-      ) : (
-        <Button label="Nic nie pasuje" onPress={() => setOpen(true)} />
-      )}
-    </Sheet>
+    <View style={styles.similar}>
+      <Txt tone="onNightSoft" variant="label">
+        {`${similar} ${similarSentence(similar)}`}
+      </Txt>
+      {group && group.size >= PROBLEM_PAGE_MIN ? (
+        <Link
+          asChild
+          href={{ params: { id: group.id }, pathname: "/problemy/[id]" }}
+        >
+          <Pressable role="link" style={styles.groupLink}>
+            <Txt
+              style={styles.groupTitle}
+              tone="onNight"
+              variant="label"
+              weight="600"
+            >
+              {`Zobacz ten problem: ${group.title}`}
+            </Txt>
+          </Pressable>
+        </Link>
+      ) : null}
+      <DemoTag night />
+    </View>
   );
 }
 
 interface MatchResultsProps {
-  at: Date;
   onEdit: () => void;
   onReset: () => void;
   registration: Registration;
@@ -80,30 +75,23 @@ interface MatchResultsProps {
   settle: number;
   text: string;
   titleRef: Ref<Text>;
-  unclear: boolean;
 }
 
 export function MatchResults({
   response,
-  at,
   titleRef,
   text,
   onEdit,
   onReset,
   settle,
   registration,
-  unclear,
 }: MatchResultsProps) {
-  const searchNeed = response.need as SearchNeed | null | undefined;
   const { colors, type, wide, roomy } = useTheme();
   const insets = useSafeAreaInsets();
   const count = response.results.length;
   const empty = count === 0;
   const [first, ...rest] = response.results;
-  const similar =
-    response.similar_count > 0
-      ? `${response.similar_count} ${similarSentence(response.similar_count)}`
-      : similarSentence(0);
+  const crisis = isCrisis(text);
   const quoteSize = wide ? type.h2 : Math.round(type.h3 * 1.1);
 
   const band = (
@@ -136,21 +124,7 @@ export function MatchResults({
       >
         {text}
       </Txt>
-      {unclear ? null : (
-        <Txt tone="onNightSoft" variant="label">
-          {similar}
-        </Txt>
-      )}
-      {searchNeed ? (
-        <View style={wide ? styles.stampWide : styles.stamp}>
-          <Stamp
-            at={at}
-            delay={settle + 200}
-            number={searchNeed.number}
-            word="PRZYJĘTO"
-          />
-        </View>
-      ) : null}
+      <Similar response={response} />
     </View>
   );
 
@@ -177,6 +151,8 @@ export function MatchResults({
         </Txt>
       ) : null}
 
+      {crisis ? <CrisisHelp /> : null}
+
       {response.degraded ? (
         <Txt tone="soft" variant="detail">
           Asystent jest teraz przeciążony, więc opisy dopasowania są
@@ -184,13 +160,18 @@ export function MatchResults({
         </Txt>
       ) : null}
 
+      {empty || response.degraded ? null : (
+        <Txt tone="soft" variant="detail">
+          {AI_NOTE}
+        </Txt>
+      )}
+
       {first ? (
         <Rise delay={settle + 60}>
           <InnovationCard
             featured
             index={1}
             innovation={first.innovation}
-            needId={searchNeed?.id}
             reason={first.reason}
           />
         </Rise>
@@ -204,7 +185,6 @@ export function MatchResults({
                 index={index + 2}
                 innovation={result.innovation}
                 key={result.innovation.slug}
-                needId={searchNeed?.id}
                 reason={result.reason}
               />
             ))}
@@ -212,11 +192,7 @@ export function MatchResults({
         </Rise>
       ) : null}
 
-      {searchNeed ? (
-        <NothingFits empty={empty} need={searchNeed} />
-      ) : (
-        <Unsolved empty={empty} onEdit={onEdit} registration={registration} />
-      )}
+      <Unsolved empty={empty} onEdit={onEdit} registration={registration} />
       <RopsFooter />
     </View>
   );
@@ -324,6 +300,15 @@ const styles = StyleSheet.create({
   fill: {
     flex: 1,
   },
+  groupLink: {
+    alignSelf: "flex-start",
+    justifyContent: "center",
+    minHeight: minTarget,
+  },
+  groupTitle: {
+    flexShrink: 1,
+    textDecorationLine: "underline",
+  },
   meta: {
     alignItems: "center",
     flexDirection: "row",
@@ -331,9 +316,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     flex: 1,
-  },
-  nothing: {
-    gap: space.sm,
   },
   pill: {
     alignItems: "center",
@@ -353,18 +335,11 @@ const styles = StyleSheet.create({
     paddingBottom: space.xxxl * 2,
     paddingTop: WIDE_TOP + 20,
   },
+  similar: {
+    gap: space.xs,
+  },
   split: {
     flex: 1,
     flexDirection: "row",
-  },
-  stamp: {
-    bottom: -38,
-    position: "absolute",
-    right: space.xl - 2,
-  },
-  stampWide: {
-    bottom: 64,
-    position: "absolute",
-    right: -64,
   },
 });

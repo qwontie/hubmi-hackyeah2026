@@ -97,13 +97,13 @@ export function PowiatPicker({ onChange, options, value }: PowiatPickerProps) {
   const showMap = wide || open;
   return (
     <View style={styles.wrap}>
-      {wide ? (
-        <View style={styles.head}>
-          <Txt tone="onNightSoft" variant="label">
-            Gdzie to jest? Powiat można wskazać na mapie.
-          </Txt>
-        </View>
-      ) : null}
+      <View style={styles.head}>
+        <Txt tone="onNightSoft" variant="label">
+          {wide
+            ? "Gdzie to jest? Powiat można wskazać na mapie."
+            : "Gdzie to jest? Powiat można wybrać z listy."}
+        </Txt>
+      </View>
       {showMap ? <RegionMap onChange={pick} value={value} /> : null}
       <View style={styles.bar}>
         <Pressable

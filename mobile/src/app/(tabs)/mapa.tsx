@@ -2,9 +2,11 @@ import Head from "expo-router/head";
 import { Check, Clock, MapPin } from "lucide-react-native";
 import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import type { MapPowiat } from "@/api/types";
+import type { MapIndicator, MapPowiat } from "@/api/types";
 import { APP_NAME } from "@/config";
+import { DemoTag } from "@/features/demo-tag";
 import { type MapCount, ProblemMap } from "@/features/problem-map";
+import { RopsFact } from "@/features/rops-fact";
 import { MAP_ATTRIBUTION, useMap } from "@/hooks/use-map";
 import { pluralPl } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
@@ -50,13 +52,21 @@ function Tally({ count }: { count: MapCount }) {
 }
 
 function PowiatPanel({
+  indicators,
   powiat,
   onReport,
 }: {
+  indicators: MapIndicator[];
   powiat: MapPowiat;
   onReport: () => void;
 }) {
   const { colors } = useTheme();
+  const figures = powiat.figures.map((figure) => ({
+    ...figure,
+    region_value:
+      indicators.find((indicator) => indicator.key === figure.key)?.regional ??
+      null,
+  }));
   const problems = powiat.problems ?? [];
   const otherOpen = powiat.other_open ?? 0;
   const otherAnswered = powiat.other_answered ?? 0;
@@ -65,6 +75,9 @@ function PowiatPanel({
       <View style={styles.group}>
         <Heading level={2}>{powiat.name}</Heading>
         <Tally count={countOf(powiat)} />
+        {countOf(powiat).open + countOf(powiat).answered > 0 ? (
+          <DemoTag words="Liczby zgłoszeń to dane pokazowe." />
+        ) : null}
       </View>
 
       {problems.length > 0 ? (
@@ -102,6 +115,17 @@ function PowiatPanel({
               {`Pozostałe zgłoszenia w tym powiecie: ${otherOpen + otherAnswered}.`}
             </Txt>
           ) : null}
+        </View>
+      ) : null}
+
+      {figures.length > 0 ? (
+        <View style={styles.group}>
+          <Heading level={3}>Dane ROPS o tym powiecie</Heading>
+          <View role="list">
+            {figures.map((figure, index) => (
+              <RopsFact fact={figure} first={index === 0} key={figure.key} />
+            ))}
+          </View>
         </View>
       ) : null}
 
@@ -218,6 +242,9 @@ export default function MapScreen() {
               : "Tu pojawią się potrzeby zgłoszone przez mieszkańców Małopolski."}
           </Txt>
         ) : null}
+        {total.open + total.answered > 0 ? (
+          <DemoTag words="Liczby zgłoszeń na tej mapie to dane pokazowe. Dane ROPS o powiatach są prawdziwe." />
+        ) : null}
       </View>
 
       {load.kind === "loading" ? (
@@ -241,6 +268,7 @@ export default function MapScreen() {
           <View style={styles.side}>
             {selected ? (
               <PowiatPanel
+                indicators={data?.indicators ?? []}
                 onReport={() => report(selected.slug)}
                 powiat={selected}
               />
@@ -253,6 +281,7 @@ export default function MapScreen() {
           {map}
           {selected ? (
             <PowiatPanel
+              indicators={data?.indicators ?? []}
               onReport={() => report(selected.slug)}
               powiat={selected}
             />

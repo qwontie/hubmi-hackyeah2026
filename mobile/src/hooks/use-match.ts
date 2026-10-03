@@ -198,12 +198,16 @@ export const similarSentence = (count: number) => {
   )} podobny problem.`;
 };
 
+export const PROBLEM_PAGE_MIN = 3;
+
+export const similarCount = (response: MatchResponse) =>
+  response.cluster?.size ?? response.similar_count;
+
 export const matchSpeech = (response: MatchResponse) => {
+  const similar = similarCount(response);
   const parts = [
     `${resultsTitle(response.results.length)}.`,
-    response.similar_count > 0
-      ? `${response.similar_count} ${similarSentence(response.similar_count)}`
-      : similarSentence(0),
+    similar > 0 ? `${similar} ${similarSentence(similar)}` : "",
   ];
   response.results.forEach((result, index) => {
     parts.push(
@@ -244,7 +248,7 @@ const waitSentence = (error: ApiError) => {
 };
 
 const rateLimitMessage = (error: ApiError) =>
-  `${error.message} ${waitSentence(error)}`;
+  `Za dużo wyszukiwań w krótkim czasie. ${waitSentence(error)}`;
 
 const registrationMessage = (caught: unknown) => {
   if (!(caught instanceof ApiError)) {

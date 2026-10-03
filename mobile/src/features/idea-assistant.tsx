@@ -66,8 +66,9 @@ export function IdeaAssistant({
     <View style={styles.block}>
       <Heading level={2}>Asystent pomysłu</Heading>
       <Txt>
-        Asystent zada kilka pytań z kanwy innowacji społecznej i podpowie, co
-        już działa w Małopolsce. Nic nie wymyśla za Ciebie.
+        Asystent to sztuczna inteligencja. Zada kilka pytań, które pomogą
+        rozwinąć pomysł, i podpowie, co już działa w Małopolsce. Nic nie wymyśla
+        za Ciebie.
       </Txt>
       {result ? (
         <View aria-live="polite" style={styles.block}>

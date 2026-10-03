@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/api/client";
 import type { Category, Problem } from "@/api/types";
+import { DEMO_WORDS } from "@/hooks/use-demo";
 import { pluralPl } from "@/lib/plural";
 import { useFilterParams } from "./use-knowledge";
 import { usePagedList } from "./use-paged-list";
@@ -12,7 +13,10 @@ export const proposeHref = (problemId: string) => ({
   pathname: "/pomysl/nowy" as const,
 });
 
-export const problemStats = (problem: Problem) =>
+export const PROBLEM_SUMMARY_NOTE =
+  "Nazwę i opis problemu przygotowano automatycznie ze zgłoszeń mieszkańców.";
+
+export const problemStats = (problem: Problem, demo = false) =>
   [
     `${problem.needs_total} ${pluralPl(problem.needs_total, "zgłoszenie", "zgłoszenia", "zgłoszeń")}`,
     problem.needs_answered > 0
@@ -21,6 +25,7 @@ export const problemStats = (problem: Problem) =>
     problem.ideas_count > 0
       ? `${problem.ideas_count} ${pluralPl(problem.ideas_count, "pomysł", "pomysły", "pomysłów")}`
       : null,
+    demo ? DEMO_WORDS : null,
   ]
     .filter(Boolean)
     .join(" · ");

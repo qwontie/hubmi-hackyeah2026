@@ -6,7 +6,7 @@ import { APP_NAME } from "@/config";
 import { CategoryFilter } from "@/features/category-filter";
 import { CardGrid } from "@/features/innovation-card";
 import { ProblemCard } from "@/features/problem-card";
-import { useProblems } from "@/hooks/use-problems";
+import { PROBLEM_SUMMARY_NOTE, useProblems } from "@/hooks/use-problems";
 import { pluralPl } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
@@ -127,6 +127,9 @@ export default function ProblemsScreen() {
           <>
             <Txt tone="soft" weight="500">
               {`${list.total} ${pluralPl(list.total, "problem", "problemy", "problemów")}`}
+            </Txt>
+            <Txt tone="soft" variant="small">
+              {PROBLEM_SUMMARY_NOTE}
             </Txt>
             <CardGrid>
               {list.items.map((problem) => (

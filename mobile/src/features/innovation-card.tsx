@@ -11,6 +11,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import type { FeedbackKind, InnovationSummary } from "@/api/types";
 import { API_BASE } from "@/config";
 import { CategoryIcon } from "@/features/category-icon";
+import { DemoTag } from "@/features/demo-tag";
 import { innovationHref, metaLine } from "@/features/innovation-row";
 import { useVote } from "@/hooks/use-tester";
 import { pluralPl } from "@/lib/plural";
@@ -125,6 +126,9 @@ function Votes({
           worded={worded}
         />
       </View>
+      {live && live.up + live.down > 0 ? (
+        <DemoTag words="głosy pokazowe" />
+      ) : null}
       <View aria-live="polite">
         {vote.error ? (
           <Txt tone="bad" variant="small" weight="500">

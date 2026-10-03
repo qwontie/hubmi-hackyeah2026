@@ -165,7 +165,6 @@ export default function MatchScreen() {
     return (
       <View style={[styles.root, { backgroundColor: colors.ground }]}>
         <MatchResults
-          at={state.at}
           key={state.at.getTime()}
           onEdit={() => {
             setChosen(true);
@@ -177,7 +176,6 @@ export default function MatchScreen() {
           settle={reduceMotion ? 0 : motion.dawn - 200}
           text={text.trim()}
           titleRef={resultsRef}
-          unclear={state.unclear}
         />
         {dawning ? <Dawn dawn={dawn} rise={rise} /> : null}
       </View>

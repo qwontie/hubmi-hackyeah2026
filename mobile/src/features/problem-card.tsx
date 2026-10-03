@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { Problem } from "@/api/types";
 import { CategoryIcon } from "@/features/category-icon";
+import { useDemo } from "@/hooks/use-demo";
 import { problemStats } from "@/hooks/use-problems";
 import { useTheme } from "@/theme/settings";
 import { minTarget, radius, space } from "@/theme/tokens";
@@ -20,6 +21,7 @@ export function ProblemCard({
 }) {
   const { colors, type } = useTheme();
   const [hovered, setHovered] = useState(false);
+  const demo = useDemo();
   const href = {
     params: { id: problem.id },
     pathname: "/problemy/[id]",
@@ -53,7 +55,7 @@ export function ProblemCard({
           {problem.summary}
         </Txt>
         <Txt tone="soft" variant="small" weight="500">
-          {problemStats(problem).replaceAll(" · ", "\u00a0· ")}
+          {problemStats(problem, demo).replaceAll(" · ", "\u00a0· ")}
         </Txt>
       </View>
       <View style={styles.foot}>

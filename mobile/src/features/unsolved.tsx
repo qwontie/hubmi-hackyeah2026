@@ -147,7 +147,7 @@ function Step({ registration }: { registration: Registration }) {
         </View>
         <View style={[styles.column, wide && styles.columnWide]}>
           <Txt nativeID={EMAIL_ID} tone="onNight" variant="label" weight="600">
-            E-mail, jeśli chcesz dostać odpowiedź
+            E-mail, na który ROPS może odpisać
             <Txt tone="onNightSoft" variant="label">
               {" "}
               (nieobowiązkowo)
@@ -190,7 +190,7 @@ function Step({ registration }: { registration: Registration }) {
         <Button
           busy={busy}
           fill={!wide}
-          label={busy ? "Wysyłam" : "Wyślij do ROPS"}
+          label={busy ? "Wysyłam" : "Wyślij zgłoszenie"}
           onPress={() => {
             fields.submit().catch(() => undefined);
           }}
@@ -248,8 +248,8 @@ export function Unsolved({
         </Heading>
         <Txt tone="onNightSoft" variant="lead">
           {empty
-            ? "Pracownik ROPS przeczyta Twój opis i odpowie."
-            : "Zgłoś swój problem do ROPS. Pracownik ROPS przeczyta go i odpowie."}
+            ? "Pracownik ROPS przeczyta Twój opis. Jeśli zostawisz e-mail, może odpisać."
+            : "Zgłoś swój problem do ROPS. Pracownik ROPS go przeczyta. Jeśli zostawisz e-mail, może odpisać."}
         </Txt>
       </View>
       <View style={styles.actions}>
@@ -285,8 +285,9 @@ export function Unsolved({
               : "ROPS przyjął Twoje zgłoszenie"}
           </Heading>
           <Txt tone="onNightSoft" variant="lead">
-            Pracownik ROPS przeczyta opis. Odpowiedź znajdziesz w zakładce
-            Zgłoszenia.
+            Pracownik ROPS przeczyta opis. Jeśli odpisze, odpowiedź znajdziesz w
+            zakładce Zgłoszenia. W pilnej sprawie zwróć się do ośrodka pomocy
+            społecznej w swojej gminie.
           </Txt>
           <Link asChild href="/zgloszenia">
             <Pressable role="link" style={styles.link}>

@@ -5,7 +5,12 @@ import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
 import { CategoryTile } from "@/features/category-icon";
 import { CardGrid, InnovationCard } from "@/features/innovation-card";
-import { problemStats, useProblem } from "@/hooks/use-problems";
+import { useDemo } from "@/hooks/use-demo";
+import {
+  PROBLEM_SUMMARY_NOTE,
+  problemStats,
+  useProblem,
+} from "@/hooks/use-problems";
 import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
@@ -18,6 +23,7 @@ export default function ProblemScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const { state, retry, propose } = useProblem(id);
+  const demo = useDemo();
 
   const hero =
     state.kind === "done" ? (
@@ -28,7 +34,10 @@ export default function ProblemScreen() {
           {state.data.summary}
         </Txt>
         <Txt tone="soft" variant="detail" weight="500">
-          {problemStats(state.data).replaceAll(" · ", "\u00a0· ")}
+          {problemStats(state.data, demo).replaceAll(" · ", "\u00a0· ")}
+        </Txt>
+        <Txt tone="soft" variant="small">
+          {PROBLEM_SUMMARY_NOTE}
         </Txt>
         <View>
           <Button

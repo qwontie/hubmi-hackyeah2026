@@ -2,11 +2,12 @@ import { Link, router, useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
 import { ArrowRight, BookOpen, Copy } from "lucide-react-native";
 import { useState } from "react";
-import { Linking, Platform, Pressable, StyleSheet, View } from "react-native";
-import type { Adaptation, LocalChallenge, LocalFact } from "@/api/types";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
+import type { Adaptation, LocalChallenge } from "@/api/types";
 import { APP_NAME } from "@/config";
 import { InnovationRow } from "@/features/innovation-row";
 import { ReadAloudButton } from "@/features/read-aloud-button";
+import { RopsFact } from "@/features/rops-fact";
 import { PLAN_LISTS, planSpeech, useAdaptation } from "@/hooks/use-adaptation";
 import { formatDate } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
@@ -63,87 +64,6 @@ function CopyLink({ path }: { path: string }) {
   );
 }
 
-const amount = (value: number, unit: string) => {
-  const number = value.toLocaleString("pl-PL");
-  if (!unit) {
-    return number;
-  }
-  return unit === "%" ? `${number}%` : `${number}\u00a0${unit}`;
-};
-
-function Source({
-  href,
-  page,
-  title,
-}: {
-  href: string;
-  page: string;
-  title: string;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const webProps =
-    Platform.OS === "web"
-      ? { href, hrefAttrs: { rel: "noopener noreferrer", target: "_blank" } }
-      : {};
-  return (
-    <Pressable
-      accessibilityHint="Otwiera się w nowym oknie"
-      onHoverIn={() => setHovered(true)}
-      onHoverOut={() => setHovered(false)}
-      onPress={
-        Platform.OS === "web"
-          ? undefined
-          : () => {
-              Linking.openURL(href).catch(() => undefined);
-            }
-      }
-      role="link"
-      style={styles.source}
-      {...webProps}
-    >
-      <Txt
-        style={{ textDecorationLine: hovered ? "underline" : "none" }}
-        tone="stamp"
-        variant="detail"
-        weight="500"
-      >
-        {`Źródło: ${title}${page}`}
-      </Txt>
-    </Pressable>
-  );
-}
-
-function Fact({ fact, first }: { fact: LocalFact; first: boolean }) {
-  const { colors } = useTheme();
-  return (
-    <View
-      role="listitem"
-      style={[
-        styles.fact,
-        { borderTopColor: colors.rule },
-        first && styles.first,
-      ]}
-    >
-      <Txt>{fact.label}</Txt>
-      <View style={styles.figure}>
-        <Txt mono variant="h3" weight="600">
-          {amount(fact.value, fact.unit)}
-        </Txt>
-        <Txt tone="soft" variant="detail">
-          {fact.region_value === null
-            ? `${fact.year}`
-            : `${fact.year}\u00a0· w całej Małopolsce ${amount(fact.region_value, fact.unit)}`}
-        </Txt>
-      </View>
-      <Source
-        href={fact.source_url}
-        page={fact.page ? `, s.\u00a0${fact.page}` : ""}
-        title={fact.source_title}
-      />
-    </View>
-  );
-}
-
 function Challenge({ challenge }: { challenge: LocalChallenge }) {
   const { colors } = useTheme();
   return (
@@ -188,7 +108,7 @@ function RopsData({ adaptation }: { adaptation: Adaptation }) {
       {facts.length > 0 ? (
         <View role="list">
           {facts.map((fact, index) => (
-            <Fact
+            <RopsFact
               fact={fact}
               first={index === 0}
               key={`${fact.label}-${fact.year}`}
@@ -229,6 +149,10 @@ function Plan({ adaptation }: { adaptation: Adaptation }) {
           </Txt>
         </View>
         <Txt variant="lead">{plan.summary}</Txt>
+        <Txt tone="soft" variant="detail">
+          Plan napisała sztuczna inteligencja na podstawie opisu rozwiązania z
+          biblioteki ROPS i Twoich odpowiedzi. Sprawdź go przed użyciem.
+        </Txt>
         <View style={styles.actions}>
           <ReadAloudButton text={planSpeech(plan)} />
           <CopyLink path={adaptation.share_path} />
@@ -387,22 +311,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: space.md,
   },
-  fact: {
-    borderTopWidth: 1,
-    gap: space.xs,
-    paddingBottom: space.sm,
-    paddingTop: space.md,
-  },
-  figure: {
-    alignItems: "baseline",
-    columnGap: space.md,
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  first: {
-    borderTopWidth: 0,
-    paddingTop: 0,
-  },
   flex: {
     flex: 1,
   },
@@ -422,11 +330,6 @@ const styles = StyleSheet.create({
   section: {
     borderTopWidth: 1,
     paddingTop: space.xl,
-  },
-  source: {
-    alignSelf: "flex-start",
-    justifyContent: "center",
-    minHeight: minTarget,
   },
   step: {
     alignItems: "flex-start",
