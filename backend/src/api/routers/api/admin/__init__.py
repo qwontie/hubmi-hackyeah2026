@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends
 
 from api.security import current_admin
 
-from . import needs
+from . import imports, innovations, needs
 
 router = APIRouter(dependencies=[Depends(current_admin)])
 router.include_router(needs.router, prefix="/needs", tags=["admin"])
+router.include_router(innovations.router, prefix="/innovations", tags=["admin"])
+router.include_router(imports.router, prefix="/import", tags=["admin"])
