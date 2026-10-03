@@ -5,6 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from api.limits import rate_limit
 from services.ai import AiBudgetExceededError, AiUnavailableError
 from services.needs import TextRejectedError, match_need
+from services.tester.repository import vote_counts
 
 from .common import categories_by_slug, translate
 from .schemas import (
@@ -27,6 +28,7 @@ async def match(body: MatchIn, session: FromDishka[AsyncSession]) -> MatchOut:
     except (TextRejectedError, AiUnavailableError, AiBudgetExceededError) as e:
         raise translate(e) from e
     categories = await categories_by_slug(session)
+    votes = await vote_counts(session, [r.hit.innovation.id for r in outcome.results])
     cluster = outcome.cluster
     return MatchOut(
         need=NeedRef(
@@ -36,7 +38,7 @@ async def match(body: MatchIn, session: FromDishka[AsyncSession]) -> MatchOut:
         ),
         results=[
             MatchItem(
-                innovation=InnovationSummary.build(r.hit.innovation, categories),
+                innovation=InnovationSummary.build(r.hit.innovation, categories, votes),
                 score=r.hit.score,
                 reason=r.reason,
             )

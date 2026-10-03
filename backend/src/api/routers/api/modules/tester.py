@@ -1,12 +1,15 @@
+import hashlib
+import hmac
+import re
 import uuid
 from typing import Annotated
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Depends, Header, Query, status
+from fastapi import APIRouter, Depends, Header, Query, Request, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.errors import not_found
-from api.limits import rate_limit
+from api.errors import invalid, not_found
+from api.limits import PER_DAY, RateLimiter, Rule, client_ip, rate_limit
 from api.security import AdminPerson
 from services.bus import bus
 from services.modules import Page
@@ -22,10 +25,12 @@ from services.tester import (
     InnovationFeedback,
     TestSignupIn,
     TestSignupPatch,
+    VoteRemoved,
     repository,
 )
 from utils.db.models.feedback import FeedbackKind
 from utils.db.models.test_signup import SignupStatus, TesterRole
+from utils.env import env
 
 from .common import (
     PageNumber,
@@ -47,9 +52,26 @@ admin = APIRouter(route_class=DishkaRoute, tags=["tester"])
 vote_limit = rate_limit("feedback", per_minute=20, per_day=200)
 improvement_limit = rate_limit("improvement", per_minute=5, per_day=30)
 signup_limit = rate_limit("test_signup", per_minute=5, per_day=20)
+card_limit = RateLimiter("vote_card", Rule(10, PER_DAY))
 
 IMPROVEMENT_MIN = 10
 NEED_MISSING = "Nie znaleziono tego zgłoszenia."
+VOTER_ID = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
+VOTER_MESSAGE = "Nieprawidłowy identyfikator urządzenia."
+
+VoterHeader = Annotated[str | None, Header(max_length=200)]
+
+
+def voter_hash(request: Request, voter_id: str | None) -> str:
+    if voter_id is None:
+        key = f"ip:{client_ip(request)}"
+    elif VOTER_ID.match(voter_id):
+        key = f"device:{voter_id}"
+    else:
+        error = invalid("x_voter_id", VOTER_MESSAGE)
+        raise error
+    secret = env.auth.secret.get_secret_value().encode()
+    return hmac.new(secret, f"voter:{key}".encode(), hashlib.sha256).hexdigest()
 
 
 @public.get("/innovations/{slug}/feedback")
@@ -65,31 +87,54 @@ async def feedback_summary(
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(vote_limit)],
 )
-async def post_feedback(
+async def post_feedback(  # noqa: PLR0913
+    *,
     slug: str,
     body: FeedbackIn,
+    request: Request,
     session: FromDishka[AsyncSession],
     x_need_token: Annotated[str | None, Header()] = None,
+    x_voter_id: VoterHeader = None,
 ) -> FeedbackOut:
     innovation = await innovation_or_404(session, slug)
+    voter = voter_hash(request, x_voter_id)
     comment = optional_text("comment", body.comment)
     if body.need_id is not None:
         expected = await repository.need_token_hash(session, body.need_id)
         if expected is None or not token_matches(x_need_token, expected):
             raise not_found(NEED_MISSING)
+    card_limit.check(f"{client_ip(request)}:{innovation.id}")
     feedback = await repository.add_vote(
         session,
         innovation_id=innovation.id,
         kind=FeedbackKind(body.kind),
         need_id=body.need_id,
+        voter_hash=voter,
         comment=comment,
     )
     bus.publish("feedback.created", repository.admin_feedback(feedback, innovation))
+    summary = await repository.summary(session, innovation.id)
     return FeedbackOut(
         id=feedback.id,
         kind=feedback.kind,
-        summary=await repository.summary(session, innovation.id),
+        votes=repository.votes_of(summary),
+        summary=summary,
     )
+
+
+@public.delete("/innovations/{slug}/feedback", dependencies=[Depends(vote_limit)])
+async def delete_feedback(
+    slug: str,
+    request: Request,
+    session: FromDishka[AsyncSession],
+    x_voter_id: VoterHeader = None,
+) -> VoteRemoved:
+    innovation = await innovation_or_404(session, slug)
+    await repository.remove_vote(
+        session, innovation_id=innovation.id, voter_hash=voter_hash(request, x_voter_id)
+    )
+    summary = await repository.summary(session, innovation.id)
+    return VoteRemoved(votes=repository.votes_of(summary), summary=summary)
 
 
 @public.post(

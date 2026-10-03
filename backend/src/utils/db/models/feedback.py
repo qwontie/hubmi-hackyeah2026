@@ -28,6 +28,13 @@ class Feedback(SQLModel, table=True):
             unique=True,
             postgresql_where=text("need_id IS NOT NULL AND kind <> 'improvement'"),
         ),
+        Index(
+            "ux_feedback_voter_vote",
+            "voter_hash",
+            "innovation_id",
+            unique=True,
+            postgresql_where=text("voter_hash IS NOT NULL AND kind <> 'improvement'"),
+        ),
         Index("ix_feedback_created_at", "created_at"),
     )
 
@@ -60,6 +67,7 @@ class Feedback(SQLModel, table=True):
             index=True,
         ),
     )
+    voter_hash: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     comment: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     created_at: datetime = created_at_col()
     updated_at: datetime = updated_at_col()

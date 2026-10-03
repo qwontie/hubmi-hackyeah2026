@@ -1,18 +1,25 @@
 import uuid
+from collections.abc import Collection
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import Executable, Result, func, text
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import Executable, Result, delete, func, or_, text
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from services.modules import InnovationRef, Page, offset
 from utils.db.models import Innovation, Need
-from utils.db.models.feedback import Feedback, FeedbackKind
+from utils.db.models.feedback import VOTE_KINDS, Feedback, FeedbackKind
 from utils.db.models.test_signup import SignupStatus, TesterRole, TestSignup
 
-from .schemas import AdminFeedback, AdminTestSignup, FeedbackSummary, InnovationFeedback
+from .schemas import (
+    AdminFeedback,
+    AdminTestSignup,
+    FeedbackSummary,
+    InnovationFeedback,
+    Votes,
+)
 
 SUMMARY_SQL = text("""
 SELECT
@@ -83,41 +90,105 @@ async def summary(session: AsyncSession, innovation_id: uuid.UUID) -> FeedbackSu
     )
 
 
-async def add_vote(
+async def vote_counts(
+    session: AsyncSession, innovation_ids: Collection[uuid.UUID]
+) -> dict[uuid.UUID, Votes]:
+    if not innovation_ids:
+        return {}
+    rows = await session.exec(
+        select(
+            Feedback.innovation_id,
+            func.count().filter(col(Feedback.kind) == FeedbackKind.FITS),
+            func.count().filter(col(Feedback.kind) == FeedbackKind.DOES_NOT_FIT),
+        )
+        .where(
+            col(Feedback.innovation_id).in_(list(innovation_ids)),
+            col(Feedback.kind).in_(VOTE_KINDS),
+        )
+        .group_by(col(Feedback.innovation_id))
+    )
+    return {innovation_id: Votes(up=up, down=down) for innovation_id, up, down in rows}
+
+
+def votes_of(summary_: FeedbackSummary) -> Votes:
+    return Votes(up=summary_.fits, down=summary_.does_not_fit)
+
+
+async def _existing_vote(
+    session: AsyncSession,
+    *,
+    innovation_id: uuid.UUID,
+    voter_hash: str,
+    need_id: uuid.UUID | None,
+) -> Feedback | None:
+    owners = [col(Feedback.voter_hash) == voter_hash]
+    if need_id is not None:
+        owners.append(col(Feedback.need_id) == need_id)
+    rows = (
+        await session.exec(
+            select(Feedback).where(
+                col(Feedback.innovation_id) == innovation_id,
+                col(Feedback.kind).in_(VOTE_KINDS),
+                or_(*owners),
+            )
+        )
+    ).all()
+    return next((r for r in rows if r.voter_hash == voter_hash), None) or next(
+        iter(rows), None
+    )
+
+
+async def add_vote(  # noqa: PLR0913
     session: AsyncSession,
     *,
     innovation_id: uuid.UUID,
     kind: FeedbackKind,
     need_id: uuid.UUID | None,
+    voter_hash: str,
     comment: str | None,
 ) -> Feedback:
-    if need_id is None:
-        feedback = Feedback(innovation_id=innovation_id, kind=kind, comment=comment)
+    for attempt in range(2):
+        feedback = await _existing_vote(
+            session, innovation_id=innovation_id, voter_hash=voter_hash, need_id=need_id
+        )
+        if feedback is None:
+            feedback = Feedback(
+                innovation_id=innovation_id,
+                kind=kind,
+                need_id=need_id,
+                voter_hash=voter_hash,
+                comment=comment,
+            )
+        else:
+            feedback.kind = kind
+            feedback.comment = comment
+            feedback.voter_hash = voter_hash
+            feedback.updated_at = datetime.now(UTC)
         session.add(feedback)
-        await session.commit()
+        try:
+            await session.commit()
+        except IntegrityError:
+            await session.rollback()
+            if attempt:
+                raise
+            continue
         await session.refresh(feedback)
         return feedback
-    statement = (
-        insert(Feedback)
-        .values(
-            id=uuid.uuid4(),
-            innovation_id=innovation_id,
-            kind=kind,
-            need_id=need_id,
-            comment=comment,
-        )
-        .on_conflict_do_update(
-            index_elements=["need_id", "innovation_id"],
-            index_where=text("need_id IS NOT NULL AND kind <> 'improvement'"),
-            set_={"kind": kind, "comment": comment, "updated_at": func.now()},
-        )
-        .returning(col(Feedback.id))
+    raise AssertionError
+
+
+async def remove_vote(
+    session: AsyncSession, *, innovation_id: uuid.UUID, voter_hash: str
+) -> None:
+    await run(
+        session,
+        delete(Feedback).where(
+            col(Feedback.innovation_id) == innovation_id,
+            col(Feedback.voter_hash) == voter_hash,
+            col(Feedback.kind).in_(VOTE_KINDS),
+        ),
     )
-    feedback_id = (await run(session, statement)).scalar_one()
     await session.commit()
-    feedback = await session.get(Feedback, feedback_id, populate_existing=True)
-    assert feedback is not None
-    return feedback
 
 
 async def add_improvement(

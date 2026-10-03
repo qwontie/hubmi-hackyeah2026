@@ -46,9 +46,20 @@ class FeedbackSummary(BaseModel):
     testers: int
 
 
+class Votes(BaseModel):
+    up: int = 0
+    down: int = 0
+
+
 class FeedbackOut(BaseModel):
     id: uuid.UUID
     kind: FeedbackKind
+    votes: Votes
+    summary: FeedbackSummary
+
+
+class VoteRemoved(BaseModel):
+    votes: Votes
     summary: FeedbackSummary
 
 

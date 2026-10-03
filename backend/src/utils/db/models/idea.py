@@ -4,7 +4,17 @@ from enum import StrEnum
 from typing import Any
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Boolean, Column, Enum, Identity, Index, Integer, Text, text
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Enum,
+    ForeignKey,
+    Identity,
+    Index,
+    Integer,
+    Text,
+    text,
+)
 from sqlalchemy import false as sa_false
 from sqlalchemy.dialects import postgresql
 from sqlmodel import Field, SQLModel
@@ -76,6 +86,15 @@ class Idea(SQLModel, table=True):
             _enum(IdeaStatus, "idea_status"),
             nullable=False,
             server_default=IdeaStatus.NEW.value,
+            index=True,
+        ),
+    )
+    problem_id: uuid.UUID | None = Field(
+        default=None,
+        sa_column=Column(
+            postgresql.UUID(as_uuid=True),
+            ForeignKey("need_cluster.id", ondelete="SET NULL"),
+            nullable=True,
             index=True,
         ),
     )

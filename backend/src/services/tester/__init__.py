@@ -10,6 +10,8 @@ from .schemas import (
     InnovationFeedback,
     TestSignupIn,
     TestSignupPatch,
+    VoteRemoved,
+    Votes,
 )
 
 __all__ = [
@@ -23,5 +25,7 @@ __all__ = [
     "InnovationFeedback",
     "TestSignupIn",
     "TestSignupPatch",
+    "VoteRemoved",
+    "Votes",
     "repository",
 ]

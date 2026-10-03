@@ -1,11 +1,13 @@
 import re
 import uuid
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from services.needs import POWIATS
+from services.tester import Votes
 from utils.db.models.category import Category
 from utils.db.models.innovation import Innovation
 
@@ -66,10 +68,14 @@ class InnovationSummary(BaseModel):
     category: CategoryRef
     has_video: bool
     has_materials: bool
+    votes: Votes
 
     @classmethod
     def build(
-        cls, innovation: Innovation, categories: dict[str, Category]
+        cls,
+        innovation: Innovation,
+        categories: dict[str, Category],
+        votes: Mapping[uuid.UUID, Votes],
     ) -> "InnovationSummary":
         category = categories.get(innovation.category_slug)
         return cls(
@@ -82,6 +88,7 @@ class InnovationSummary(BaseModel):
             ),
             has_video=bool(innovation.video_url),
             has_materials=bool(innovation.materials_url),
+            votes=votes.get(innovation.id) or Votes(),
         )
 
 
@@ -103,9 +110,12 @@ class InnovationDetail(InnovationSummary):
 
     @classmethod
     def build_detail(
-        cls, innovation: Innovation, categories: dict[str, Category]
+        cls,
+        innovation: Innovation,
+        categories: dict[str, Category],
+        votes: Mapping[uuid.UUID, Votes],
     ) -> "InnovationDetail":
-        summary = InnovationSummary.build(innovation, categories)
+        summary = InnovationSummary.build(innovation, categories, votes)
         return cls(
             **summary.model_dump(),
             what_it_is=innovation.what_it_is,
