@@ -1,10 +1,10 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import { resolve } from "$app/paths";
   import {
-    type AdminFeedback,
-    type AdminNeed,
     type AdminTestSignup,
-    listAllNeeds,
+    type ContactProfile,
+    contactProfile,
     type SignupStatus,
   } from "$lib/api/admin";
   import ErrorState from "$lib/components/error-state.svelte";
@@ -24,14 +24,12 @@
   let {
     email,
     signups,
-    feedback,
     backHref,
     innovationHref,
     onstatus,
   }: {
     email: string;
     signups: AdminTestSignup[];
-    feedback: AdminFeedback[];
     backHref: string;
     innovationHref: (slug: string) => string;
     onstatus: (
@@ -41,32 +39,41 @@
     ) => void;
   } = $props();
 
-  let allNeeds = $state<AdminNeed[] | null>(null);
+  let profile = $state<ContactProfile | null>(null);
   let needsError = $state<Error | null>(null);
 
-  async function loadNeeds() {
+  async function loadNeeds(target: string) {
     needsError = null;
     try {
-      allNeeds = await listAllNeeds();
+      const next = await contactProfile(target);
+      if (contactKey(next.email) === email) {
+        profile = next;
+      }
     } catch (e) {
       needsError = e instanceof Error ? e : new Error(String(e));
     }
   }
 
   $effect(() => {
-    loadNeeds();
+    const target = email;
+    untrack(() => {
+      profile = null;
+      loadNeeds(target);
+    });
   });
 
+  const ideaLabel: Record<ContactProfile["ideas"][number]["status"], string> = {
+    accepted: "Przyjęty",
+    in_review: "W ocenie",
+    new: "Nowy",
+    rejected: "Odrzucony",
+  };
+
   const address = $derived(signups[0]?.contact_email ?? email);
-  const needs = $derived(
-    (allNeeds ?? []).filter(
-      (n) => n.contact_email && contactKey(n.contact_email) === email
-    )
-  );
-  const needIds = $derived(new Set(needs.map((n) => n.id)));
-  const ratings = $derived(
-    feedback.filter((f) => f.need_id && needIds.has(f.need_id))
-  );
+  const allNeeds = $derived(profile?.needs ?? null);
+  const needs = $derived(profile?.needs ?? []);
+  const ideas = $derived(profile?.ideas ?? []);
+  const ratings = $derived(profile?.feedback ?? []);
   const organizations = $derived([
     ...new Set(signups.map((s) => s.organization).filter(Boolean)),
   ]);
@@ -196,7 +203,11 @@
         {/if}
       </h3>
       {#if needsError}
-        <ErrorState class="py-2" error={needsError} retry={loadNeeds} />
+        <ErrorState
+          class="py-2"
+          error={needsError}
+          retry={() => loadNeeds(email)}
+        />
       {:else if allNeeds === null}
         <p class="text-[13px] text-hm-ink-soft">Wczytywanie…</p>
       {:else if needs.length === 0}
@@ -222,6 +233,31 @@
       {/if}
     </section>
 
+    {#if ideas.length > 0}
+      <section aria-labelledby="c-ideas-h">
+        <h3 class="mb-1.5 font-semibold text-[13px]" id="c-ideas-h">
+          Pomysły z&nbsp;tego adresu
+          <span class="font-medium text-hm-ink-soft tabular"
+            >{ideas.length}</span
+          >
+        </h3>
+        <ol class="list">
+          {#each ideas as idea (idea.id)}
+            <li>
+              <a class="title" href={resolve("/ideas/[[id]]", { id: idea.id })}>
+                Pomysł nr {registerNumber(idea.number)}
+              </a>
+              <span class="text-hm-ink-soft text-xs"
+                >{ideaLabel[idea.status]}
+                · {when(idea.created_at)}</span
+              >
+              <p class="text-sm">{nbsp(idea.title)}</p>
+            </li>
+          {/each}
+        </ol>
+      </section>
+    {/if}
+
     {#if ratings.length > 0}
       <section aria-labelledby="c-votes-h">
         <h3 class="mb-1.5 font-semibold text-[13px]" id="c-votes-h">
@@ -240,10 +276,7 @@
                   >{f.innovation.title}</a
                 >
               </span>
-              {#if f.comment}
-                <p class="text-sm text-pretty">{nbsp(f.comment)}</p>
-              {/if}
-              <span class="text-hm-ink-soft text-xs">{when(f.updated_at)}</span>
+              <span class="text-hm-ink-soft text-xs">{when(f.created_at)}</span>
             </li>
           {/each}
         </ol>

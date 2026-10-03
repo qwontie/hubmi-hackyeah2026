@@ -92,6 +92,15 @@
   const openSlug = $derived(params.get("innovation"));
   const openNote = $derived(params.get("note"));
   const openContact = $derived(params.get("contact"));
+  const openEmail = $derived.by(() => {
+    const found = signups.find((s) => s.id === openContact);
+    return found ? contactKey(found.contact_email) : null;
+  });
+
+  function idOf(email: string): string | null {
+    const key = contactKey(email);
+    return signups.find((s) => contactKey(s.contact_email) === key)?.id ?? null;
+  }
   const hasItem = $derived(Boolean(openSlug || openContact));
 
   $effect(() => {
@@ -326,7 +335,11 @@
           seen.push(k);
         }
       }
-      return seen.map((k) => ({ contact: k, innovation: null, note: null }));
+      return seen.map((k) => ({
+        contact: idOf(k),
+        innovation: null,
+        note: null,
+      }));
     }
     if (view === "comments") {
       return shownComments.map((c) => ({
@@ -443,7 +456,7 @@
         hint: "Enter",
         label: "Otwórz kontakt",
         run: () =>
-          open({ contact: contactKey(signup.contact_email), innovation: null }),
+          open({ contact: idOf(signup.contact_email), innovation: null }),
       },
       {
         label: "Opinie o tej innowacji",
@@ -537,7 +550,7 @@
   }
 
   const sameContact = (s: AdminTestSignup) =>
-    openContact !== null && contactKey(s.contact_email) === openContact;
+    openEmail !== null && contactKey(s.contact_email) === openEmail;
 
   const placeholder = $derived(
     {
@@ -749,7 +762,7 @@
                       class="row srow"
                       data-sveltekit-noscroll
                       data-sveltekit-replacestate
-                      href={href({ contact: contactKey(s.contact_email), innovation: null })}
+                      href={href({ contact: idOf(s.contact_email), innovation: null })}
                       oncontextmenu={(event) =>
                       signupMenu(s, event, event.currentTarget)}
                       onkeydown={(event) =>
@@ -809,11 +822,10 @@
         </div>
       </section>
 
-      {#if openContact}
+      {#if openEmail}
         <ContactSheet
           {backHref}
-          email={openContact}
-          {feedback}
+          email={openEmail}
           innovationHref={(slug) =>
             href({ contact: null, innovation: slug, view: "votes" })}
           onstatus={changeStatus}
@@ -825,7 +837,7 @@
           category={categoryOf(openSlug)}
           comments={comments.filter((c) => c.innovation.slug === openSlug)}
           contactHref={(email) =>
-            href({ contact: contactKey(email), innovation: null, view: "signups" })}
+            href({ contact: idOf(email), innovation: null, view: "signups" })}
           highlight={openNote}
           onstatus={changeStatus}
           row={rows.find((r) => r.innovation.slug === openSlug) ?? null}

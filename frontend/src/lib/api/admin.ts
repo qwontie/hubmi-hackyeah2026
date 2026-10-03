@@ -723,3 +723,35 @@ export const uploadMaterial = (file: File, title?: string) => {
 
 export const ingestJob = (id: string) =>
   api.get<IngestJob>(`/admin/materials/jobs/${id}`);
+
+export interface ContactProfile {
+  email: string;
+  feedback: {
+    created_at: string;
+    id: string;
+    innovation: { slug: string; title: string };
+    kind: AdminFeedback["kind"];
+    need_id: string;
+  }[];
+  ideas: {
+    created_at: string;
+    id: string;
+    number: number;
+    powiat: string | null;
+    status: IdeaStatus;
+    title: string;
+  }[];
+  needs: {
+    created_at: string;
+    id: string;
+    number: number | null;
+    powiat: string | null;
+    status: NeedStatus;
+    text: string;
+    title: string | null;
+  }[];
+  test_signups: AdminTestSignup[];
+}
+
+export const contactProfile = (email: string) =>
+  api.post<ContactProfile>("/admin/contact-profile", { email });
