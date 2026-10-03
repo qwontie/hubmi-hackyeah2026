@@ -32,8 +32,11 @@ import type {
   Page,
   Powiat,
   PowiatGeo,
+  Problem,
+  ProblemDetail,
   TestSignup,
   ThreadMessage,
+  VoteResponse,
 } from "./types";
 
 const FALLBACK_MESSAGES: Record<ErrorCode, string> = {
@@ -147,7 +150,7 @@ const toApiError = async (response: Response): Promise<ApiError> => {
 interface RequestOptions {
   body?: unknown;
   headers?: Record<string, string>;
-  method?: "GET" | "POST" | "PATCH";
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
   signal?: AbortSignal;
 }
 
@@ -295,6 +298,20 @@ export const api = {
     }),
   powiats: (signal?: AbortSignal) =>
     request<Powiat[]>("/api/powiats", { signal }),
+  problem: (id: string, signal?: AbortSignal) =>
+    request<ProblemDetail>(`/api/problems/${encodeURIComponent(id)}`, {
+      signal,
+    }),
+  problems: (
+    params: {
+      q?: string;
+      category?: string;
+      powiat?: string;
+      page?: number;
+      per_page?: number;
+    },
+    signal?: AbortSignal
+  ) => request<Page<Problem>>(`/api/problems${query(params)}`, { signal }),
   sendIdeaMessage: (id: string, token: string, body: string) =>
     request<ThreadMessage>(`/api/ideas/${encodeURIComponent(id)}/messages`, {
       body: { body },
@@ -317,16 +334,24 @@ export const api = {
       headers: { "x-need-token": token },
       signal,
     }),
+  unvote: (slug: string, voter: string) =>
+    request<VoteResponse>(
+      `/api/innovations/${encodeURIComponent(slug)}/feedback`,
+      { headers: { "x-voter-id": voter }, method: "DELETE" }
+    ),
   vote: (
     slug: string,
     kind: FeedbackKind,
-    need?: { id: string; token: string }
+    options: { need?: { id: string; token: string }; voter?: string } = {}
   ) =>
-    request<{ id: string; kind: FeedbackKind; summary: FeedbackSummary }>(
+    request<VoteResponse>(
       `/api/innovations/${encodeURIComponent(slug)}/feedback`,
       {
-        body: need ? { kind, need_id: need.id } : { kind },
-        headers: need ? { "x-need-token": need.token } : {},
+        body: options.need ? { kind, need_id: options.need.id } : { kind },
+        headers: {
+          ...(options.need ? { "x-need-token": options.need.token } : {}),
+          ...(options.voter ? { "x-voter-id": options.voter } : {}),
+        },
         method: "POST",
       }
     ),

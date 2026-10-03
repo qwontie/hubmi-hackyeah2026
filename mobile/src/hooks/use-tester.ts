@@ -1,10 +1,15 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api, errorMessage } from "@/api/client";
-import type { FeedbackKind, FeedbackSummary, TesterRole } from "@/api/types";
+import type {
+  FeedbackKind,
+  FeedbackSummary,
+  TesterRole,
+  Votes,
+} from "@/api/types";
 import type { SelectOption } from "@/lib/options";
 import { pluralPl } from "@/lib/plural";
 import { EMAIL_INVALID, fieldMessage, isEmail } from "@/lib/validation";
-import { getNeed } from "@/storage/needs";
+import { useCardVote } from "./use-card-vote";
 
 export const TESTER_ROLES: SelectOption[] = [
   { label: "Mieszkaniec lub mieszkanka", value: "resident" },
@@ -24,47 +29,37 @@ export const votesLine = (summary: FeedbackSummary | null) => {
   return `Oceny: ${summary.fits} pasuje, ${summary.does_not_fit} nie pasuje.${testers}`;
 };
 
-export const useVote = (slug: string, needId?: string) => {
-  const [summary, setSummary] = useState<FeedbackSummary | null>(null);
-  const [mine, setMine] = useState<FeedbackKind | null>(null);
-  const [busy, setBusy] = useState<FeedbackKind | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const abort = new AbortController();
-    api
-      .feedbackSummary(slug, abort.signal)
-      .then(setSummary)
-      .catch(() => setSummary(null));
-    return () => abort.abort();
-  }, [slug]);
-
-  const vote = async (kind: FeedbackKind) => {
-    setBusy(kind);
-    setError(null);
-    try {
-      const stored = needId ? await getNeed(needId) : null;
-      const response = await api.vote(
-        slug,
-        kind,
-        stored ? { id: stored.id, token: stored.token } : undefined
-      );
-      setMine(kind);
-      setSummary(response.summary);
-    } catch (caught) {
-      setError(errorMessage(caught));
-    } finally {
-      setBusy(null);
+export const useVote = (slug: string, needId?: string, initial?: Votes) => {
+  const card = useCardVote(slug, initial, needId);
+  const mine: FeedbackKind | null = (() => {
+    if (card.mine === "up") {
+      return "fits";
     }
-  };
-
+    return card.mine === "down" ? "does_not_fit" : null;
+  })();
   return {
-    busy,
-    error,
+    busy: (() => {
+      if (card.busy === "up") {
+        return "fits" as const;
+      }
+      return card.busy === "down" ? ("does_not_fit" as const) : null;
+    })(),
+    counts: card.loaded ? { down: card.down, up: card.up } : null,
+    error: card.error,
     fromMatch: Boolean(needId),
-    line: votesLine(summary),
+    line: votesLine(
+      card.summary ??
+        (card.loaded
+          ? {
+              does_not_fit: card.down,
+              fits: card.up,
+              improvements: 0,
+              testers: 0,
+            }
+          : null)
+    ),
     mine,
-    vote,
+    vote: (kind: FeedbackKind) => card.vote(kind === "fits" ? "up" : "down"),
   };
 };
 

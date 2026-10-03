@@ -1,3 +1,4 @@
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ApiError, api, errorMessage } from "@/api/client";
 import type {
@@ -70,6 +71,24 @@ export const useIdeaForm = () => {
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<IdeaCreated | null>(null);
   const [round, setRound] = useState(0);
+  const params = useLocalSearchParams<{ problem?: string }>();
+  const [problem, setProblem] = useState<{ id: string; title: string } | null>(
+    null
+  );
+
+  useEffect(() => {
+    const id = params.problem;
+    if (!id) {
+      setProblem(null);
+      return;
+    }
+    const abort = new AbortController();
+    api
+      .problem(id, abort.signal)
+      .then((found) => setProblem({ id: found.id, title: found.title }))
+      .catch(() => setProblem(null));
+    return () => abort.abort();
+  }, [params.problem]);
 
   useEffect(() => {
     const abort = new AbortController();
@@ -94,6 +113,7 @@ export const useIdeaForm = () => {
     setError(null);
     try {
       const result = await api.createIdea({
+        ...(problem ? { problem_id: problem.id } : {}),
         essence: form.essence.trim(),
         for_whom: form.forWhom.trim(),
         stage: form.stage,
@@ -144,9 +164,15 @@ export const useIdeaForm = () => {
     value: item.slug,
   }));
 
+  const clearProblem = () => {
+    setProblem(null);
+    router.setParams({ problem: "" });
+  };
+
   return {
     busy,
     canvas,
+    clearProblem,
     created,
     draft,
     error,
@@ -154,6 +180,7 @@ export const useIdeaForm = () => {
     form,
     needsConsent: form.email.trim().length > 0,
     options,
+    problem,
     reset,
     round,
     set,

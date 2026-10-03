@@ -13,6 +13,11 @@ export interface Powiat {
   slug: string;
 }
 
+export interface Votes {
+  down: number;
+  up: number;
+}
+
 export interface InnovationSummary {
   category: CategoryRef;
   has_materials: boolean;
@@ -20,6 +25,7 @@ export interface InnovationSummary {
   lead: string;
   slug: string;
   title: string;
+  votes?: Votes;
 }
 
 export interface InnovationDetail extends InnovationSummary {
@@ -396,4 +402,41 @@ export interface PowiatFeature {
 export interface PowiatGeo {
   features: PowiatFeature[];
   type: "FeatureCollection";
+}
+
+export interface Problem {
+  category: CategoryRef | null;
+  id: string;
+  ideas_count: number;
+  needs_answered: number;
+  needs_open: number;
+  needs_total: number;
+  powiats: string[];
+  summary: string;
+  title: string;
+}
+
+export interface PublicIdea {
+  canvas: Partial<Canvas> | null;
+  created_at: string;
+  essence: string;
+  for_whom: string;
+  id: string;
+  number: number | null;
+  powiat: string | null;
+  problem_id?: string | null;
+  stage: string;
+  title: string;
+}
+
+export interface ProblemDetail extends Problem {
+  ideas: PublicIdea[];
+  innovations: InnovationSummary[];
+}
+
+export interface VoteResponse {
+  id?: string;
+  kind?: FeedbackKind;
+  summary: FeedbackSummary;
+  votes?: Votes;
 }
