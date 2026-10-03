@@ -197,6 +197,16 @@
   <span>{days.at(-1) ? shortLabel(days.at(-1)?.start ?? "") : ""}</span>
 </div>
 
+{#if days.some((d) => d.nothing_fits > 0)}
+  <p class="legend">
+    <span><i aria-hidden="true" class="sw all"></i>nowe potrzeby</span>
+    <span
+      ><i aria-hidden="true" class="sw none"></i>w&nbsp;tym nic nie
+      pasowało</span
+    >
+  </p>
+{/if}
+
 <style>
   .wrap {
     position: relative;
@@ -336,6 +346,36 @@
     margin-top: 8px;
     font-size: 12px;
     color: var(--hm-ink-soft);
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: var(--hm-ink-soft);
+  }
+
+  .legend span {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .sw {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  .sw.all {
+    background: var(--hm-stamp);
+  }
+
+  .sw.none {
+    background: var(--hm-tab);
+    box-shadow: inset 0 0 0 1px var(--hm-stamp);
   }
 
   @media (max-width: 899px) {
