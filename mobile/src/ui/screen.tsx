@@ -25,7 +25,7 @@ export const Screen = function Screen({
       ]}
       keyboardShouldPersistTaps="handled"
       ref={ref}
-      style={{ backgroundColor: colors.desk }}
+      style={{ backgroundColor: colors.board }}
     >
       <View role="main" style={[styles.column, { maxWidth: width }]}>
         {children}

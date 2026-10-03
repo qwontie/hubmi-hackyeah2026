@@ -14,11 +14,13 @@ import { StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { APP_NAME, ORGANIZATION_NAME } from "@/config";
 import { SettingsProvider, useTheme } from "@/theme/settings";
-import { BottomBar, TopBar } from "@/ui/shell";
+import { radius } from "@/theme/tokens";
+import { BottomBar, TopBar, useLastTabActive } from "@/ui/shell";
 import { applyWebGlobals } from "@/ui/web-globals";
 
 function Shell() {
-  const { colors, reduceMotion } = useTheme();
+  const { colors, reduceMotion, wide, highContrast } = useTheme();
+  const lastTabActive = useLastTabActive();
 
   useEffect(() => {
     applyWebGlobals(colors, reduceMotion);
@@ -35,11 +37,31 @@ function Shell() {
       </Head>
       <StatusBar style="dark" />
       <TopBar />
-      <View style={styles.stack}>
+      <View
+        style={[
+          styles.stack,
+          {
+            backgroundColor: colors.board,
+            borderColor: colors.ink,
+            borderWidth: highContrast ? 2 : 0,
+          },
+          wide
+            ? {
+                borderRadius: radius.board,
+                borderTopRightRadius: lastTabActive ? 0 : radius.board,
+                marginBottom: 14,
+                marginHorizontal: 14,
+              }
+            : {
+                borderTopLeftRadius: radius.sheet,
+                borderTopRightRadius: radius.sheet,
+              },
+        ]}
+      >
         <Stack
           screenOptions={{
             animation: reduceMotion ? "none" : "default",
-            contentStyle: { backgroundColor: colors.desk },
+            contentStyle: { backgroundColor: colors.board },
             headerShown: false,
           }}
         />
@@ -77,5 +99,6 @@ const styles = StyleSheet.create({
   },
   stack: {
     flex: 1,
+    overflow: "hidden",
   },
 });

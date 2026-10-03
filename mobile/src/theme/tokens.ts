@@ -1,5 +1,6 @@
 export interface Palette {
   bad: string;
+  board: string;
   desk: string;
   ink: string;
   inkSoft: string;
@@ -13,15 +14,19 @@ export interface Palette {
   stampPress: string;
   stampWash: string;
   sunk: string;
+  tab: string;
+  tabHover: string;
+  tabInkSoft: string;
   warn: string;
 }
 
 export const palettes: Record<"standard" | "contrast", Palette> = {
   contrast: {
     bad: "#9e0f18",
+    board: "#ffffff",
     desk: "#ffffff",
     ink: "#000000",
-    inkSoft: "#1d1e29",
+    inkSoft: "#181928",
     ok: "#004d25",
     onStamp: "#ffffff",
     paper: "#ffffff",
@@ -30,25 +35,32 @@ export const palettes: Record<"standard" | "contrast", Palette> = {
     ruleStrong: "#000000",
     stamp: "#24197f",
     stampPress: "#170f5c",
-    stampWash: "#e7e9ff",
+    stampWash: "#dce0ff",
     sunk: "#ffffff",
+    tab: "#ffffff",
+    tabHover: "#dce0ff",
+    tabInkSoft: "#000000",
     warn: "#6b4100",
   },
   standard: {
     bad: "#c51d28",
-    desk: "#ebecf2",
-    ink: "#1d1e29",
-    inkSoft: "#585a66",
+    board: "#f5f6ff",
+    desk: "#e3e5f5",
+    ink: "#181928",
+    inkSoft: "#525466",
     ok: "#006933",
     onStamp: "#f7f8ff",
-    paper: "#fafafc",
+    paper: "#fdfdff",
     ring: "#544ccb",
-    rule: "#dddde3",
-    ruleStrong: "#8a8c99",
+    rule: "#cdd0e2",
+    ruleStrong: "#7d8098",
     stamp: "#4137a6",
     stampPress: "#352795",
-    stampWash: "#e7e9ff",
-    sunk: "#f2f3f7",
+    stampWash: "#dce0ff",
+    sunk: "#ecedfb",
+    tab: "#cacef2",
+    tabHover: "#d3d7f7",
+    tabInkSoft: "#43465d",
     warn: "#945a00",
   },
 };
@@ -64,11 +76,13 @@ export const space = {
 } as const;
 
 export const radius = {
+  board: 26,
   lg: 14,
   md: 10,
   pill: 999,
   sheet: 20,
   sm: 8,
+  tab: 16,
   xs: 5,
 } as const;
 

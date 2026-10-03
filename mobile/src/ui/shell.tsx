@@ -48,8 +48,19 @@ const isActive = (pathname: string, href: string) =>
     ? pathname === "/" || pathname.startsWith("/innowacje")
     : pathname.startsWith(href);
 
-function NavLink({ item, compact }: { item: NavItem; compact: boolean }) {
-  const { colors, type } = useTheme();
+const tabBackground = (
+  colors: { board: string; tab: string; tabHover: string },
+  active: boolean,
+  hovered: boolean
+) => {
+  if (active) {
+    return colors.board;
+  }
+  return hovered ? colors.tabHover : colors.tab;
+};
+
+function FolderTab({ item }: { item: NavItem }) {
+  const { colors, highContrast } = useTheme();
   const pathname = usePathname();
   const [hovered, setHovered] = useState(false);
   const active = isActive(pathname, item.href);
@@ -58,41 +69,76 @@ function NavLink({ item, compact }: { item: NavItem; compact: boolean }) {
     <Link asChild href={item.href}>
       <Pressable
         aria-current={active ? "page" : undefined}
-        aria-label={compact ? item.label : undefined}
         onHoverIn={() => setHovered(true)}
         onHoverOut={() => setHovered(false)}
         role="link"
         style={StyleSheet.flatten([
-          compact ? styles.tab : styles.navLink,
+          styles.folderTab,
           {
-            backgroundColor:
-              active || hovered ? colors.stampWash : "transparent",
+            backgroundColor: tabBackground(colors, active, hovered),
+            borderBottomWidth: 0,
+            borderColor: highContrast ? colors.ink : "transparent",
+            borderWidth: highContrast ? 2 : 0,
+            marginTop: active || hovered ? 0 : 6,
+            minHeight: active || hovered ? 56 : 50,
           },
         ])}
       >
         <Icon
           aria-hidden
-          color={active ? colors.stamp : colors.inkSoft}
-          size={compact ? 24 : 20}
+          color={active ? colors.stamp : colors.tabInkSoft}
+          size={20}
           strokeWidth={active ? 2.4 : 2}
         />
-        <Txt
-          numberOfLines={1}
-          style={
-            compact
-              ? { fontSize: Math.min(type.small - 2, 16), lineHeight: 18 }
-              : undefined
-          }
-          tone={active ? "stamp" : "default"}
-          variant={compact ? "small" : "label"}
-          weight={active ? "600" : "500"}
-        >
-          {compact ? item.short : item.label}
+        <Txt variant="label" weight={active ? "600" : "500"}>
+          {item.label}
         </Txt>
       </Pressable>
     </Link>
   );
 }
+
+function BarLink({ item }: { item: NavItem }) {
+  const { colors, type } = useTheme();
+  const pathname = usePathname();
+  const active = isActive(pathname, item.href);
+  const Icon = item.icon;
+  return (
+    <Link asChild href={item.href}>
+      <Pressable
+        aria-current={active ? "page" : undefined}
+        aria-label={item.label}
+        role="link"
+        style={StyleSheet.flatten([
+          styles.barLink,
+          { backgroundColor: active ? colors.stampWash : "transparent" },
+        ])}
+      >
+        <Icon
+          aria-hidden
+          color={active ? colors.stamp : colors.inkSoft}
+          size={24}
+          strokeWidth={active ? 2.4 : 2}
+        />
+        <Txt
+          numberOfLines={1}
+          style={{ fontSize: Math.min(type.small - 2, 16), lineHeight: 18 }}
+          tone={active ? "stamp" : "default"}
+          variant="small"
+          weight={active ? "600" : "500"}
+        >
+          {item.short}
+        </Txt>
+      </Pressable>
+    </Link>
+  );
+}
+
+export const useLastTabActive = () => {
+  const pathname = usePathname();
+  const last = NAV.at(-1);
+  return last ? isActive(pathname, last.href) : false;
+};
 
 function SkipLink() {
   const { colors } = useTheme();
@@ -176,7 +222,9 @@ export function TopBar() {
           backgroundColor: colors.desk,
           borderBottomColor: colors.rule,
           borderBottomWidth: borderWidth === 1 ? 0 : borderWidth,
-          paddingHorizontal: wide ? space.xxl : space.md,
+          paddingBottom: wide ? 0 : space.sm,
+          paddingLeft: wide ? space.xxl : space.md,
+          paddingRight: wide ? 14 : space.md,
           paddingTop: insets.top + space.sm,
         },
       ]}
@@ -186,7 +234,7 @@ export function TopBar() {
       {wide ? (
         <View aria-label="Menu główne" role="navigation" style={styles.navRow}>
           {NAV.map((item) => (
-            <NavLink compact={false} item={item} key={item.href} />
+            <FolderTab item={item} key={item.href} />
           ))}
         </View>
       ) : null}
@@ -215,13 +263,22 @@ export function BottomBar() {
       ]}
     >
       {NAV.map((item) => (
-        <NavLink compact item={item} key={item.href} />
+        <BarLink item={item} key={item.href} />
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  barLink: {
+    alignItems: "center",
+    borderRadius: radius.md,
+    flex: 1,
+    gap: 2,
+    justifyContent: "center",
+    minHeight: 60,
+    paddingHorizontal: 2,
+  },
   bottom: {
     flexDirection: "row",
     paddingHorizontal: space.xs,
@@ -234,19 +291,20 @@ const styles = StyleSheet.create({
     minHeight: minTarget,
     paddingRight: space.sm,
   },
-  navLink: {
+  folderTab: {
     alignItems: "center",
-    borderRadius: radius.md,
+    borderTopLeftRadius: radius.tab,
+    borderTopRightRadius: radius.tab,
     flexDirection: "row",
     gap: space.sm,
-    minHeight: minTarget,
-    paddingHorizontal: space.md,
+    paddingHorizontal: 18,
   },
   navRow: {
+    alignItems: "flex-end",
+    alignSelf: "flex-end",
     flexDirection: "row",
     flexShrink: 1,
-    flexWrap: "wrap",
-    gap: space.xs,
+    gap: 6,
     justifyContent: "flex-end",
   },
   seal: {
@@ -263,15 +321,6 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
     position: "absolute",
     zIndex: 10,
-  },
-  tab: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    flex: 1,
-    gap: 2,
-    justifyContent: "center",
-    minHeight: 60,
-    paddingHorizontal: 2,
   },
   top: {
     alignItems: "center",

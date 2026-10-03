@@ -10,10 +10,48 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useTheme } from "@/theme/settings";
-import { minTarget, radius, space } from "@/theme/tokens";
+import { minTarget, type Palette, radius, space } from "@/theme/tokens";
 import { Txt } from "./text";
 
 type Variant = "primary" | "secondary" | "quiet";
+
+const buttonPalette = ({
+  colors,
+  highContrast,
+  hot,
+  kind,
+}: {
+  colors: Palette;
+  highContrast: boolean;
+  hot: boolean;
+  kind: Variant | "choice";
+}) =>
+  ({
+    choice: {
+      background: hot ? colors.tabHover : colors.tab,
+      border: highContrast ? colors.ink : colors.tab,
+      icon: colors.stamp,
+      text: "default" as const,
+    },
+    primary: {
+      background: hot ? colors.stampPress : colors.stamp,
+      border: colors.stamp,
+      icon: colors.onStamp,
+      text: "onStamp" as const,
+    },
+    quiet: {
+      background: hot ? colors.sunk : "transparent",
+      border: "transparent",
+      icon: colors.stamp,
+      text: "stamp" as const,
+    },
+    secondary: {
+      background: hot ? colors.sunk : colors.paper,
+      border: colors.ruleStrong,
+      icon: colors.stamp,
+      text: "default" as const,
+    },
+  })[kind];
 
 interface ButtonProps extends Omit<PressableProps, "style" | "children"> {
   busy?: boolean;
@@ -40,30 +78,16 @@ export const Button = function Button({
   ref,
   ...rest
 }: ButtonProps & { ref?: Ref<View> }) {
-  const { colors, borderWidth, reduceMotion } = useTheme();
+  const { colors, borderWidth, reduceMotion, highContrast } = useTheme();
   const [hovered, setHovered] = useState(false);
   const inactive = disabled === true || busy;
 
-  const palette = {
-    primary: {
-      background: hovered && !inactive ? colors.stampPress : colors.stamp,
-      border: colors.stamp,
-      icon: colors.onStamp,
-      text: "onStamp" as const,
-    },
-    quiet: {
-      background: hovered && !inactive ? colors.sunk : "transparent",
-      border: "transparent",
-      icon: colors.stamp,
-      text: "stamp" as const,
-    },
-    secondary: {
-      background: hovered && !inactive ? colors.sunk : colors.paper,
-      border: colors.ruleStrong,
-      icon: colors.stamp,
-      text: "default" as const,
-    },
-  }[variant];
+  const palette = buttonPalette({
+    colors,
+    highContrast,
+    hot: hovered && !inactive,
+    kind: toggled === undefined ? variant : "choice",
+  });
 
   const selected = toggled === true;
 
