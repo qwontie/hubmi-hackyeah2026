@@ -2,7 +2,15 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "extends": ["ultracite/biome/core", "ultracite/biome/react"],
   "files": {
-    "includes": ["!.expo", "!dist", "!ios", "!android", "!expo-env.d.ts"]
+    "includes": [
+      "!.expo",
+      "!dist",
+      "!ios",
+      "!android",
+      "!expo-env.d.ts",
+      "!assets/brand",
+      "!public/favicon.svg"
+    ]
   },
   "javascript": { "globals": ["Bun"] },
   "linter": {
