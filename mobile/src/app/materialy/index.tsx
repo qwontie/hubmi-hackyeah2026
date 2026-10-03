@@ -13,7 +13,7 @@ import { Notice } from "@/ui/notice";
 import { PageHead, Screen } from "@/ui/screen";
 import { Select } from "@/ui/select";
 import { Sheet } from "@/ui/sheet";
-import { Heading, Txt } from "@/ui/text";
+import { Txt } from "@/ui/text";
 
 export default function MaterialsScreen() {
   const { wide } = useTheme();
@@ -36,12 +36,16 @@ export default function MaterialsScreen() {
   } = useMaterials();
 
   return (
-    <Screen back="Biblioteka" backFallback="/biblioteka" width={900}>
+    <Screen
+      back="Biblioteka"
+      backFallback="/biblioteka"
+      title="Raporty i materiały ROPS"
+      width={900}
+    >
       <Head>
         <title>{`Raporty i materiały ROPS · ${APP_NAME}`}</title>
       </Head>
       <PageHead>
-        <Heading level={1}>Raporty i materiały ROPS</Heading>
         <View style={[styles.group, wide && styles.searchWide]}>
           <View style={styles.flex}>
             <TextField

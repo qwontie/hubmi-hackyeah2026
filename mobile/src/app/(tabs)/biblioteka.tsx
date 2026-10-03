@@ -12,7 +12,7 @@ import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
 import { PageHead, Screen } from "@/ui/screen";
-import { Heading, Txt } from "@/ui/text";
+import { Txt } from "@/ui/text";
 
 export default function LibraryScreen() {
   const { wide } = useTheme();
@@ -33,12 +33,11 @@ export default function LibraryScreen() {
   } = useLibrary();
 
   return (
-    <Screen tabs width={900}>
+    <Screen tabs title="Biblioteka innowacji" width={900}>
       <Head>
         <title>{`Biblioteka innowacji · ${APP_NAME}`}</title>
       </Head>
       <PageHead>
-        <Heading level={1}>Biblioteka innowacji</Heading>
         <View style={[styles.search, wide && styles.searchWide]}>
           <View style={styles.searchField}>
             <TextField
@@ -84,14 +83,12 @@ export default function LibraryScreen() {
           icon={Compass}
           label="Wyzwania Małopolski"
           onPress={() => router.push("/wiedza")}
-          role="link"
           variant="quiet"
         />
         <Button
           icon={FileText}
           label="Raporty i materiały"
           onPress={() => router.push("/materialy")}
-          role="link"
           variant="quiet"
         />
       </View>

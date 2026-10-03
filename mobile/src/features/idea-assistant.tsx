@@ -71,7 +71,7 @@ export function IdeaAssistant({
       </Txt>
       {result ? (
         <View aria-live="polite" style={styles.block}>
-          <Txt weight="600">{`Kanwa: ${done} z ${total} pól uzupełnionych`}</Txt>
+          <Txt weight="600">{`Uzupełniono ${done} z ${total} pól kanwy`}</Txt>
           <CanvasView canvas={canvas} options={options} />
           {result.suggestions.length > 0 ? (
             <View style={styles.block}>

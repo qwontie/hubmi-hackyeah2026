@@ -364,7 +364,7 @@ export function SkipLink() {
           target.focus();
         }
       }}
-      role="link"
+      role="button"
       style={[
         styles.skip,
         {

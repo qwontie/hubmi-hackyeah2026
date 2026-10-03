@@ -18,12 +18,11 @@ const date = (value: string) =>
 export default function GrantCallsScreen() {
   const { calls, error, loading, retry } = useGrantCalls();
   return (
-    <Screen back="Wróć" width={900}>
+    <Screen back="Wróć" title="Nabory na innowacje" width={900}>
       <Head>
         <title>{`Nabory · ${APP_NAME}`}</title>
       </Head>
       <View style={styles.group}>
-        <Heading level={1}>Nabory na innowacje</Heading>
         <Txt tone="soft" variant="lead">
           Sprawdź otwarte i zapowiedziane nabory. Zapisany na tym urządzeniu
           pomysł możesz zamienić w roboczy wniosek.

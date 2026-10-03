@@ -25,7 +25,7 @@ import { Heading, Txt } from "@/ui/text";
 
 const COPY = {
   idea: {
-    back: "Zgłoś pomysł",
+    back: "Pomysły",
     backHref: "/pomysl" as const,
     title: "Pomysł",
     unnamed: "Twój pomysł",

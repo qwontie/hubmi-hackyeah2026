@@ -14,7 +14,7 @@ import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
 import { PageHead, Screen } from "@/ui/screen";
-import { Heading, Txt } from "@/ui/text";
+import { Txt } from "@/ui/text";
 
 const ownIdea = () => router.push("/pomysl/nowy");
 
@@ -38,12 +38,11 @@ export default function ProblemsScreen() {
   const empty = !(list.loading || list.error) && list.items.length === 0;
 
   return (
-    <Screen tabs width={900}>
+    <Screen tabs title="Problemy, które czekają na pomysł" width={900}>
       <Head>
         <title>{`Problemy mieszkańców · ${APP_NAME}`}</title>
       </Head>
       <PageHead>
-        <Heading level={1}>Problemy, które czekają na pomysł</Heading>
         <View style={[styles.search, wide && styles.searchWide]}>
           <View style={styles.flex}>
             <TextField
@@ -87,14 +86,12 @@ export default function ProblemsScreen() {
             icon={PenLine}
             label="Mam własny pomysł"
             onPress={ownIdea}
-            role="link"
             variant="quiet"
           />
           <Button
             icon={FileText}
             label="Nabory i wnioski"
             onPress={() => router.push("/nabory")}
-            role="link"
             variant="quiet"
           />
         </View>

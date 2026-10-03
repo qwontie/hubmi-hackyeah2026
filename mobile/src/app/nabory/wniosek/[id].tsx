@@ -104,7 +104,7 @@ export default function GrantApplicationScreen() {
           <Button
             busy={form.busy === "redraft"}
             disabled={form.busy !== null}
-            label="Ponów szkic AI"
+            label="Przygotuj szkic od nowa"
             onPress={form.redraft}
             variant="secondary"
           />

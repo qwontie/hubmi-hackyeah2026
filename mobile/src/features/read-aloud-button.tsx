@@ -1,5 +1,5 @@
 import { Square, Volume2 } from "lucide-react-native";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { useReadAloud } from "@/speech/read-aloud";
 import { useTheme } from "@/theme/settings";
 import { minTarget, radius, space } from "@/theme/tokens";
@@ -30,14 +30,18 @@ export function ReadAloudPill({
   text: string;
 }) {
   const { colors, reduceMotion } = useTheme();
+  const { width } = useWindowDimensions();
   const { supported, speaking, toggle } = useReadAloud();
   if (!supported) {
     return null;
   }
   const Icon = speaking ? Square : Volume2;
   const ink = night ? colors.onNight : colors.stamp;
+  const label = speaking ? "Zatrzymaj" : "Posłuchaj";
+  const narrow = width < 380;
   return (
     <Pressable
+      aria-label={label}
       aria-pressed={speaking}
       onPress={() => toggle(text)}
       role="button"
@@ -48,9 +52,11 @@ export function ReadAloudPill({
     >
       <Glass interactive night={night} style={styles.pill}>
         <Icon aria-hidden color={ink} size={22} strokeWidth={2.2} />
-        <Txt style={{ color: ink }} variant="label" weight="600">
-          {speaking ? "Zatrzymaj" : "Posłuchaj"}
-        </Txt>
+        {narrow ? null : (
+          <Txt style={{ color: ink }} variant="label" weight="600">
+            {label}
+          </Txt>
+        )}
       </Glass>
     </Pressable>
   );

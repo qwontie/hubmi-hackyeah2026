@@ -85,7 +85,14 @@ function PowiatPanel({
               >
                 <Txt weight="600">{problem.title}</Txt>
                 <Txt tone="soft" variant="label">
-                  {`${openWords(problem.open)}, ${answeredWords(problem.answered)}`}
+                  {[
+                    problem.open > 0 ? openWords(problem.open) : null,
+                    problem.answered > 0
+                      ? answeredWords(problem.answered)
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
                 </Txt>
               </View>
             ))}
@@ -149,7 +156,7 @@ export default function MapScreen() {
           width={projection.width}
         />
         <Txt tone="soft" variant="small">
-          {`Wybierz powiat na mapie albo z listy. Ciemniejszy to więcej zgłoszeń. ${MAP_ATTRIBUTION}.`}
+          {`Wybierz powiat na mapie albo z listy. Im ciemniejszy kolor, tym więcej zgłoszeń. ${MAP_ATTRIBUTION}.`}
         </Txt>
       </View>
     ) : null;
@@ -187,7 +194,7 @@ export default function MapScreen() {
                 </Txt>
                 <Txt tone="soft" variant="label">
                   {count.open + count.answered > 0
-                    ? `${count.open} czeka · ${count.answered} z odpowiedzią`
+                    ? `${count.open} ${pluralPl(count.open, "czeka", "czekają", "czeka")} · ${count.answered} z odpowiedzią`
                     : "brak zgłoszeń"}
                 </Txt>
               </Pressable>
@@ -199,16 +206,15 @@ export default function MapScreen() {
   ) : null;
 
   return (
-    <Screen tabs width={wide ? 1180 : undefined}>
+    <Screen tabs title="Mapa potrzeb" width={wide ? 1180 : undefined}>
       <Head>
         <title>{`Mapa potrzeb · ${APP_NAME}`}</title>
       </Head>
       <View style={styles.group}>
-        <Heading level={1}>Mapa potrzeb</Heading>
         {data ? (
           <Txt tone="soft" variant="lead">
             {total.open + total.answered > 0
-              ? `Mieszkańcy Małopolski zgłosili ${total.open + total.answered} ${pluralPl(total.open + total.answered, "potrzebę", "potrzeby", "potrzeb")}: ${total.open} czeka na odpowiedź, ${total.answered} ma odpowiedź ROPS.`
+              ? `Mieszkańcy Małopolski zgłosili ${total.open + total.answered} ${pluralPl(total.open + total.answered, "potrzebę", "potrzeby", "potrzeb")}: ${total.open} ${pluralPl(total.open, "czeka", "czekają", "czeka")} na odpowiedź, ${total.answered} ${pluralPl(total.answered, "ma", "mają", "ma")} odpowiedź ROPS.`
               : "Tu pojawią się potrzeby zgłoszone przez mieszkańców Małopolski."}
           </Txt>
         ) : null}

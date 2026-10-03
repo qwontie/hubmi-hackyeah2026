@@ -161,7 +161,6 @@ export default function InnovationScreen() {
                 icon={FlaskConical}
                 label="Zgłoś się do testów"
                 onPress={() => router.push("/testy")}
-                role="link"
               />
             </View>
             <View style={[styles.divider, { backgroundColor: colors.rule }]} />

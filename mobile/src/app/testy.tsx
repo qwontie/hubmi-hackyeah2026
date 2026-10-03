@@ -57,7 +57,7 @@ export default function TestingScreen() {
   const [selected, setSelected] = useState<InnovationSummary | null>(null);
 
   return (
-    <Screen back="Wróć" width={900}>
+    <Screen back="Wróć" title="Testuj innowacje społeczne" width={900}>
       <Head>
         <title>{`Testuj innowacje · ${APP_NAME}`}</title>
         <meta
@@ -67,7 +67,6 @@ export default function TestingScreen() {
       </Head>
 
       <View style={styles.group}>
-        <Heading level={1}>Testuj innowacje społeczne</Heading>
         <Txt tone="soft" variant="lead">
           Wybierz rozwiązanie z biblioteki ROPS i zostaw kontakt. ROPS odezwie
           się, gdy będzie można dołączyć do testów.

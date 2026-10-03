@@ -28,7 +28,9 @@ export default function ChallengeScreen() {
       {state.kind === "error" ? (
         <Notice
           title={
-            state.missing ? "Nie ma takiego wyzwania" : "Nie udało się wczytać"
+            state.missing
+              ? "Nie ma takiego wyzwania"
+              : "Nie udało się wczytać wyzwania"
           }
           tone="error"
         >

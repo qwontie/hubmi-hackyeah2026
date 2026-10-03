@@ -198,7 +198,7 @@ export function EntryChoice({
       <Panel
         night={false}
         onPress={() => router.navigate("/pomysl")}
-        role="link"
+        role="button"
         text="Zobacz, z czym mierzą się mieszkańcy, i zaproponuj rozwiązanie."
         title="Mam pomysł"
       />

@@ -20,7 +20,8 @@ import {
   tabBarSpace,
 } from "@/theme/tokens";
 import { Glass } from "./glass";
-import { Txt } from "./text";
+import { nightAttr } from "./night";
+import { Heading, Txt } from "./text";
 
 export const WIDE_TOP = 96;
 
@@ -77,8 +78,81 @@ interface ScreenProps {
   children: ReactNode;
   hero?: ReactNode;
   tabs?: boolean;
+  title?: string;
   trailing?: ReactNode;
   width?: number;
+}
+
+function Band({
+  children,
+  night,
+  top,
+  width,
+}: {
+  children: ReactNode;
+  night: boolean;
+  top: number;
+  width: number;
+}) {
+  const { colors, wide } = useTheme();
+  return (
+    <View
+      style={[
+        styles.hero,
+        {
+          backgroundColor: night ? colors.night : colors.tone,
+          paddingHorizontal: wide ? space.xxl : space.xl - 2,
+          paddingTop: top,
+        },
+      ]}
+    >
+      <View style={[styles.column, { maxWidth: width }]} {...nightAttr(night)}>
+        {children}
+      </View>
+    </View>
+  );
+}
+
+function TopBar({
+  back,
+  backFallback,
+  night,
+  top,
+  trailing,
+  width,
+}: {
+  back?: string;
+  backFallback?: string;
+  night: boolean;
+  top: number;
+  trailing?: ReactNode;
+  width: number;
+}) {
+  const { wide } = useTheme();
+  return (
+    <View
+      pointerEvents="box-none"
+      style={[
+        styles.bar,
+        { paddingHorizontal: wide ? space.xxl : space.lg, top },
+      ]}
+    >
+      <View
+        pointerEvents="box-none"
+        style={[styles.barRow, { maxWidth: width }]}
+      >
+        {back ? (
+          <BackPill fallback={backFallback} label={back} night={night} />
+        ) : (
+          <View />
+        )}
+        <View style={styles.trail}>
+          {trailing ?? null}
+          <A11yButton night={night} />
+        </View>
+      </View>
+    </View>
+  );
 }
 
 export const Screen = function Screen({
@@ -87,12 +161,22 @@ export const Screen = function Screen({
   children,
   hero,
   tabs = false,
+  title,
   trailing,
   width = contentWidth,
   ref,
 }: ScreenProps & { ref?: Ref<ScrollView> }) {
   const { colors, wide } = useTheme();
   const insets = useSafeAreaInsets();
+  const night = Boolean(title);
+  const boxed = night && wide;
+  const band = title ? (
+    <Heading level={1} night>
+      {title}
+    </Heading>
+  ) : (
+    hero
+  );
   const chromeTop = wide ? WIDE_TOP : insets.top + space.sm;
   const hasBar = Boolean(back || trailing) || !wide;
   const barSpace = hasBar ? minTarget + space.lg : 0;
@@ -106,61 +190,48 @@ export const Screen = function Screen({
         ref={ref}
         scrollIndicatorInsets={{ bottom: tabs ? tabBarSpace : 0 }}
       >
-        {hero ? (
-          <View
-            style={[
-              styles.hero,
-              {
-                backgroundColor: colors.tone,
-                paddingHorizontal: wide ? space.xxl : space.xl - 2,
-                paddingTop: chromeTop + barSpace + space.sm,
-              },
-            ]}
+        {band && !boxed ? (
+          <Band
+            night={night}
+            top={chromeTop + barSpace + space.sm}
+            width={width}
           >
-            <View style={[styles.column, { maxWidth: width }]}>{hero}</View>
-          </View>
+            {band}
+          </Band>
         ) : null}
         <View
           style={[
             styles.pad,
             {
               paddingHorizontal: wide ? space.xxl : space.lg,
-              paddingTop: hero ? space.xl : chromeTop + barSpace + space.sm,
+              paddingTop:
+                band && !boxed ? space.xl : chromeTop + barSpace + space.sm,
             },
           ]}
         >
           <View style={[styles.column, { maxWidth: width }]}>
+            {boxed ? (
+              <View
+                style={[styles.titleBox, { backgroundColor: colors.night }]}
+                {...nightAttr(true)}
+              >
+                {band}
+              </View>
+            ) : null}
             {children}
             <RopsFooter />
           </View>
         </View>
       </ScrollView>
       {hasBar ? (
-        <View
-          pointerEvents="box-none"
-          style={[
-            styles.bar,
-            {
-              paddingHorizontal: wide ? space.xxl : space.lg,
-              top: chromeTop,
-            },
-          ]}
-        >
-          <View
-            pointerEvents="box-none"
-            style={[styles.barRow, { maxWidth: width }]}
-          >
-            {back ? (
-              <BackPill fallback={backFallback} label={back} />
-            ) : (
-              <View />
-            )}
-            <View style={styles.trail}>
-              {trailing ?? null}
-              <A11yButton />
-            </View>
-          </View>
-        </View>
+        <TopBar
+          back={back}
+          backFallback={backFallback}
+          night={night && !boxed}
+          top={chromeTop}
+          trailing={trailing}
+          width={width}
+        />
       ) : null}
     </View>
   );
@@ -215,6 +286,11 @@ const styles = StyleSheet.create({
   },
   root: {
     flex: 1,
+  },
+  titleBox: {
+    borderRadius: radius.sheet,
+    paddingHorizontal: space.xxl + 2,
+    paddingVertical: space.xxl,
   },
   trail: {
     alignItems: "center",

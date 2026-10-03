@@ -28,7 +28,9 @@ export default function MaterialScreen() {
       {state.kind === "error" ? (
         <Notice
           title={
-            state.missing ? "Nie ma takiego materiału" : "Nie udało się wczytać"
+            state.missing
+              ? "Nie ma takiego materiału"
+              : "Nie udało się wczytać materiału"
           }
           tone="error"
         >

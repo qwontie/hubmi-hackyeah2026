@@ -21,8 +21,8 @@ import { Heading, Txt } from "@/ui/text";
 const WASH = "rgba(252, 252, 255, 0.14)";
 const SIZE_WORDS: Record<string, string> = {
   large: "duży",
-  standard: "zwykły",
-  xlarge: "największy",
+  standard: "standardowy",
+  xlarge: "bardzo duży",
 };
 
 interface TileProps {
@@ -93,7 +93,7 @@ export function A11yControls({ night = false }: { night?: boolean }) {
   return (
     <View aria-label="Dostępność" role="group" style={styles.row}>
       <Tile
-        hint={`${text.label}. Zmień wielkość tekstu`}
+        hint={`Tekst: ${size}. Zmień wielkość tekstu`}
         icon={ALargeSmall}
         label="Tekst"
         night={night}
@@ -101,7 +101,7 @@ export function A11yControls({ night = false }: { night?: boolean }) {
         state={size}
       />
       <Tile
-        hint={contrast.label}
+        hint={contrast.on ? "Kontrast: wysoki, włączony" : "Kontrast wysoki"}
         icon={Contrast}
         label="Kontrast"
         night={night}
@@ -109,16 +109,16 @@ export function A11yControls({ night = false }: { night?: boolean }) {
         onPress={contrast.toggle}
       />
       <Tile
-        hint={motion.label}
+        hint={motion.on ? "Mniej ruchu: włączone" : "Mniej ruchu"}
         icon={CirclePause}
-        label="Bez ruchu"
+        label="Mniej ruchu"
         night={night}
         on={motion.on}
         onPress={motion.toggle}
       />
       {read.supported ? (
         <Tile
-          hint={read.label}
+          hint={read.on ? "Zatrzymaj czytanie" : "Czytaj stronę na głos"}
           icon={read.on ? Square : Volume2}
           label={read.on ? "Zatrzymaj" : "Czytaj"}
           night={night}
@@ -140,7 +140,9 @@ export function A11yPanel({
   const insets = useSafeAreaInsets();
   return (
     <Modal
+      accessibilityLabel="Dostępność"
       animationType={reduceMotion ? "none" : "fade"}
+      aria-label="Dostępność"
       onRequestClose={onClose}
       transparent
       visible={open}
@@ -148,6 +150,7 @@ export function A11yPanel({
       <Pressable
         accessibilityLabel="Zamknij ustawienia dostępności"
         onPress={onClose}
+        role="button"
         style={styles.backdrop}
       />
       <View
@@ -160,6 +163,8 @@ export function A11yPanel({
         ]}
       >
         <View
+          aria-label="Dostępność"
+          role="group"
           style={[
             styles.panel,
             {
@@ -277,7 +282,7 @@ const styles = StyleSheet.create({
     gap: 2,
     justifyContent: "center",
     minHeight: 84,
-    paddingHorizontal: space.xs,
+    paddingHorizontal: 2,
     paddingVertical: space.sm,
   },
   tileLabel: {
@@ -286,7 +291,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   tileState: {
-    fontSize: 13,
+    fontSize: 12.5,
     lineHeight: 16,
     textAlign: "center",
   },

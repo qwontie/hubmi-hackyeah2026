@@ -78,7 +78,7 @@ export default function AdaptScreen() {
         ) : null}
         <TextField
           error={errors.context}
-          hint="Kim są Wasi odbiorcy, jaki macie zespół i budżet. Bez danych osobowych: plan można udostępnić linkiem."
+          hint="Napisz, kim są odbiorcy, jaki zespół i budżet ma instytucja. Nie podawaj danych osobowych: plan można udostępnić linkiem."
           label="Opisz swoją sytuację"
           maxLength={3000}
           multiline

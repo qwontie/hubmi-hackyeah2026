@@ -77,7 +77,7 @@ export default function GrantCallScreen() {
           )}
           {call.phase === "open" && start.ideas.length === 0 ? (
             <Txt tone="soft">
-              Najpierw zapisz pomysł w Kreatorze na tym urządzeniu.
+              Najpierw opisz pomysł w zakładce Pomysł na tym urządzeniu.
             </Txt>
           ) : null}
           {call.phase === "open"

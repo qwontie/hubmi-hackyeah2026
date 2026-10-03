@@ -78,7 +78,7 @@ function Step({ registration }: { registration: Registration }) {
           Przekaż problem do ROPS
         </Heading>
         <Txt tone="onNightSoft" variant="lead">
-          Wyślemy Twój opis pracownikom urzędu. Wskaż powiat, a jeśli chcesz
+          Wyślemy Twój opis pracownikom ROPS. Wskaż powiat, a jeśli chcesz
           dostać odpowiedź, zostaw e-mail.
         </Txt>
       </View>
@@ -169,7 +169,7 @@ export function Unsolved({ registration }: { registration: Registration }) {
           Żadne z tych rozwiązań nie pomaga?
         </Heading>
         <Txt tone="onNightSoft" variant="lead">
-          Przekaż swój problem do ROPS. Pracownik urzędu przeczyta go i odpowie.
+          Przekaż swój problem do ROPS. Pracownik ROPS przeczyta go i odpowie.
         </Txt>
       </View>
       <Button
@@ -193,7 +193,7 @@ export function Unsolved({ registration }: { registration: Registration }) {
             ROPS przyjął Twoje zgłoszenie
           </Heading>
           <Txt tone="onNightSoft" variant="lead">
-            Pracownik urzędu przeczyta opis. Odpowiedź znajdziesz w zakładce
+            Pracownik ROPS przeczyta opis. Odpowiedź znajdziesz w zakładce
             Zgłoszenia.
           </Txt>
           <Link asChild href="/zgloszenia">

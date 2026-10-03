@@ -12,9 +12,9 @@ import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { Notice } from "@/ui/notice";
-import { PageHead, Screen } from "@/ui/screen";
+import { Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
-import { Heading, Txt } from "@/ui/text";
+import { Txt } from "@/ui/text";
 
 function NeedEntry({ need, last }: { need: StoredNeed; last: boolean }) {
   const { colors, wide } = useTheme();
@@ -129,15 +129,10 @@ function NeedEntry({ need, last }: { need: StoredNeed; last: boolean }) {
 export default function SubmissionsScreen() {
   const needs = useStoredNeeds();
   return (
-    <Screen tabs>
+    <Screen tabs title="Moje zgłoszenia">
       <Head>
         <title>{`Moje zgłoszenia · ${APP_NAME}`}</title>
       </Head>
-      <PageHead>
-        <View style={styles.intro}>
-          <Heading level={1}>Moje zgłoszenia</Heading>
-        </View>
-      </PageHead>
       {needs === null ? null : (
         <Sheet>
           {needs.length === 0 ? (

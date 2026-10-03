@@ -14,7 +14,7 @@ import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
 import { PageHead, Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
-import { Heading, Txt } from "@/ui/text";
+import { Txt } from "@/ui/text";
 
 export default function ChallengesScreen() {
   const { wide } = useTheme();
@@ -34,14 +34,16 @@ export default function ChallengesScreen() {
   } = useChallenges();
 
   return (
-    <Screen back="Biblioteka" backFallback="/biblioteka" width={900}>
+    <Screen
+      back="Biblioteka"
+      backFallback="/biblioteka"
+      title="Wyzwania społeczne Małopolski"
+      width={900}
+    >
       <Head>
         <title>{`Wyzwania Małopolski · ${APP_NAME}`}</title>
       </Head>
       <PageHead>
-        <View style={styles.group}>
-          <Heading level={1}>Wyzwania społeczne Małopolski</Heading>
-        </View>
         <View style={[styles.group, wide && styles.searchWide]}>
           <View style={styles.flex}>
             <TextField
