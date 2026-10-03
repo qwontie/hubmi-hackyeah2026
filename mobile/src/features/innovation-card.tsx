@@ -34,6 +34,7 @@ function VoteButton({
   icon: Icon,
   label,
   onPress,
+  worded,
 }: {
   active: boolean;
   busy: boolean;
@@ -41,6 +42,7 @@ function VoteButton({
   icon: LucideIcon;
   label: string;
   onPress: () => void;
+  worded: boolean;
 }) {
   const { colors, highContrast, reduceMotion } = useTheme();
   const [hovered, setHovered] = useState(false);
@@ -71,6 +73,11 @@ function VoteButton({
       ) : (
         <Icon aria-hidden color={ink} size={22} strokeWidth={2.2} />
       )}
+      {worded ? (
+        <Txt style={{ color: ink }} variant="detail" weight="600">
+          {label}
+        </Txt>
+      ) : null}
       {count === null ? null : (
         <Txt mono style={{ color: ink }} variant="number">
           {count}
@@ -84,10 +91,12 @@ function Votes({
   slug,
   needId,
   initial,
+  worded,
 }: {
   initial: Counts | null;
   needId?: string;
   slug: string;
+  worded: boolean;
 }) {
   const vote = useVote(slug, needId, initial ?? undefined);
   const live = vote.counts ?? initial;
@@ -104,6 +113,7 @@ function Votes({
           icon={ThumbsUp}
           label="Pasuje"
           onPress={cast("fits")}
+          worded={worded}
         />
         <VoteButton
           active={vote.mine === "does_not_fit"}
@@ -112,6 +122,7 @@ function Votes({
           icon={ThumbsDown}
           label="Nie pasuje"
           onPress={cast("does_not_fit")}
+          worded={worded}
         />
       </View>
       <View aria-live="polite">
@@ -179,8 +190,8 @@ export function InnovationCard({
           />
           {index === undefined ? null : (
             <View style={[styles.rank, { backgroundColor: colors.paper }]}>
-              <Txt aria-hidden mono tone="stamp" variant="number">
-                {index}
+              <Txt tone="stamp" variant="small" weight="600">
+                {`Propozycja ${index}`}
               </Txt>
             </View>
           )}
@@ -191,8 +202,8 @@ export function InnovationCard({
             <CategoryIcon size={26} slug={innovation.category.slug} />
           </View>
           {index === undefined ? null : (
-            <Txt aria-hidden mono tone="stamp" variant="number">
-              {index}
+            <Txt tone="stamp" variant="small" weight="600">
+              {`Propozycja ${index}`}
             </Txt>
           )}
         </View>
@@ -225,7 +236,12 @@ export function InnovationCard({
         </Txt>
       </View>
       <View style={styles.foot}>
-        <Votes initial={votes} needId={needId} slug={innovation.slug} />
+        <Votes
+          initial={votes}
+          needId={needId}
+          slug={innovation.slug}
+          worded={wide || featured}
+        />
         <Link asChild href={innovationHref(innovation.slug, needId)}>
           <Pressable
             aria-label={`Zobacz rozwiązanie: ${innovation.title}`}
@@ -332,12 +348,12 @@ const styles = StyleSheet.create({
   rank: {
     alignItems: "center",
     borderRadius: radius.pill,
-    height: 40,
     justifyContent: "center",
+    minHeight: 36,
+    paddingHorizontal: space.md,
     position: "absolute",
     right: space.sm + 2,
     top: space.sm + 2,
-    width: 40,
   },
   stack: {
     gap: space.lg,

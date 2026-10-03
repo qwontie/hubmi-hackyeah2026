@@ -148,7 +148,6 @@ function BarLink({ item }: { item: TabItem }) {
         />
         <Txt
           maxFontSizeMultiplier={1.15}
-          numberOfLines={1}
           style={[styles.barLabel, { color }]}
           weight="600"
         >
@@ -403,6 +402,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     letterSpacing: -0.2,
     lineHeight: 16,
+    textAlign: "center",
   },
   barLink: {
     alignItems: "center",

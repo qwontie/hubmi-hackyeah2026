@@ -97,7 +97,7 @@ export default function GrantApplicationScreen() {
         <View style={styles.actions}>
           <Button
             busy={form.busy === "save"}
-            disabled={form.busy !== null}
+            disabled={form.busy !== null || !form.dirty}
             label="Zapisz wersję roboczą"
             onPress={form.save}
           />
@@ -110,18 +110,16 @@ export default function GrantApplicationScreen() {
           />
           <Button
             busy={form.busy === "submit"}
-            disabled={
-              form.busy !== null || application.missing_required.length > 0
-            }
+            disabled={form.busy !== null || !form.canSubmit}
             label="Złóż wniosek"
             onPress={form.submit}
             variant="primary"
           />
-          {application.missing_required.length > 0 ? (
+          {form.canSubmit ? null : (
             <Txt aria-live="polite" tone="soft">
               Uzupełnij wymagane informacje przed złożeniem.
             </Txt>
-          ) : null}
+          )}
         </View>
       )}
       <ExternalLink

@@ -1,7 +1,9 @@
 import { Image } from "expo-image";
-import { Sparkles } from "lucide-react-native";
+import { router } from "expo-router";
+import { FileText, Sparkles } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { API_BASE } from "@/config";
+import { useGrantCalls } from "@/hooks/use-grants";
 import { useIdeaVisualisation } from "@/hooks/use-idea-visualisation";
 import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
@@ -11,6 +13,35 @@ import { Heading, Txt } from "@/ui/text";
 
 const absolute = (url: string) =>
   url.startsWith("/") ? `${API_BASE}${url}` : url;
+
+export function IdeaGrantAction({ id }: { id: string | undefined }) {
+  const { calls } = useGrantCalls();
+  const open = calls.find((call) => call.phase === "open");
+  if (!(id && open)) {
+    return null;
+  }
+  return (
+    <Sheet>
+      <View style={styles.group}>
+        <Heading level={2}>Trwa nabór</Heading>
+        <Txt tone="soft">{open.title}</Txt>
+      </View>
+      <View>
+        <Button
+          icon={FileText}
+          label="Złóż wniosek w naborze"
+          onPress={() =>
+            router.push({
+              params: { id: open.id, pomysl: id },
+              pathname: "/nabory/[id]",
+            })
+          }
+          variant="primary"
+        />
+      </View>
+    </Sheet>
+  );
+}
 
 export function IdeaVisualisation({ id }: { id: string | undefined }) {
   const { colors, reduceMotion } = useTheme();

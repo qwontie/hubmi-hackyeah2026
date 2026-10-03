@@ -36,7 +36,7 @@ interface TileProps {
 }
 
 function Tile({ hint, icon, label, night, on, onPress, state }: TileProps) {
-  const { colors, highContrast, reduceMotion } = useTheme();
+  const { colors, highContrast, reduceMotion, wide } = useTheme();
   const [hovered, setHovered] = useState(false);
   const active = on === true;
   const Icon = active ? Check : icon;
@@ -57,6 +57,7 @@ function Tile({ hint, icon, label, night, on, onPress, state }: TileProps) {
       role="button"
       style={({ pressed }) => [
         styles.tile,
+        wide ? styles.tileWide : styles.tileNarrow,
         {
           backgroundColor: active ? fill : idle,
           borderColor: highContrast ? ink : "transparent",
@@ -66,23 +67,23 @@ function Tile({ hint, icon, label, night, on, onPress, state }: TileProps) {
       ]}
     >
       <Icon aria-hidden color={ink} size={26} strokeWidth={2.2} />
-      <Txt
-        maxFontSizeMultiplier={1.3}
-        numberOfLines={2}
-        style={[styles.tileLabel, { color: ink }]}
-        weight="600"
-      >
-        {label}
-      </Txt>
-      {state ? (
+      <View style={wide ? styles.wordsWide : styles.words}>
         <Txt
           maxFontSizeMultiplier={1.3}
-          numberOfLines={1}
-          style={[styles.tileState, { color: ink }]}
+          style={[styles.tileLabel, wide && styles.centered, { color: ink }]}
+          weight="600"
         >
-          {state}
+          {label}
         </Txt>
-      ) : null}
+        {state ? (
+          <Txt
+            maxFontSizeMultiplier={1.3}
+            style={[styles.tileState, wide && styles.centered, { color: ink }]}
+          >
+            {state}
+          </Txt>
+        ) : null}
+      </View>
     </Pressable>
   );
 }
@@ -195,12 +196,19 @@ export function A11yPanel({
   );
 }
 
-export function A11yButton({ night = false }: { night?: boolean }) {
+export function A11yButton({
+  labelled = false,
+  night = false,
+}: {
+  labelled?: boolean;
+  night?: boolean;
+}) {
   const { colors, wide } = useTheme();
   const [open, setOpen] = useState(false);
   if (wide) {
     return null;
   }
+  const ink = night ? colors.onNight : colors.ink;
   return (
     <>
       <Pressable
@@ -210,13 +218,17 @@ export function A11yButton({ night = false }: { night?: boolean }) {
         role="button"
         style={styles.round}
       >
-        <Glass interactive night={night} style={styles.roundGlass}>
-          <ALargeSmall
-            aria-hidden
-            color={night ? colors.onNight : colors.ink}
-            size={26}
-            strokeWidth={2}
-          />
+        <Glass
+          interactive
+          night={night}
+          style={labelled ? styles.pillGlass : styles.roundGlass}
+        >
+          <ALargeSmall aria-hidden color={ink} size={26} strokeWidth={2} />
+          {labelled ? (
+            <Txt style={{ color: ink }} variant="label" weight="600">
+              Dostępność
+            </Txt>
+          ) : null}
         </Glass>
       </Pressable>
       <A11yPanel onClose={() => setOpen(false)} open={open} />
@@ -232,6 +244,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     top: 0,
+  },
+  centered: {
+    textAlign: "center",
   },
   close: {
     alignItems: "center",
@@ -261,6 +276,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
+  pillGlass: {
+    alignItems: "center",
+    borderRadius: radius.pill,
+    flexDirection: "row",
+    gap: space.sm,
+    minHeight: minTarget + 4,
+    paddingHorizontal: space.lg,
+  },
   round: {
     borderRadius: radius.pill,
   },
@@ -273,26 +296,42 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: space.sm,
   },
   tile: {
     alignItems: "center",
     borderRadius: 18,
-    flex: 1,
-    gap: 2,
     justifyContent: "center",
-    minHeight: 84,
-    paddingHorizontal: 2,
     paddingVertical: space.sm,
   },
   tileLabel: {
     fontSize: 15,
     lineHeight: 19,
-    textAlign: "center",
+  },
+  tileNarrow: {
+    flexBasis: "47%",
+    flexDirection: "row",
+    flexGrow: 1,
+    gap: space.sm + 2,
+    justifyContent: "flex-start",
+    minHeight: 56,
+    paddingHorizontal: space.md + 2,
   },
   tileState: {
-    fontSize: 12.5,
+    fontSize: 13,
     lineHeight: 16,
-    textAlign: "center",
+  },
+  tileWide: {
+    flex: 1,
+    gap: 2,
+    minHeight: 84,
+    paddingHorizontal: space.xs,
+  },
+  words: {
+    flexShrink: 1,
+  },
+  wordsWide: {
+    alignItems: "center",
   },
 });

@@ -148,7 +148,7 @@ function TopBar({
         )}
         <View style={styles.trail}>
           {trailing ?? null}
-          <A11yButton night={night} />
+          <A11yButton labelled={!trailing} night={night} />
         </View>
       </View>
     </View>

@@ -91,7 +91,7 @@ const usePanelPadding = (night: boolean): ViewStyle => {
       ? space.xl + radius.band
       : tabBarSpace + insets.bottom + space.sm,
     paddingHorizontal: space.xl - 2,
-    paddingTop: night ? insets.top + 180 : space.xxl,
+    paddingTop: night ? insets.top + 216 : space.xxl,
   };
 };
 
@@ -127,6 +127,7 @@ function Panel({ night, onPress, role, text, title }: PanelProps) {
         },
         usePanelPadding(night),
         lower && styles.sheet,
+        !wide && styles.panelNarrow,
       ]}
       {...nightAttr(night)}
     >
@@ -280,6 +281,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexShrink: 1,
     overflow: "hidden",
+  },
+  panelNarrow: {
+    flexBasis: "auto",
   },
   root: {
     flex: 1,
