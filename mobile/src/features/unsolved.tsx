@@ -2,12 +2,10 @@ import { Link } from "expo-router";
 import { ArrowRight, Check, CircleAlert } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
-  Platform,
   Pressable,
   StyleSheet,
   type Text,
   TextInput,
-  type TextStyle,
   View,
 } from "react-native";
 import { TEXT_MAX } from "@/config";
@@ -93,7 +91,7 @@ function Step({ registration }: { registration: Registration }) {
   return (
     <>
       <View style={styles.text}>
-        <Heading level={2} night ref={title} style={styles.anchor}>
+        <Heading level={2} night ref={title}>
           Zgłoś problem do ROPS
         </Heading>
         <Txt tone="onNightSoft" variant="lead">
@@ -279,7 +277,7 @@ export function Unsolved({
       <View style={[styles.done, wide && styles.doneWide]}>
         <Stamp at={need.at} number={need.number} word="PRZYJĘTO" />
         <View style={[styles.text, wide && styles.textWide]}>
-          <Heading level={2} night ref={doneTitle} style={styles.anchor}>
+          <Heading level={2} night ref={doneTitle}>
             {need.duplicate
               ? "ROPS ma już to zgłoszenie"
               : "ROPS przyjął Twoje zgłoszenie"}
@@ -320,7 +318,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: space.lg,
   },
-  anchor: (Platform.OS === "web" ? { scrollMarginTop: 150 } : {}) as TextStyle,
   block: {
     borderRadius: radius.sheet,
     gap: space.xl,
