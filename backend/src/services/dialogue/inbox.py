@@ -229,6 +229,7 @@ def admin_need(
         powiat=need.powiat,
         category_slug=need.category_slug,
         contact_email=need.contact_email if need.contact_consent else None,
+        has_contact=bool(need.contact_email and need.contact_consent),
         status=need.status,
         nothing_fits=need.nothing_fits,
         cluster=cluster,

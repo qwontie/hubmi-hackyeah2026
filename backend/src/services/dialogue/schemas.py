@@ -83,6 +83,7 @@ class AdminNeed(BaseModel):
     powiat: str | None
     category_slug: str | None
     contact_email: str | None
+    has_contact: bool
     status: NeedStatus
     nothing_fits: bool
     cluster: ClusterRef | None
