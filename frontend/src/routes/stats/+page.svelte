@@ -363,6 +363,7 @@
 
 <style>
   .board {
+    position: relative;
     display: grid;
     gap: 18px;
     align-content: start;

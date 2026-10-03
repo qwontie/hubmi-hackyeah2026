@@ -1,4 +1,4 @@
-import { api } from "$lib/api/client";
+import { api, type Params } from "$lib/api/client";
 
 export type NeedStatus = "new" | "answered" | "closed";
 
@@ -316,6 +316,21 @@ export const replyToIdea = (id: string, body: string) =>
 export const markIdeaRead = (id: string) =>
   api.post<void>(`/admin/ideas/${id}/read`);
 
+async function allPages<T>(path: string, params: Params = {}): Promise<T[]> {
+  const first = await api.get<Page<T>>(path, {
+    ...params,
+    page: 1,
+    per_page: 100,
+  });
+  const pages = Math.ceil(first.total / 100);
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, pages - 1) }, (_, n) =>
+      api.get<Page<T>>(path, { ...params, page: n + 2, per_page: 100 })
+    )
+  );
+  return [first, ...rest].flatMap((p) => p.items);
+}
+
 export interface FeedbackByInnovation {
   does_not_fit: number;
   fits: number;
@@ -349,17 +364,17 @@ export interface AdminTestSignup {
   who: "resident" | "ngo" | "local_government" | "expert";
 }
 
-export const feedbackByInnovation = (sort: string) =>
-  api.get<Page<FeedbackByInnovation>>("/admin/feedback/by-innovation", {
-    per_page: 100,
-    sort,
+export const feedbackByInnovation = () =>
+  allPages<FeedbackByInnovation>("/admin/feedback/by-innovation", {
+    sort: "recent",
   });
 
-export const listComments = () =>
-  api.get<Page<AdminFeedback>>("/admin/feedback", { per_page: 50 });
+export const listFeedback = () => allPages<AdminFeedback>("/admin/feedback");
 
 export const listSignups = () =>
-  api.get<Page<AdminTestSignup>>("/admin/test-signups", { per_page: 100 });
+  allPages<AdminTestSignup>("/admin/test-signups");
+
+export const listAllNeeds = () => allPages<AdminNeed>("/admin/needs");
 
 export const setSignupStatus = (id: string, status: SignupStatus) =>
   api.patch<AdminTestSignup>(`/admin/test-signups/${id}`, { status });
@@ -426,17 +441,6 @@ export interface KnowledgeRun {
   status: "running" | "done" | "failed";
   step: string | null;
   total: number;
-}
-
-async function allPages<T>(path: string): Promise<T[]> {
-  const first = await api.get<Page<T>>(path, { page: 1, per_page: 100 });
-  const pages = Math.ceil(first.total / 100);
-  const rest = await Promise.all(
-    Array.from({ length: Math.max(0, pages - 1) }, (_, n) =>
-      api.get<Page<T>>(path, { page: n + 2, per_page: 100 })
-    )
-  );
-  return [first, ...rest].flatMap((p) => p.items);
 }
 
 export const listChallenges = () =>

@@ -36,8 +36,8 @@
   const onStats = $derived(page.url.pathname.startsWith(statsPath));
   const ideasPath = resolve("/ideas");
   const onIdeas = $derived(page.url.pathname.startsWith(ideasPath));
-  const testersPath = resolve("/testers");
-  const onTesters = $derived(page.url.pathname.startsWith(testersPath));
+  const opinionsPath = resolve("/opinions");
+  const onOpinions = $derived(page.url.pathname.startsWith(opinionsPath));
   const knowledgePath = resolve("/knowledge");
   const onKnowledge = $derived(page.url.pathname.startsWith(knowledgePath));
 
@@ -105,8 +105,8 @@
         <a aria-current={onIdeas ? "page" : undefined} href={ideasPath}
           >Pomysły</a
         >
-        <a aria-current={onTesters ? "page" : undefined} href={testersPath}
-          >Testerzy</a
+        <a aria-current={onOpinions ? "page" : undefined} href={opinionsPath}
+          >Opinie i&nbsp;zgłoszenia</a
         >
         <a aria-current={onStats ? "page" : undefined} href={statsPath}
           >Statystyki</a
@@ -201,5 +201,13 @@
 
   .signout:hover {
     background: color-mix(in oklab, var(--hm-paper) 60%, transparent);
+  }
+
+  @media (max-width: 899px), (pointer: coarse) {
+    .nav a,
+    .signout {
+      height: 44px;
+      min-height: 44px;
+    }
   }
 </style>

@@ -161,6 +161,12 @@
     color: var(--hm-ink-soft);
   }
 
+  @media (max-width: 899px), (pointer: coarse) {
+    button {
+      min-height: 44px;
+    }
+  }
+
   .sep {
     height: 1px;
     margin: 4px 8px;

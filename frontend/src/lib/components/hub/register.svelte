@@ -60,6 +60,7 @@
 
 <style>
   .rows {
+    position: relative;
     min-height: 0;
     padding: 0 0 8px;
     margin: 0;

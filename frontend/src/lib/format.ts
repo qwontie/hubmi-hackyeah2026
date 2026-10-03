@@ -23,11 +23,13 @@ export function clock(iso: string): string {
 }
 
 export function dayWords(iso: string): string {
-  return new Date(iso).toLocaleDateString("pl-PL", {
-    day: "numeric",
-    month: "long",
-    timeZone: ZONE,
-  });
+  return new Date(iso)
+    .toLocaleDateString("pl-PL", {
+      day: "numeric",
+      month: "long",
+      timeZone: ZONE,
+    })
+    .replace(" ", "\u00a0");
 }
 
 function dayKey(date: Date): string {
