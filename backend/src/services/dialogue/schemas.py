@@ -5,11 +5,14 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from utils.db.models import (
+    FeedbackKind,
     IdeaStatus,
     MessageDelivery,
     MessageDirection,
     NeedOrigin,
     NeedStatus,
+    SignupStatus,
+    TesterRole,
 )
 
 REPLY_MAX = 5000
@@ -177,3 +180,53 @@ class PublicIdeaThread(BaseModel):
     idea: PublicIdea
     messages: list[PublicMessage]
     can_email: bool
+
+
+class ContactInnovation(BaseModel):
+    slug: str
+    title: str
+
+
+class ContactNeed(BaseModel):
+    id: uuid.UUID
+    number: int | None
+    title: str | None
+    status: NeedStatus
+    powiat: str | None
+    created_at: datetime
+
+
+class ContactIdea(BaseModel):
+    id: uuid.UUID
+    number: int | None
+    title: str
+    status: IdeaStatus
+    powiat: str | None
+    created_at: datetime
+
+
+class ContactSignup(BaseModel):
+    id: uuid.UUID
+    innovation: ContactInnovation
+    who: TesterRole
+    organization: str | None
+    powiat: str | None
+    note: str
+    status: SignupStatus
+    created_at: datetime
+
+
+class ContactFeedback(BaseModel):
+    id: uuid.UUID
+    innovation: ContactInnovation
+    need_id: uuid.UUID
+    kind: FeedbackKind
+    created_at: datetime
+
+
+class ContactProfile(BaseModel):
+    email: str
+    needs: list[ContactNeed]
+    ideas: list[ContactIdea]
+    test_signups: list[ContactSignup]
+    feedback: list[ContactFeedback]
