@@ -211,13 +211,14 @@
       </a>
       <header class="grid gap-1.5">
         <label class="sr-only" for="f-title">Tytuł</label>
-        <input
+        <textarea
           class="title"
           id="f-title"
           maxlength="200"
           required
+          rows="1"
           bind:value={draft.title}
-        >
+        ></textarea>
         <p class="text-[13px] text-hm-ink-soft" id="innovation-title">
           {detail.category.name}
           ·
@@ -337,6 +338,10 @@
   }
 
   .title {
+    display: block;
+    resize: none;
+    field-sizing: content;
+    line-height: 1.25;
     width: 100%;
     padding: 2px 0;
     font-size: 22px;

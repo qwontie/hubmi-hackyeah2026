@@ -18,6 +18,10 @@ const TOPICS = [
   "idea.updated",
   "feedback.created",
   "test_signup.created",
+  "knowledge.import.progress",
+  "knowledge.import.finished",
+  "material.updated",
+  "challenge.updated",
 ] as const;
 
 export type Topic = (typeof TOPICS)[number];

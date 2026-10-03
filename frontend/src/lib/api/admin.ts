@@ -356,3 +356,92 @@ export const listSignups = () =>
 
 export const setSignupStatus = (id: string, status: SignupStatus) =>
   api.patch<AdminTestSignup>(`/admin/test-signups/${id}`, { status });
+
+export interface Ref {
+  name: string;
+  slug: string;
+}
+
+export interface Figure {
+  document_title: string;
+  document_url: string;
+  label: string;
+  page: number;
+  quote: string;
+  scope: string;
+  source_title: string;
+  unit: string | null;
+  value: string;
+  year: number | null;
+}
+
+export interface AdminChallenge {
+  area: Ref;
+  description: string;
+  edited_fields: string[];
+  figures: Figure[];
+  id: string;
+  position: number;
+  slug: string;
+  source: { pages: number[]; title: string; url: string };
+  status: "draft" | "published";
+  summary: string;
+  title: string;
+  verified: boolean;
+  verified_at: string | null;
+  verified_by: string | null;
+}
+
+export interface AdminMaterial {
+  edited_fields: string[];
+  file_size: number | null;
+  file_url: string;
+  id: string;
+  kind: Ref;
+  pages: number | null;
+  source_url: string | null;
+  status: "draft" | "published";
+  summary: string;
+  summary_ai: boolean;
+  summary_state: string;
+  title: string;
+  topics: Ref[];
+  year: number | null;
+}
+
+export interface KnowledgeRun {
+  counters: Record<string, unknown>;
+  done: number;
+  error: string | null;
+  finished_at: string | null;
+  id: string;
+  started_at: string;
+  status: "running" | "done" | "failed";
+  step: string | null;
+  total: number;
+}
+
+async function allPages<T>(path: string): Promise<T[]> {
+  const first = await api.get<Page<T>>(path, { page: 1, per_page: 100 });
+  const pages = Math.ceil(first.total / 100);
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, pages - 1) }, (_, n) =>
+      api.get<Page<T>>(path, { page: n + 2, per_page: 100 })
+    )
+  );
+  return [first, ...rest].flatMap((p) => p.items);
+}
+
+export const listChallenges = () =>
+  allPages<AdminChallenge>("/admin/challenges");
+export const listMaterials = () => allPages<AdminMaterial>("/admin/materials");
+export const challengeAreas = () =>
+  api.get<(Ref & { count: number })[]>("/challenges/areas");
+export const patchChallenge = (id: string, body: Record<string, unknown>) =>
+  api.patch<AdminChallenge>(`/admin/challenges/${id}`, body);
+export const patchMaterial = (id: string, body: Record<string, unknown>) =>
+  api.patch<AdminMaterial>(`/admin/materials/${id}`, body);
+export const runKnowledgeImport = () =>
+  api.post<{ run_id: string }>("/admin/knowledge/import/run");
+export const knowledgeRuns = () =>
+  api.get<KnowledgeRun[]>("/admin/knowledge/import/runs", { limit: 3 });

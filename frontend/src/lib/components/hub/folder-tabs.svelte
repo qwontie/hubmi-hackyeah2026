@@ -13,7 +13,7 @@
   } = $props();
 
   const height = (tab: FolderTab) =>
-    tab.id === "all" ? 84 : Math.min(64 + tab.size * 3, 140);
+    tab.id === "all" ? 84 : Math.min(76 + tab.size * 2, 140);
 </script>
 
 <ul class="tabs">

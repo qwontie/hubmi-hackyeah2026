@@ -26,6 +26,8 @@
   const onIdeas = $derived(page.url.pathname.startsWith(ideasPath));
   const testersPath = resolve("/testers");
   const onTesters = $derived(page.url.pathname.startsWith(testersPath));
+  const knowledgePath = resolve("/knowledge");
+  const onKnowledge = $derived(page.url.pathname.startsWith(knowledgePath));
 
   const liveWords: Record<string, string> = {
     connecting: "Łączenie…",
@@ -76,6 +78,9 @@
       </a>
       <a aria-current={onLibrary ? "page" : undefined} href={libraryPath}
         >Biblioteka</a
+      >
+      <a aria-current={onKnowledge ? "page" : undefined} href={knowledgePath}
+        >Wiedza</a
       >
       <a aria-current={onIdeas ? "page" : undefined} href={ideasPath}
         >Pomysły</a
