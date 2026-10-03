@@ -12,13 +12,21 @@ const securityHeaders = {
   "x-content-type-options": "nosniff",
 };
 
-const proxy = (request: Request, url: URL) => {
+const proxy = async (request: Request, url: URL) => {
   const target = `${apiProxy}${url.pathname}${url.search}`;
-  return fetch(target, {
-    body: request.body,
-    headers: request.headers,
+  const headers = new Headers(request.headers);
+  headers.delete("host");
+  headers.delete("accept-encoding");
+  const hasBody = request.method !== "GET" && request.method !== "HEAD";
+  const response = await fetch(target, {
+    body: hasBody ? await request.arrayBuffer() : undefined,
+    headers,
     method: request.method,
     redirect: "manual",
+  });
+  return new Response(await response.arrayBuffer(), {
+    headers: response.headers,
+    status: response.status,
   });
 };
 
