@@ -1,5 +1,6 @@
 import Head from "expo-router/head";
 import { Check, Clock, MapPin } from "lucide-react-native";
+import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { MapPowiat } from "@/api/types";
 import { APP_NAME } from "@/config";
@@ -134,6 +135,20 @@ function PowiatPanel({
 export default function MapScreen() {
   const { colors, wide, highContrast } = useTheme();
   const { data, load, projection, report, retry, select, selected } = useMap();
+  const opened = useRef(false);
+
+  useEffect(() => {
+    if (!data || opened.current) {
+      return;
+    }
+    opened.current = true;
+    const needsOf = (powiat: MapPowiat) =>
+      (powiat.needs_open ?? 0) + (powiat.needs_answered ?? 0);
+    const [busiest] = [...data.powiats].sort((a, b) => needsOf(b) - needsOf(a));
+    if (busiest && needsOf(busiest) > 0) {
+      select(busiest.slug);
+    }
+  }, [data, select]);
   const counts: Record<string, MapCount> = Object.fromEntries(
     (data?.powiats ?? []).map((powiat) => [powiat.slug, countOf(powiat)])
   );
@@ -157,7 +172,7 @@ export default function MapScreen() {
           width={projection.width}
         />
         <Txt tone="soft" variant="small">
-          {`Ciemniejszy powiat to więcej zgłoszeń, liczba pokazuje ile. ${MAP_ATTRIBUTION}.`}
+          {`Wybierz powiat na mapie albo z listy. Ciemniejszy to więcej zgłoszeń. ${MAP_ATTRIBUTION}.`}
         </Txt>
       </View>
     ) : null;

@@ -1,22 +1,10 @@
 import { Link } from "expo-router";
-import { ArrowRight } from "lucide-react-native";
 import { type Ref, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  type Text,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, type Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { MatchResponse, MatchResult } from "@/api/types";
-import { CategoryIcon } from "@/features/category-icon";
+import type { MatchResponse } from "@/api/types";
 import { ContactForm } from "@/features/contact-form";
-import {
-  InnovationRow,
-  innovationHref,
-  metaLine,
-} from "@/features/innovation-row";
+import { CardGrid, InnovationCard } from "@/features/innovation-card";
 import { ReadAloudPill } from "@/features/read-aloud-button";
 import { Stamp } from "@/features/stamp";
 import { matchSpeech, resultsTitle, similarSentence } from "@/hooks/use-match";
@@ -46,7 +34,7 @@ function NothingFits({
       <Notice title="Przekazaliśmy to do ROPS" tone="success">
         <Txt>
           {done.email
-            ? `Pracownik ROPS przeczyta Twój opis i odpisze na adres ${done.email}.`
+            ? `Pracownik ROPS przeczyta opis i odpisze na adres ${done.email}.`
             : "Pracownik ROPS przeczyta Twój opis. Jeśli chcesz dostać odpowiedź, dodaj e-mail w zakładce Zgłoszenia."}
         </Txt>
         <Link href="/zgloszenia" style={{ color: colors.stamp }}>
@@ -81,70 +69,6 @@ function NothingFits({
         <Button label="Nic nie pasuje" onPress={() => setOpen(true)} />
       )}
     </Sheet>
-  );
-}
-
-function BestMatch({
-  result,
-  needId,
-}: {
-  result: MatchResult;
-  needId: string;
-}) {
-  const { colors, type, wide, reduceMotion } = useTheme();
-  const [hovered, setHovered] = useState(false);
-  const { innovation } = result;
-  return (
-    <Link asChild href={innovationHref(innovation.slug, needId)}>
-      <Pressable
-        onHoverIn={() => setHovered(true)}
-        onHoverOut={() => setHovered(false)}
-        role="link"
-        style={{
-          transform: [{ translateY: hovered && !reduceMotion ? -3 : 0 }],
-        }}
-      >
-        <Sheet raised style={styles.best}>
-          <Txt
-            style={{
-              fontSize: wide ? type.h1 : type.h2,
-              letterSpacing: (wide ? type.h1 : type.h2) * -0.032,
-              lineHeight: Math.round((wide ? type.h1 : type.h2) * 1.08),
-            }}
-            weight="600"
-          >
-            {innovation.title}
-          </Txt>
-          <Txt tone="soft" variant="lead">
-            {result.reason}
-          </Txt>
-          <View style={styles.meta}>
-            <CategoryIcon
-              color={colors.inkSoft}
-              size={18}
-              slug={innovation.category.slug}
-            />
-            <Txt style={styles.metaText} tone="soft" variant="small">
-              {metaLine(innovation)}
-            </Txt>
-          </View>
-          <View
-            style={[
-              styles.cta,
-              {
-                backgroundColor: hovered ? colors.stampPress : colors.stamp,
-              },
-              wide && styles.ctaWide,
-            ]}
-          >
-            <Txt tone="onStamp" variant="lead" weight="600">
-              Zobacz rozwiązanie
-            </Txt>
-            <ArrowRight aria-hidden color={colors.onStamp} size={22} />
-          </View>
-        </Sheet>
-      </Pressable>
-    </Link>
   );
 }
 
@@ -217,10 +141,7 @@ export function MatchResults({
   );
 
   const list = (
-    <View
-      role="main"
-      style={[styles.body, wide ? styles.bodyWide : styles.bodyNarrow]}
-    >
+    <View style={[styles.body, wide ? styles.bodyWide : styles.bodyNarrow]}>
       <Heading
         level={2}
         nativeID="results-title"
@@ -239,27 +160,30 @@ export function MatchResults({
 
       {first ? (
         <Rise delay={settle + 60}>
-          <BestMatch needId={response.need.id} result={first} />
+          <InnovationCard
+            featured
+            index={1}
+            innovation={first.innovation}
+            needId={response.need.id}
+            reason={first.reason}
+          />
         </Rise>
       ) : null}
 
       {rest.length > 0 ? (
-        <View role="list" style={styles.rows}>
-          {rest.map((result, index) => (
-            <Rise
-              delay={settle + 160 + index * motion.stagger}
-              key={result.innovation.slug}
-            >
-              <InnovationRow
+        <Rise delay={settle + 60 + motion.stagger * 2}>
+          <CardGrid>
+            {rest.map((result, index) => (
+              <InnovationCard
                 index={index + 2}
                 innovation={result.innovation}
-                last={index === rest.length - 1}
+                key={result.innovation.slug}
                 needId={response.need.id}
                 reason={result.reason}
               />
-            </Rise>
-          ))}
-        </View>
+            ))}
+          </CardGrid>
+        </Rise>
       ) : null}
 
       <NothingFits empty={empty} response={response} />
@@ -268,7 +192,10 @@ export function MatchResults({
 
   if (wide) {
     return (
-      <View style={[styles.split, { backgroundColor: colors.ground }]}>
+      <View
+        role="main"
+        style={[styles.split, { backgroundColor: colors.ground }]}
+      >
         {band}
         <ScrollView
           contentContainerStyle={styles.scrollWide}
@@ -289,8 +216,10 @@ export function MatchResults({
       keyboardShouldPersistTaps="handled"
       style={[styles.fill, { backgroundColor: colors.ground }]}
     >
-      {band}
-      {list}
+      <View role="main">
+        {band}
+        {list}
+      </View>
     </ScrollView>
   );
 }
@@ -323,6 +252,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     paddingTop: WIDE_TOP,
     width: 440,
+    zIndex: 2,
   },
   best: {
     gap: space.md,
@@ -396,6 +326,8 @@ const styles = StyleSheet.create({
     right: space.xl - 2,
   },
   stampWide: {
-    marginTop: "auto",
+    bottom: 64,
+    position: "absolute",
+    right: -64,
   },
 });

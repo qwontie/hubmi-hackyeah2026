@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +17,7 @@ import { api } from "@/api/client";
 import type { Category } from "@/api/types";
 import { TEXT_MAX } from "@/config";
 import { CategoryIcon } from "@/features/category-icon";
+import { EntryChoice } from "@/features/entry-choice";
 import { MatchResults } from "@/features/match-results";
 import { Sky, skyHeight } from "@/features/sky";
 import { charactersLeft, useMatch } from "@/hooks/use-match";
@@ -37,7 +39,7 @@ import { Glass } from "@/ui/glass";
 import { nightAttr } from "@/ui/night";
 import { Notice } from "@/ui/notice";
 import { nativeDriver } from "@/ui/rise";
-import { WIDE_TOP } from "@/ui/screen";
+import { BackPill, WIDE_TOP } from "@/ui/screen";
 import { Select } from "@/ui/select";
 import { AccessButton, Brand } from "@/ui/shell";
 import { Heading, Txt } from "@/ui/text";
@@ -83,6 +85,21 @@ function Voice({ recognition }: { recognition: Recognition }) {
         {listening ? "Zakończ dyktowanie" : "Powiedz"}
       </Txt>
     </Pressable>
+  );
+}
+
+function KeyboardDictation() {
+  const { colors } = useTheme();
+  if (Platform.OS === "web") {
+    return <View />;
+  }
+  return (
+    <View style={styles.hint}>
+      <Mic aria-hidden color={colors.onNightSoft} size={22} />
+      <Txt style={styles.errorText} tone="onNightSoft" variant="small">
+        Można dyktować z klawiatury
+      </Txt>
+    </View>
   );
 }
 
@@ -238,8 +255,17 @@ type Match = ReturnType<typeof useMatch>;
 function ProblemField({ match }: { match: Match }) {
   const { colors, wide, type, lineHeight } = useTheme();
   const [focused, setFocused] = useState(false);
-  const { fieldError, inputRef, loading, recognition, setText, text } = match;
-  const left = charactersLeft(text.length);
+  const powiats = usePowiats();
+  const {
+    fieldError,
+    inputRef,
+    loading,
+    powiat,
+    recognition,
+    setPowiat,
+    setText,
+    text,
+  } = match;
   const inputSize = wide ? type.h3 : type.lead;
   return (
     <View
@@ -277,16 +303,24 @@ function ProblemField({ match }: { match: Match }) {
           value={text}
         />
         <View style={styles.fieldFoot}>
-          <Voice recognition={recognition} />
-          {left ? (
-            <Txt
-              aria-live="polite"
-              tone={left.over ? "onNight" : "onNightSoft"}
-              variant="small"
-              weight={left.over ? "600" : "400"}
-            >
-              {left.text}
-            </Txt>
+          {recognition.supported ? (
+            <Voice recognition={recognition} />
+          ) : (
+            <KeyboardDictation />
+          )}
+          {powiats.options.length > 0 ? (
+            <View style={styles.powiat}>
+              <Select
+                compact
+                emptyLabel="Powiat: dowolny"
+                label="Powiat"
+                night
+                onChange={setPowiat}
+                optional
+                options={powiats.options}
+                value={powiat}
+              />
+            </View>
           ) : null}
         </View>
       </Glass>
@@ -296,9 +330,19 @@ function ProblemField({ match }: { match: Match }) {
 
 function FieldFeedback({ match }: { match: Match }) {
   const { colors } = useTheme();
-  const { fieldError, recognition } = match;
+  const { fieldError, recognition, text } = match;
+  const left = charactersLeft(text.length);
   return (
     <View aria-live="polite">
+      {left ? (
+        <Txt
+          tone={left.over ? "onNight" : "onNightSoft"}
+          variant="small"
+          weight={left.over ? "600" : "400"}
+        >
+          {left.text}
+        </Txt>
+      ) : null}
       {fieldError ? (
         <View style={styles.error}>
           <CircleAlert aria-hidden color={colors.onNight} size={24} />
@@ -314,7 +358,7 @@ function FieldFeedback({ match }: { match: Match }) {
       ) : null}
       {recognition.listening ? (
         <Txt tone="onNight" weight="500">
-          Słucham. Proszę mówić po polsku, tekst pojawi się w polu.
+          Słucham. Mów po polsku, tekst pojawi się w polu.
         </Txt>
       ) : null}
       {recognition.error ? (
@@ -326,7 +370,16 @@ function FieldFeedback({ match }: { match: Match }) {
   );
 }
 
-function Intro({ loading }: { loading: boolean }) {
+const introTitle = (asking: boolean, wide: boolean) => {
+  if (!asking) {
+    return "Z czym przychodzisz?";
+  }
+  return wide
+    ? "Opowiedz,\nco się dzieje."
+    : "Opowiedz, co\u00a0się\u00a0dzieje.";
+};
+
+function Intro({ asking, loading }: { asking: boolean; loading: boolean }) {
   const { wide, type } = useTheme();
   const { width } = useWindowDimensions();
   const display = wide
@@ -347,20 +400,20 @@ function Intro({ loading }: { loading: boolean }) {
           wide && styles.center,
         ]}
       >
-        {wide
-          ? "Proszę opowiedzieć,\nco się dzieje."
-          : "Proszę opowiedzieć, co\u00a0się\u00a0dzieje."}
+        {introTitle(asking, wide)}
       </Heading>
       <View aria-live="polite">
-        <Txt
-          style={wide ? styles.center : undefined}
-          tone="onNightSoft"
-          variant="lead"
-        >
-          {loading
-            ? "Szukamy w bibliotece ROPS. To trwa zwykle kilka sekund."
-            : "Znajdziemy rozwiązania, które już działają w Małopolsce."}
-        </Txt>
+        {asking ? (
+          <Txt
+            style={wide ? styles.center : undefined}
+            tone="onNightSoft"
+            variant="lead"
+          >
+            {loading
+              ? "Szukamy w bibliotece ROPS. To trwa zwykle kilka sekund."
+              : "Znajdziemy rozwiązania, które już działają w Małopolsce."}
+          </Txt>
+        ) : null}
       </View>
     </View>
   );
@@ -368,24 +421,10 @@ function Intro({ loading }: { loading: boolean }) {
 
 function Actions({ match }: { match: Match }) {
   const { wide } = useTheme();
-  const powiats = usePowiats();
-  const { blocked, loading, powiat, setPowiat, state, submit } = match;
+  const { blocked, loading, state, submit } = match;
   return (
     <>
       <View style={[styles.actions, wide && styles.actionsWide]}>
-        {powiats.options.length > 0 ? (
-          <View style={wide ? styles.powiatWide : undefined}>
-            <Select
-              emptyLabel="Nie wybieram"
-              label="Powiat"
-              night
-              onChange={setPowiat}
-              optional
-              options={powiats.options}
-              value={powiat}
-            />
-          </View>
-        ) : null}
         <Button
           busy={loading}
           disabled={blocked}
@@ -423,8 +462,22 @@ export default function MatchScreen() {
   const insets = useSafeAreaInsets();
   const categories = useResource("categories", loadCategories);
   const match = useMatch();
-  const { loading, reset, resultsRef, state, text } = match;
+  const { inputRef, loading, powiat, reset, resultsRef, state, text } = match;
+  const [chosen, setChosen] = useState(false);
   const done = state.kind === "done";
+  const asking =
+    chosen || powiat !== "" || text.length > 0 || state.kind !== "idle";
+
+  useEffect(() => {
+    if (chosen) {
+      inputRef.current?.focus();
+    }
+  }, [chosen, inputRef]);
+
+  const leave = () => {
+    setChosen(false);
+    reset();
+  };
   const { dawn, dawning, rise } = useDawn(loading, done);
   useSetChromeTone(chromeTone(done, dawning, wide));
 
@@ -468,15 +521,22 @@ export default function MatchScreen() {
               <AccessButton night />
             </View>
           )}
-          <Intro loading={loading} />
-          <ProblemField match={match} />
-          <FieldFeedback match={match} />
-          <Actions match={match} />
-          <Topics
-            categories={
-              categories.state.kind === "done" ? categories.state.data : []
-            }
-          />
+          {asking ? <BackPill label="Wróć" night onPress={leave} /> : null}
+          <Intro asking={asking} loading={loading} />
+          {asking ? (
+            <>
+              <ProblemField match={match} />
+              <FieldFeedback match={match} />
+              <Actions match={match} />
+              <Topics
+                categories={
+                  categories.state.kind === "done" ? categories.state.data : []
+                }
+              />
+            </>
+          ) : (
+            <EntryChoice onProblem={() => setChosen(true)} />
+          )}
         </View>
       </ScrollView>
     </View>
@@ -488,9 +548,7 @@ const styles = StyleSheet.create({
     gap: space.lg,
   },
   actionsWide: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    justifyContent: "center",
+    alignItems: "center",
   },
   center: {
     textAlign: "center",
@@ -553,14 +611,23 @@ const styles = StyleSheet.create({
   fieldFoot: {
     alignItems: "center",
     flexDirection: "row",
+    gap: space.sm,
     justifyContent: "space-between",
-    paddingRight: space.md,
+    paddingBottom: space.sm,
+    paddingHorizontal: space.md + 2,
   },
   fieldRing: {
     borderRadius: radius.field + 4,
     borderWidth: 2,
     margin: -4,
     padding: 2,
+  },
+  hint: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
+    gap: space.sm,
+    minHeight: minTarget + 4,
   },
   input: {
     paddingHorizontal: space.md + 2,
@@ -571,8 +638,10 @@ const styles = StyleSheet.create({
     gap: space.md + 2,
     marginTop: space.md,
   },
-  powiatWide: {
-    width: 320,
+  powiat: {
+    flexShrink: 1,
+    maxWidth: 200,
+    minWidth: 110,
   },
   root: {
     flex: 1,

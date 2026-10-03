@@ -10,7 +10,7 @@ import { minTarget, space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
-import { Screen } from "@/ui/screen";
+import { PageHead, Screen } from "@/ui/screen";
 import { Select } from "@/ui/select";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
@@ -40,16 +40,17 @@ export default function MaterialsScreen() {
       <Head>
         <title>{`Raporty i materiały ROPS · ${APP_NAME}`}</title>
       </Head>
-      <Sheet raised>
+      <PageHead>
         <Heading level={1}>Raporty i materiały ROPS</Heading>
         <View style={[styles.group, wide && styles.searchWide]}>
           <View style={styles.flex}>
             <TextField
               enterKeyHint="search"
+              hideLabel
               label="Szukaj w materiałach"
               onChangeText={setDraft}
               onSubmitEditing={search}
-              placeholder="Na przykład: piecza zastępcza"
+              placeholder="np. piecza zastępcza"
               returnKeyType="search"
               value={draft}
             />
@@ -97,7 +98,7 @@ export default function MaterialsScreen() {
             value={topic}
           />
         ) : null}
-      </Sheet>
+      </PageHead>
 
       <Sheet>
         {list.error ? (

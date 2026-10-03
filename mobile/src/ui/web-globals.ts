@@ -30,6 +30,8 @@ textarea::placeholder, input::placeholder { opacity: 1; }
 [tabindex="-1"]:focus-visible { outline: none !important; }
 [role="heading"], h1, h2, h3 { scroll-margin-top: 24px; }
 [role="heading"][aria-level="1"], #results-title { scroll-margin-top: 100vh; }
+[role="heading"] { text-wrap: balance; }
+[dir="auto"] { text-wrap: pretty; }
 textarea:focus-visible, input:focus-visible { outline: none !important; }
 select:focus-visible { outline-offset: 1px !important; }
 a { text-underline-offset: 0.18em; text-decoration-thickness: 1px; }

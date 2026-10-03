@@ -13,6 +13,7 @@ export interface SelectOption {
 }
 
 export interface SelectProps {
+  compact?: boolean;
   emptyLabel?: string;
   error?: string | null;
   label: string;
@@ -28,6 +29,17 @@ const fieldEdge = (
   colors: { bad: string; ruleStrong: string }
 ) => (error ? colors.bad : colors.ruleStrong);
 
+const triggerFill = (
+  compact: boolean,
+  night: boolean,
+  colors: { nightDeep: string; sunk: string }
+) => {
+  if (compact && night) {
+    return "transparent";
+  }
+  return night ? colors.nightDeep : colors.sunk;
+};
+
 export function Select({
   label,
   optional = false,
@@ -37,6 +49,7 @@ export function Select({
   emptyLabel,
   error,
   night = false,
+  compact = false,
 }: SelectProps) {
   const { colors, borderWidth } = useTheme();
   const ink = night ? colors.onNight : colors.ink;
@@ -47,26 +60,37 @@ export function Select({
     : options;
   const selected = all.find((option) => option.value === value);
   return (
-    <View style={styles.wrap}>
-      <Txt style={{ color: ink }} variant="label" weight="600">
-        {label}
-        {optional ? <Txt style={{ color: soft }}> (nieobowiązkowo)</Txt> : null}
-      </Txt>
+    <View style={compact ? undefined : styles.wrap}>
+      {compact ? null : (
+        <Txt style={{ color: ink }} variant="label" weight="600">
+          {label}
+          {optional ? (
+            <Txt style={{ color: soft }}> (nieobowiązkowo)</Txt>
+          ) : null}
+        </Txt>
+      )}
       <Pressable
         accessibilityHint="Otwiera listę do wyboru"
         accessibilityLabel={`${label}: ${selected?.label ?? "nie wybrano"}`}
         onPress={() => setOpen(true)}
         role="button"
         style={[
-          styles.trigger,
+          compact ? styles.pill : styles.trigger,
           {
-            backgroundColor: night ? colors.nightDeep : colors.sunk,
+            backgroundColor: triggerFill(compact, night, colors),
             borderColor: night ? soft : fieldEdge(error, colors),
             borderWidth: error ? 2 : Math.max(borderWidth, 1.5),
           },
         ]}
       >
-        <Txt style={{ color: ink }}>{selected?.label ?? "Wybierz"}</Txt>
+        <Txt
+          numberOfLines={1}
+          style={[compact && styles.pillText, { color: ink }]}
+          variant={compact ? "label" : "body"}
+          weight={compact ? "500" : "400"}
+        >
+          {selected?.label ?? "Wybierz"}
+        </Txt>
         <ChevronDown aria-hidden color={soft} size={22} />
       </Pressable>
       {error ? (
@@ -145,6 +169,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     minHeight: minTarget + 8,
     paddingHorizontal: space.lg,
+  },
+  pill: {
+    alignItems: "center",
+    borderRadius: radius.pill,
+    flexDirection: "row",
+    gap: space.sm,
+    maxWidth: 210,
+    minHeight: minTarget + 4,
+    paddingHorizontal: space.lg,
+  },
+  pillText: {
+    flexShrink: 1,
   },
   trigger: {
     alignItems: "center",

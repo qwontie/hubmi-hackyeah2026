@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import Svg, { G, Path, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, G, Path, Text as SvgText } from "react-native-svg";
 import type { PowiatShape } from "@/lib/geo";
 import { useTheme } from "@/theme/settings";
 import { fonts } from "@/theme/tokens";
@@ -40,7 +40,8 @@ export function ProblemMap({
   shapes,
   width,
 }: ProblemMapProps) {
-  const { colors, highContrast } = useTheme();
+  const { colors, highContrast, type } = useTheme();
+  const scale = type.body / 19;
   const most = Math.max(
     1,
     ...Object.values(counts).map((count) => count.open + count.answered)
@@ -80,14 +81,22 @@ export function ProblemMap({
           const active = shape.slug === selected;
           return (
             <G key={shape.slug} pointerEvents="none">
+              <Circle
+                cx={shape.center.x}
+                cy={shape.center.y}
+                fill={colors.paper}
+                r={36 * scale}
+                stroke={active || highContrast ? colors.ink : colors.stamp}
+                strokeWidth={3}
+              />
               <SvgText
-                fill={active ? colors.onNight : colors.ink}
+                fill={colors.ink}
                 fontFamily={fonts.mono}
-                fontSize={34}
+                fontSize={42 * scale}
                 fontWeight="600"
                 textAnchor="middle"
                 x={shape.center.x}
-                y={shape.center.y + 12}
+                y={shape.center.y + 15 * scale}
               >
                 {total}
               </SvgText>

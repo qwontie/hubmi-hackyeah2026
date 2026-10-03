@@ -5,28 +5,25 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
 import { ContactForm } from "@/features/contact-form";
+import { Stamp } from "@/features/stamp";
 import { formatDate } from "@/lib/plural";
 import { forgetNeed, type StoredNeed, useStoredNeeds } from "@/storage/needs";
 import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { Notice } from "@/ui/notice";
-import { Screen } from "@/ui/screen";
+import { PageHead, Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { AccessButton } from "@/ui/shell";
 import { Heading, Txt } from "@/ui/text";
 
-const numberLabel = (need: StoredNeed) =>
-  need.number ? `nr HUB/${String(need.number).padStart(4, "0")}` : null;
-
-function NeedEntry({ need }: { need: StoredNeed }) {
-  const { colors } = useTheme();
+function NeedEntry({ need, last }: { need: StoredNeed; last: boolean }) {
+  const { colors, wide } = useTheme();
   const [adding, setAdding] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
   const [confirmForget, setConfirmForget] = useState(false);
   const meta = [
-    numberLabel(need),
-    `wysłane ${formatDate(need.createdAt)}`,
+    need.number ? null : `wysłane ${formatDate(need.createdAt)}`,
     need.clusterTitle ? `temat: ${need.clusterTitle}` : null,
   ]
     .filter(Boolean)
@@ -34,14 +31,26 @@ function NeedEntry({ need }: { need: StoredNeed }) {
   return (
     <View
       role="listitem"
-      style={[styles.entry, { borderBottomColor: colors.rule }]}
+      style={[
+        styles.entry,
+        { borderBottomColor: colors.rule, borderBottomWidth: last ? 0 : 1 },
+      ]}
     >
-      <Txt tone="soft" variant="detail">
-        {meta}
-      </Txt>
-      <Txt weight="500">
+      <Txt variant="lead" weight="500">
         {need.text || "Zgłoszenie otwarte z linku od ROPS."}
       </Txt>
+      {need.number ? (
+        <Stamp
+          at={new Date(need.createdAt)}
+          number={need.number}
+          word="PRZYJĘTO"
+        />
+      ) : null}
+      {meta ? (
+        <Txt tone="soft" variant="detail">
+          {meta}
+        </Txt>
+      ) : null}
       {need.contactEmail ? (
         <Txt tone="soft">Odpowiedź przyjdzie na adres {need.contactEmail}.</Txt>
       ) : null}
@@ -66,6 +75,7 @@ function NeedEntry({ need }: { need: StoredNeed }) {
       ) : null}
       <View style={styles.actions}>
         <Button
+          fill={!wide}
           icon={MessageSquareText}
           label="Rozmowa z ROPS"
           onPress={() =>
@@ -78,8 +88,9 @@ function NeedEntry({ need }: { need: StoredNeed }) {
         />
         {need.contactEmail || adding ? null : (
           <Button
+            fill={!wide}
             icon={Mail}
-            label="Chcę dostać odpowiedź e-mailem"
+            label="Odpowiedź e-mailem"
             onPress={() => setAdding(true)}
           />
         )}
@@ -123,14 +134,11 @@ export default function SubmissionsScreen() {
       <Head>
         <title>{`Moje zgłoszenia · ${APP_NAME}`}</title>
       </Head>
-      <Sheet raised>
+      <PageHead>
         <View style={styles.intro}>
           <Heading level={1}>Moje zgłoszenia</Heading>
-          <Txt tone="soft">
-            Zgłoszenia wysłane z tego urządzenia. Nie trzeba zakładać konta.
-          </Txt>
         </View>
-      </Sheet>
+      </PageHead>
       {needs === null ? null : (
         <Sheet>
           {needs.length === 0 ? (
@@ -145,8 +153,12 @@ export default function SubmissionsScreen() {
             </View>
           ) : (
             <View role="list">
-              {needs.map((need) => (
-                <NeedEntry key={need.id} need={need} />
+              {needs.map((need, index) => (
+                <NeedEntry
+                  key={need.id}
+                  last={index === needs.length - 1}
+                  need={need}
+                />
               ))}
             </View>
           )}
@@ -170,8 +182,7 @@ const styles = StyleSheet.create({
     gap: space.lg,
   },
   entry: {
-    borderBottomWidth: 1,
-    gap: space.md,
+    gap: space.lg,
     paddingVertical: space.lg,
   },
   intro: {

@@ -24,6 +24,7 @@ const fieldBorder = (
 
 interface FieldProps extends Omit<TextInputProps, "style"> {
   error?: string | null;
+  hideLabel?: boolean;
   hint?: string;
   label: string;
   labelledBy?: string;
@@ -35,6 +36,7 @@ export const TextField = function TextField({
   hint,
   error,
   labelledBy,
+  hideLabel = false,
   large = false,
   multiline,
   ref,
@@ -52,7 +54,7 @@ export const TextField = function TextField({
   const fontSize = large ? type.lead : type.body;
   return (
     <View style={styles.wrap}>
-      {labelledBy ? null : (
+      {labelledBy || hideLabel ? null : (
         <Txt nativeID={labelId} variant="label" weight="600">
           {label}
         </Txt>
@@ -66,7 +68,7 @@ export const TextField = function TextField({
         accessibilityLabel={label}
         aria-describedby={describedBy || undefined}
         aria-invalid={error ? true : undefined}
-        aria-labelledby={labelledBy ?? labelId}
+        aria-labelledby={hideLabel ? undefined : (labelledBy ?? labelId)}
         multiline={multiline}
         onBlur={(event) => {
           setFocused(false);

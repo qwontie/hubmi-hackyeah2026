@@ -14,6 +14,7 @@ export function Select({
   emptyLabel,
   error,
   night = false,
+  compact = false,
 }: SelectProps) {
   const { colors, type, borderWidth } = useTheme();
   const ink = night ? colors.onNight : colors.ink;
@@ -21,6 +22,36 @@ export function Select({
   const edge = night ? soft : colors.ruleStrong;
   const id = useId();
   const errorId = `${id}-error`;
+  if (compact) {
+    return (
+      <select
+        aria-label={optional ? `${label} (nieobowiązkowo)` : label}
+        onChange={(event) => onChange(event.target.value)}
+        style={{
+          appearance: "auto",
+          background: night ? "transparent" : colors.sunk,
+          border: `1px solid ${edge}`,
+          borderRadius: radius.pill,
+          color: ink,
+          fontFamily: fonts["500"],
+          fontSize: type.label,
+          height: minTarget + 4,
+          maxWidth: 210,
+          minWidth: 0,
+          padding: `0 ${space.md}px`,
+          width: "100%",
+        }}
+        value={value}
+      >
+        {emptyLabel ? <option value="">{emptyLabel}</option> : null}
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
   return (
     <View style={styles.wrap}>
       <label htmlFor={id}>

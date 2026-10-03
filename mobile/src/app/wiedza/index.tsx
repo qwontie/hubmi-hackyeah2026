@@ -12,7 +12,7 @@ import { minTarget, space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
-import { Screen } from "@/ui/screen";
+import { PageHead, Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
@@ -38,22 +38,19 @@ export default function ChallengesScreen() {
       <Head>
         <title>{`Wyzwania Małopolski · ${APP_NAME}`}</title>
       </Head>
-      <Sheet raised>
+      <PageHead>
         <View style={styles.group}>
           <Heading level={1}>Wyzwania społeczne Małopolski</Heading>
-          <Txt tone="soft" variant="lead">
-            Najważniejsze problemy regionu według raportów ROPS w Krakowie,
-            każdy z liczbami i źródłem.
-          </Txt>
         </View>
         <View style={[styles.group, wide && styles.searchWide]}>
           <View style={styles.flex}>
             <TextField
               enterKeyHint="search"
+              hideLabel
               label="Szukaj wyzwania"
               onChangeText={setDraft}
               onSubmitEditing={search}
-              placeholder="Na przykład: samotność seniorów"
+              placeholder="np. samotność seniorów"
               returnKeyType="search"
               value={draft}
             />
@@ -96,7 +93,7 @@ export default function ChallengesScreen() {
           onPress={() => router.push("/materialy")}
           variant="quiet"
         />
-      </Sheet>
+      </PageHead>
 
       <Sheet>
         {list.error ? (

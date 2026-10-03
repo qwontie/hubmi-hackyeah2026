@@ -4,15 +4,14 @@ import { Compass, FileText, Search, X } from "lucide-react-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
 import { categoryIcon } from "@/features/category-icon";
-import { InnovationRow } from "@/features/innovation-row";
+import { CardGrid, InnovationCard } from "@/features/innovation-card";
 import { useLibrary } from "@/hooks/use-library";
 import { useTheme } from "@/theme/settings";
 import { minTarget, space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
-import { Screen } from "@/ui/screen";
-import { Sheet } from "@/ui/sheet";
+import { PageHead, Screen } from "@/ui/screen";
 import { AccessButton } from "@/ui/shell";
 import { Heading, Txt } from "@/ui/text";
 
@@ -39,16 +38,17 @@ export default function LibraryScreen() {
       <Head>
         <title>{`Biblioteka innowacji · ${APP_NAME}`}</title>
       </Head>
-      <Sheet raised>
+      <PageHead>
         <Heading level={1}>Biblioteka innowacji</Heading>
         <View style={[styles.search, wide && styles.searchWide]}>
           <View style={styles.searchField}>
             <TextField
               enterKeyHint="search"
+              hideLabel
               label="Szukaj w bibliotece"
               onChangeText={setDraft}
               onSubmitEditing={search}
-              placeholder="Na przykład: opieka wytchnieniowa"
+              placeholder="np. opieka wytchnieniowa"
               returnKeyType="search"
               value={draft}
             />
@@ -92,7 +92,7 @@ export default function LibraryScreen() {
             ))}
           </ScrollView>
         ) : null}
-      </Sheet>
+      </PageHead>
 
       <View style={styles.more}>
         <Button
@@ -100,16 +100,18 @@ export default function LibraryScreen() {
           label="Wyzwania Małopolski"
           onPress={() => router.push("/wiedza")}
           role="link"
+          variant="quiet"
         />
         <Button
           icon={FileText}
           label="Raporty i materiały"
           onPress={() => router.push("/materialy")}
           role="link"
+          variant="quiet"
         />
       </View>
 
-      <Sheet>
+      <View style={styles.results}>
         {list.error ? null : (
           <Txt aria-live="polite" tone="soft" weight="500">
             {summary}
@@ -130,15 +132,11 @@ export default function LibraryScreen() {
           </Txt>
         ) : null}
         {list.items.length > 0 ? (
-          <View role="list">
-            {list.items.map((item, index) => (
-              <InnovationRow
-                innovation={item}
-                key={item.slug}
-                last={index === list.items.length - 1}
-              />
+          <CardGrid>
+            {list.items.map((item) => (
+              <InnovationCard innovation={item} key={item.slug} />
             ))}
-          </View>
+          </CardGrid>
         ) : null}
         {hasMore ? (
           <Button
@@ -147,7 +145,7 @@ export default function LibraryScreen() {
             onPress={loadMore}
           />
         ) : null}
-      </Sheet>
+      </View>
     </Screen>
   );
 }
@@ -168,6 +166,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: space.sm,
+  },
+  results: {
+    gap: space.lg,
   },
   search: {
     gap: space.md,

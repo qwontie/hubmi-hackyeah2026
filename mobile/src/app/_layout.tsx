@@ -36,8 +36,12 @@ function Shell() {
         />
       </Head>
       <StatusBar style={night || dark ? "light" : "dark"} />
-      <SkipLink />
-      {Platform.OS === "web" ? <WideChrome /> : null}
+      {Platform.OS === "web" ? (
+        <View pointerEvents="box-none" role="banner" style={styles.banner}>
+          <SkipLink />
+          <WideChrome />
+        </View>
+      ) : null}
       <Stack
         screenOptions={{
           animation: reduceMotion ? "none" : "default",
@@ -74,6 +78,13 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
+  banner: {
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
+    zIndex: 20,
+  },
   root: {
     flex: 1,
   },

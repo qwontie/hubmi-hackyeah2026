@@ -65,6 +65,10 @@ export function BackPill({
   );
 }
 
+export function PageHead({ children }: { children: ReactNode }) {
+  return <View style={styles.head}>{children}</View>;
+}
+
 interface ScreenProps {
   back?: string;
   backFallback?: string;
@@ -93,7 +97,7 @@ export const Screen = function Screen({
   const bottomSpace =
     tabs && !wide ? tabBarSpace + insets.bottom : space.xxxl + insets.bottom;
   return (
-    <View style={[styles.root, { backgroundColor: colors.ground }]}>
+    <View role="main" style={[styles.root, { backgroundColor: colors.ground }]}>
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}
         keyboardShouldPersistTaps="handled"
@@ -123,9 +127,7 @@ export const Screen = function Screen({
             },
           ]}
         >
-          <View role="main" style={[styles.column, { maxWidth: width }]}>
-            {children}
-          </View>
+          <View style={[styles.column, { maxWidth: width }]}>{children}</View>
         </View>
       </ScrollView>
       {hasBar ? (
@@ -176,6 +178,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
+  },
+  head: {
+    gap: space.lg,
+    paddingBottom: space.sm,
+    paddingHorizontal: space.xs + 2,
   },
   hero: {
     borderBottomLeftRadius: radius.band,

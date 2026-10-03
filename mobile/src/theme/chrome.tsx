@@ -1,3 +1,4 @@
+import { useIsFocused } from "expo-router";
 import {
   createContext,
   type ReactNode,
@@ -29,13 +30,14 @@ export function ChromeProvider({ children }: { children: ReactNode }) {
 
 export const useChromeTone = () => useContext(ChromeContext).tone;
 
-export const useSetChromeTone = (tone: ChromeTone, active = true) => {
+export const useSetChromeTone = (tone: ChromeTone) => {
   const { setTone } = useContext(ChromeContext);
+  const focused = useIsFocused();
   useEffect(() => {
-    if (!active) {
+    if (!focused) {
       return;
     }
     setTone(tone);
     return () => setTone("day");
-  }, [tone, active, setTone]);
+  }, [tone, focused, setTone]);
 };

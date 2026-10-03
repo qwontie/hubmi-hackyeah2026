@@ -5,7 +5,7 @@ import { useSettings } from "@/theme/settings";
 import { space, textScales } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/field";
-import { Screen } from "@/ui/screen";
+import { PageHead, Screen } from "@/ui/screen";
 import { Sheet } from "@/ui/sheet";
 import { Heading, Txt } from "@/ui/text";
 
@@ -17,14 +17,11 @@ export default function AccessibilityScreen() {
       <Head>
         <title>{`Dostępność · ${APP_NAME}`}</title>
       </Head>
-      <Sheet raised>
+      <PageHead>
         <View style={styles.group}>
           <Heading level={1}>Dostępność</Heading>
-          <Txt tone="soft">
-            Ustawienia zapisują się na tym urządzeniu i działają od razu.
-          </Txt>
         </View>
-      </Sheet>
+      </PageHead>
       <Sheet>
         <View style={styles.group}>
           <Heading level={2} nativeID="text-size">
@@ -64,9 +61,9 @@ export default function AccessibilityScreen() {
         <View style={styles.group}>
           <Heading level={2}>Głos</Heading>
           <Txt>
-            Przy wynikach i opisach rozwiązań jest przycisk „Przeczytaj na
-            głos”. Opis problemu możesz też podyktować przyciskiem „Powiedz
-            zamiast pisać”, jeśli przeglądarka na to pozwala.
+            Przy wynikach i opisach rozwiązań jest przycisk „Posłuchaj”. Opis
+            problemu możesz też podyktować przyciskiem „Powiedz”, jeśli
+            przeglądarka na to pozwala.
           </Txt>
         </View>
       </Sheet>

@@ -183,7 +183,7 @@ export function Brand({ night = false }: { night?: boolean }) {
           <Txt
             style={[
               styles.sealText,
-              { color: night ? colors.stamp : colors.onStamp },
+              { color: night ? colors.night : colors.onStamp },
             ]}
             weight="700"
           >
@@ -289,12 +289,7 @@ export function WideChrome() {
     return null;
   }
   return (
-    <View
-      pointerEvents="box-none"
-      role="banner"
-      style={styles.wide}
-      {...nightAttr(night)}
-    >
+    <View pointerEvents="box-none" style={styles.wide} {...nightAttr(night)}>
       <Brand night={brandNight} />
       <Glass
         aria-label="Menu główne"

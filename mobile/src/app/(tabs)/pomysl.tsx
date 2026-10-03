@@ -13,7 +13,7 @@ import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { Checkbox, TextField } from "@/ui/field";
 import { Notice } from "@/ui/notice";
-import { Screen } from "@/ui/screen";
+import { PageHead, Screen } from "@/ui/screen";
 import { Select } from "@/ui/select";
 import { Sheet } from "@/ui/sheet";
 import { AccessButton } from "@/ui/shell";
@@ -32,8 +32,8 @@ function Created({
         <View style={[styles.block, styles.flex]}>
           <Heading level={2}>Pomysł trafił do ROPS</Heading>
           <Txt>
-            Pracownicy ROPS przeczytają fiszkę. Po akceptacji pomysł będzie
-            widoczny dla innych.
+            Pracownicy ROPS przeczytają pomysł. Po akceptacji będzie widoczny
+            dla innych.
           </Txt>
         </View>
         <Stamp at={new Date()} number={created.number} word="PRZYJĘTO" />
@@ -119,21 +119,23 @@ export default function IdeaScreen() {
         <Created created={created} onReset={reset} />
       ) : (
         <>
-          <Sheet raised>
+          <PageHead>
             <View style={styles.block}>
               <Heading level={1}>
                 Masz pomysł na zmianę w swojej okolicy?
               </Heading>
               <Txt tone="soft" variant="lead">
-                Opisz go krótko. ROPS w Krakowie przeczyta każdą fiszkę.
+                Opisz go krótko. ROPS w Krakowie przeczyta każdy pomysł.
               </Txt>
             </View>
+          </PageHead>
+          <Sheet>
             <TextField
               error={errors.title}
               label="Nazwa pomysłu"
               maxLength={120}
               onChangeText={(value) => set({ title: value })}
-              placeholder="Na przykład: Wspólne obiady dla seniorów"
+              placeholder="np. Wspólne obiady"
               value={form.title}
             />
             <TextField
@@ -149,7 +151,7 @@ export default function IdeaScreen() {
               label="Dla kogo jest ten pomysł?"
               maxLength={500}
               onChangeText={(value) => set({ forWhom: value })}
-              placeholder="Na przykład: samotni seniorzy w małej wsi"
+              placeholder="np. samotni seniorzy na wsi"
               value={form.forWhom}
             />
             {options ? (
