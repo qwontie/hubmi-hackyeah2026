@@ -132,6 +132,7 @@ export const Button = function Button({
         />
       ) : null}
       <Txt
+        style={styles.label}
         tone={selected ? "onStamp" : palette.text}
         variant={size === "large" ? "lead" : "label"}
         weight="600"
@@ -150,8 +151,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: space.sm,
     justifyContent: "center",
+    maxWidth: "100%",
   },
   fill: {
     alignSelf: "stretch",
+  },
+  label: {
+    flexShrink: 1,
+    paddingVertical: space.xs,
   },
 });

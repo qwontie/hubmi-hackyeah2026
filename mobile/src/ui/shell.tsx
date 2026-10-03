@@ -129,7 +129,7 @@ function BarLink({ item }: { item: NavItem }) {
         />
         <Txt
           numberOfLines={1}
-          style={{ fontSize: Math.min(type.small - 2, 16), lineHeight: 18 }}
+          style={{ fontSize: Math.min(type.small - 3, 14), lineHeight: 17 }}
           tone={active ? "stamp" : "default"}
           variant="small"
           weight={active ? "600" : "500"}
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     gap: 2,
     justifyContent: "center",
     minHeight: 60,
-    paddingHorizontal: 2,
+    paddingHorizontal: 0,
   },
   bottom: {
     flexDirection: "row",
