@@ -32,7 +32,13 @@
       "name": "HubMi",
       "shortName": "HubMi"
     },
-    "plugins": ["expo-router", "expo-status-bar", "expo-image", "expo-font"],
+    "plugins": [
+      ["expo-router", { "origin": "https://hubmi.qwontie.dev" }],
+      "expo-status-bar",
+      "expo-image",
+      "expo-font",
+      "./plugins/with-scene-lifecycle.js"
+    ],
     "experiments": {
       "typedRoutes": true
     }
