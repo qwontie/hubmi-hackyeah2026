@@ -25,10 +25,18 @@ const FOOTER_NOTE =
   "HubMi to prototyp Małopolskiego Hubu Innowacji Społecznych. Regionalny Ośrodek Polityki Społecznej w Krakowie, ul.\u00a0Piastowska\u00a032, 30-070\u00a0Kraków.";
 
 const logos = {
-  malopolska: require("../../assets/rops/malopolska.png"),
-  malopolskaWhite: require("../../assets/rops/malopolska-white.png"),
-  rops: require("../../assets/rops/rops.png"),
-  ropsWhite: require("../../assets/rops/rops-white.png"),
+  malopolska: require("../../assets/brand/malopolska.svg"),
+  malopolskaBlack: require("../../assets/brand/malopolska-black.svg"),
+  malopolskaWhite: require("../../assets/brand/malopolska-white.svg"),
+  rops: require("../../assets/brand/rops-logo.svg"),
+  ropsWhite: require("../../assets/brand/rops-logo-white.svg"),
+};
+
+const malopolskaMark = (dark: boolean, highContrast: boolean) => {
+  if (highContrast) {
+    return logos.malopolskaBlack;
+  }
+  return dark ? logos.malopolskaWhite : logos.malopolska;
 };
 
 function FooterLink({ href, label }: { href: string; label: string }) {
@@ -88,7 +96,7 @@ export function RopsFooter() {
         <Image
           accessibilityLabel="Małopolska"
           contentFit="contain"
-          source={dark ? logos.malopolskaWhite : logos.malopolska}
+          source={malopolskaMark(dark, highContrast)}
           style={styles.malopolska}
         />
       </View>
@@ -132,11 +140,11 @@ const styles = StyleSheet.create({
     gap: space.xl,
   },
   malopolska: {
-    height: 24,
-    width: 141,
+    height: 22,
+    width: 160,
   },
   rops: {
-    height: 56,
-    width: 173,
+    height: 63,
+    width: 200,
   },
 });

@@ -1,3 +1,4 @@
+import { Image } from "expo-image";
 import { Link, usePathname } from "expo-router";
 import {
   ALargeSmall,
@@ -185,8 +186,13 @@ export function TabBar() {
   );
 }
 
+const marks = {
+  signet: require("../../assets/brand/rops-signet.svg"),
+  signetWhite: require("../../assets/brand/rops-signet-white.svg"),
+};
+
 export function Brand({ night = false }: { night?: boolean }) {
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
   const { width } = useWindowDimensions();
   return (
     <Link asChild href="/">
@@ -195,22 +201,12 @@ export function Brand({ night = false }: { night?: boolean }) {
         role="link"
         style={styles.brand}
       >
-        <View
-          style={[
-            styles.seal,
-            { backgroundColor: night ? colors.onNight : colors.stamp },
-          ]}
-        >
-          <Txt
-            style={[
-              styles.sealText,
-              { color: night ? colors.night : colors.onStamp },
-            ]}
-            weight="700"
-          >
-            Hm
-          </Txt>
-        </View>
+        <Image
+          aria-hidden
+          contentFit="contain"
+          source={night || dark ? marks.signetWhite : marks.signet}
+          style={styles.signet}
+        />
         <Txt
           style={[
             styles.brandName,
@@ -442,16 +438,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: minTarget + 4,
   },
-  seal: {
-    alignItems: "center",
-    borderRadius: 10,
-    height: 34,
-    justifyContent: "center",
-    width: 34,
-  },
-  sealText: {
-    fontSize: 14,
-    lineHeight: 18,
+  signet: {
+    height: 30,
+    width: 39,
   },
   skip: {
     borderRadius: radius.md,
