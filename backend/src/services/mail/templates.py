@@ -5,7 +5,7 @@ from html import escape
 from .sender import Email
 
 SIGNATURE = (
-    "Zespół Małopolskiego Centrum Innowacji Społecznych\n"
+    "Zespół Małopolskiego Hubu Innowacji Społecznych\n"
     "Regionalny Ośrodek Polityki Społecznej w Krakowie"
 )
 EXCERPT_LENGTH = 280
@@ -221,10 +221,11 @@ def expert_message(  # noqa: PLR0913
     )
     who = f"{expert_name}, {expertise}" if expertise else expert_name
     quote = excerpt(about)
+    target = "pomysłu" if is_idea else "zgłoszenia"
     text = (
         "Dzień dobry,\n\n"
-        f"Ekspert współpracujący z ROPS w Krakowie ({who}) napisał opinię "
-        f"o Twoim {'pomyśle' if is_idea else 'zgłoszeniu'} w HubMi.\n\n"
+        f"Do Twojego {target} dodano opinię "
+        f"eksperta współpracującego z ROPS w Krakowie: {who}.\n\n"
         f"{label}:\n„{quote}”\n\n"
         f"Opinia:\n{body}\n\n"
         f"Całą rozmowę zobaczysz i odpowiesz na nią tutaj:\n{thread_url}\n\n"
@@ -234,8 +235,9 @@ def expert_message(  # noqa: PLR0913
     html = html_document(
         subject,
         f"{H1}Opinia eksperta</h1>"
-        '<p style="margin:0 0 16px">Ekspert współpracujący z ROPS w Krakowie '
-        f"(<strong>{escape(who)}</strong>) napisał opinię.</p>"
+        f'<p style="margin:0 0 16px">Do Twojego {target} '
+        "dodano opinię eksperta współpracującego z ROPS w Krakowie: "
+        f"<strong>{escape(who)}</strong>.</p>"
         f'<h2 style="font-size:16px;margin:0 0 8px">{label}</h2>'
         f"{html_quote(quote)}"
         '<h2 style="font-size:16px;margin:0 0 8px">Opinia</h2>'
@@ -258,7 +260,7 @@ def expert_assigned(  # noqa: PLR0913
     note_text = f"Uwagi od ROPS:\n{note}\n\n" if note else ""
     text = (
         f"Dzień dobry, {expert_name},\n\n"
-        "zespół ROPS w Krakowie prosi o Twoją opinię w HubMi.\n\n"
+        "Zespół ROPS w Krakowie prosi o Twoją opinię w HubMi.\n\n"
         f"Sprawa:\n„{title}”\n\n"
         f"{note_text}"
         f"Otwórz sprawę w panelu:\n{url}\n\n"
@@ -273,8 +275,9 @@ def expert_assigned(  # noqa: PLR0913
     html = html_document(
         subject,
         f"{H1}Prośba o opinię</h1>"
-        f'<p style="margin:0 0 16px">Dzień dobry, {escape(expert_name)}, '
-        "zespół ROPS w Krakowie prosi o Twoją opinię w HubMi.</p>"
+        f'<p style="margin:0 0 16px">Dzień dobry, {escape(expert_name)}.</p>'
+        '<p style="margin:0 0 16px">Zespół ROPS w Krakowie prosi '
+        "o Twoją opinię w HubMi.</p>"
         '<h2 style="font-size:16px;margin:0 0 8px">Sprawa</h2>'
         f"{html_quote(title)}"
         f"{note_html}"

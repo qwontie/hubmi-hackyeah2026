@@ -51,7 +51,7 @@ class NeedNotFoundError(LookupError):
 
 def rejected(code: str) -> TextRejectedError:
     messages = {
-        TOO_SHORT: f"Opisz problem w co najmniej {MIN_TEXT} znakach.",
+        TOO_SHORT: f"Opis musi mieć co najmniej {MIN_TEXT} znaków.",
         TOO_LONG: f"Opis może mieć najwyżej {MAX_TEXT} znaków.",
         UNCLEAR: (
             "Nie rozumiemy opisu. Napisz w kilku słowach, "

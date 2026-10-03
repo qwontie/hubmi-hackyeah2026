@@ -119,7 +119,7 @@ def call_email(
     url = calls_url(call.id)
     if opened:
         subject = f"Otwarty nabór: {excerpt(call.title, 120)}"
-        lead = "W HubMi otworzył się nabór, w którym możesz złożyć wniosek."
+        lead = "Ruszył nabór, w którym możesz złożyć wniosek."
     else:
         subject = f"Zmiana terminów naboru: {excerpt(call.title, 120)}"
         lead = "ROPS zmienił terminy naboru, o którym informowaliśmy."

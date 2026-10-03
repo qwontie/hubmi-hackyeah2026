@@ -25,7 +25,7 @@ STATUS_MESSAGES = {
     403: "Brak uprawnień do tej operacji.",
     404: "Nie znaleziono.",
     405: "Ta operacja nie jest dostępna.",
-    409: "Operacja koliduje z bieżącym stanem.",
+    409: "Tej operacji nie można teraz wykonać. Odśwież stronę i spróbuj ponownie.",
     422: "Popraw zaznaczone pola.",
     429: "Zbyt wiele prób. Spróbuj ponownie za chwilę.",
     503: "Usługa jest chwilowo niedostępna.",

@@ -22,8 +22,10 @@ from utils.logging import logger
 
 CONSENT_MESSAGE = "Zaznacz zgodę na kontakt, abyśmy mogli odpisać."
 EMAIL_MESSAGE = "Wpisz poprawny adres e-mail."
-UNCLEAR_MESSAGE = "Nie rozumiemy tego tekstu. Napisz kilka słów pełnymi zdaniami."
-NOISE_MESSAGE = "Ten tekst wygląda na przypadkowe znaki."
+UNCLEAR_MESSAGE = "Nie rozumiemy tego tekstu. Napisz zwykłymi słowami, o co chodzi."
+NOISE_MESSAGE = (
+    "Ten tekst wygląda na przypadkowe znaki. Napisz zwykłymi słowami, o co chodzi."
+)
 INNOVATION_MISSING = "Nie znaleziono takiej innowacji."
 AI_MESSAGE = "Asystent jest chwilowo niedostępny. Spróbuj ponownie za kilka minut."
 POWIAT_MESSAGE = "Wybierz powiat z listy."

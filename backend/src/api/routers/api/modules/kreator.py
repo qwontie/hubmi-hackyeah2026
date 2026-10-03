@@ -69,7 +69,7 @@ OFF_TOPIC = "Opisz pomysł, który pomoże ludziom albo społeczności."
 EMAIL_NEEDED = "Podaj adres e-mail, abyśmy mogli odpisać."
 IDEA_MISSING = "Nie znaleziono tego pomysłu."
 PROBLEM_MISSING = "Wybierz problem z listy."
-LOCKED = "Ten pomysł jest już rozpatrzony. Napisz do nas, jeśli chcesz coś zmienić."
+LOCKED = "Ten pomysł został już rozpatrzony. Napisz do nas, jeśli chcesz coś zmienić."
 
 IdeaToken = Annotated[str | None, Header(alias="X-Idea-Token")]
 
