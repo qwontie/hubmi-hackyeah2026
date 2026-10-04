@@ -287,6 +287,30 @@
         {/if}
       </div>
       <div class="flex flex-wrap gap-2">
+        <a
+          class="ghost cladd-clickable"
+          href={resolve("/materials/[[id]]", {})}
+        >
+          <span class="flex items-center gap-2">
+            <svg
+              aria-hidden="true"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.75"
+              viewBox="0 0 24 24"
+              width="16"
+            >
+              <path
+                d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"
+              />
+              <path d="M14 3v5h5M9 13h6M9 17h6" />
+            </svg>
+            Materiały
+          </span>
+        </a>
         <button
           aria-expanded={adding}
           class="ghost cladd-clickable"
