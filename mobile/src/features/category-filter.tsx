@@ -56,6 +56,7 @@ function Cell({
         />
       </View>
       <Txt
+        maxFontSizeMultiplier={1.3}
         style={[styles.name, { color: ink }]}
         variant="detail"
         weight={active ? "600" : "500"}
@@ -64,6 +65,7 @@ function Cell({
       </Txt>
       {item.count === undefined ? null : (
         <Txt
+          maxFontSizeMultiplier={1.3}
           mono
           style={{ color: active ? colors.onStamp : colors.inkSoft }}
           variant="small"

@@ -145,6 +145,7 @@ export const Button = function Button({
         />
       ) : null}
       <Txt
+        maxFontSizeMultiplier={1.5}
         style={[
           styles.label,
           palette.text === "night" && !selected && { color: colors.night },

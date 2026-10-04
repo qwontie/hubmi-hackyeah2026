@@ -75,12 +75,22 @@ function VoteButton({
         <Icon aria-hidden color={ink} size={22} strokeWidth={2.2} />
       )}
       {worded ? (
-        <Txt style={{ color: ink }} variant="detail" weight="600">
+        <Txt
+          maxFontSizeMultiplier={1.3}
+          style={{ color: ink }}
+          variant="detail"
+          weight="600"
+        >
           {label}
         </Txt>
       ) : null}
       {count === null ? null : (
-        <Txt mono style={{ color: ink }} variant="number">
+        <Txt
+          maxFontSizeMultiplier={1.3}
+          mono
+          style={{ color: ink }}
+          variant="number"
+        >
           {count}
         </Txt>
       )}

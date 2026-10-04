@@ -53,7 +53,12 @@ export function ReadAloudPill({
       <Glass interactive night={night} style={styles.pill}>
         <Icon aria-hidden color={ink} size={22} strokeWidth={2.2} />
         {narrow ? null : (
-          <Txt style={{ color: ink }} variant="label" weight="600">
+          <Txt
+            maxFontSizeMultiplier={1.3}
+            style={{ color: ink }}
+            variant="label"
+            weight="600"
+          >
             {label}
           </Txt>
         )}

@@ -229,7 +229,12 @@ export function A11yButton({
         >
           <ALargeSmall aria-hidden color={ink} size={26} strokeWidth={2} />
           {labelled ? (
-            <Txt style={{ color: ink }} variant="label" weight="600">
+            <Txt
+              maxFontSizeMultiplier={1.3}
+              style={{ color: ink }}
+              variant="label"
+              weight="600"
+            >
               Dostępność
             </Txt>
           ) : null}
