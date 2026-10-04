@@ -13,6 +13,11 @@ import { API_BASE } from "@/config";
 import { CategoryIcon } from "@/features/category-icon";
 import { DemoTag } from "@/features/demo-tag";
 import { innovationHref, metaLine } from "@/features/innovation-row";
+import {
+  isVolunteerChecked,
+  VOLUNTEER_CHECKED,
+  VolunteerBadge,
+} from "@/features/volunteer-badge";
 import { useVote } from "@/hooks/use-tester";
 import { pluralPl } from "@/lib/plural";
 import { useTheme } from "@/theme/settings";
@@ -277,6 +282,7 @@ export function InnovationCard({
               </Txt>
             </Pressable>
           </Link>
+          <VolunteerBadge innovation={innovation} />
           <Txt tone="soft" variant={featured ? "body" : "label"}>
             {reason ?? innovation.lead}
           </Txt>
@@ -299,7 +305,14 @@ export function InnovationCard({
           />
           <Link asChild href={innovationHref(innovation.slug, needId)}>
             <Pressable
-              aria-label={`Zobacz rozwiązanie: ${innovation.title}`}
+              aria-label={[
+                `Zobacz rozwiązanie: ${innovation.title}`,
+                isVolunteerChecked(innovation)
+                  ? VOLUNTEER_CHECKED.toLowerCase()
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(", ")}
               role="link"
               style={StyleSheet.flatten([
                 styles.open,

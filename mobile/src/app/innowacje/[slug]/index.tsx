@@ -19,6 +19,7 @@ import { RichText } from "@/features/rich-text";
 import { ImprovementBlock, VoteBlock } from "@/features/tester";
 import { Video } from "@/features/video";
 import { VolunteerBlock } from "@/features/volunteer";
+import { VolunteerBadge, volunteerReports } from "@/features/volunteer-badge";
 import {
   innovationMeta,
   innovationSections,
@@ -61,11 +62,12 @@ function Hero({
         <Heading level={1} ref={titleRef}>
           {data.title}
         </Heading>
+        <VolunteerBadge innovation={data} />
         <Txt tone="soft" variant="lead">
           {data.lead}
         </Txt>
         <Txt tone="soft" variant="detail">
-          {[innovationMeta(data), picture?.label]
+          {[innovationMeta(data), volunteerReports(data), picture?.label]
             .filter(Boolean)
             .join(" · ")
             .replaceAll(" · ", "\u00a0· ")}

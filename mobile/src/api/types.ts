@@ -30,6 +30,8 @@ export interface InnovationSummary {
   lead: string;
   slug: string;
   title: string;
+  volunteer_checked?: boolean;
+  volunteer_reports?: number;
   votes?: Votes;
 }
 
