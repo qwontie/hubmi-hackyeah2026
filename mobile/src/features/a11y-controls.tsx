@@ -1,3 +1,4 @@
+import { useIsFocused } from "expo-router";
 import {
   ALargeSmall,
   Check,
@@ -8,7 +9,7 @@ import {
   Volume2,
   X,
 } from "lucide-react-native";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useA11yControls } from "@/hooks/use-a11y-controls";
@@ -24,6 +25,41 @@ const SIZE_WORDS: Record<string, string> = {
   large: "duży",
   standard: "standardowy",
   xlarge: "bardzo duży",
+};
+
+let shownInline = 0;
+const inlineListeners = new Set<() => void>();
+
+const subscribeInline = (listener: () => void) => {
+  inlineListeners.add(listener);
+  return () => {
+    inlineListeners.delete(listener);
+  };
+};
+
+const shiftInline = (step: number) => {
+  shownInline += step;
+  for (const listener of inlineListeners) {
+    listener();
+  }
+};
+
+export const useA11yInline = () =>
+  useSyncExternalStore(
+    subscribeInline,
+    () => shownInline > 0,
+    () => false
+  );
+
+export const useShowA11yInline = () => {
+  const focused = useIsFocused();
+  useEffect(() => {
+    if (!focused) {
+      return;
+    }
+    shiftInline(1);
+    return () => shiftInline(-1);
+  }, [focused]);
 };
 
 interface TileProps {

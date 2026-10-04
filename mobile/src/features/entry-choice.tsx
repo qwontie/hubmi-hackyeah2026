@@ -10,7 +10,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { A11yControls } from "@/features/a11y-controls";
+import { A11yControls, useShowA11yInline } from "@/features/a11y-controls";
 import { useTheme } from "@/theme/settings";
 import { radius, space, tabBarSpace } from "@/theme/tokens";
 import { nightAttr } from "@/ui/night";
@@ -182,6 +182,7 @@ export function EntryChoice({
 }) {
   const { colors, wide } = useTheme();
   const insets = useSafeAreaInsets();
+  useShowA11yInline();
   return (
     <View
       style={[
