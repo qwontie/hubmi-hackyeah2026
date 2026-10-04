@@ -134,6 +134,7 @@ function Panel({ night, onPress, role, text, title }: PanelProps) {
       <Discs night={night} span={span} />
       <View style={styles.body}>
         <Txt
+          maxFontSizeMultiplier={1.2}
           style={{
             color: ink,
             fontSize: size,

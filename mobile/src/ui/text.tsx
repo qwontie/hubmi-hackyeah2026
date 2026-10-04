@@ -77,6 +77,7 @@ interface HeadingProps extends TextProps {
 }
 
 const headingRole = { 1: "h1", 2: "h2", 3: "h3" } as const;
+const HEADING_SCALE_CAP = 1.5;
 
 export const Heading = function Heading({
   level,
@@ -93,6 +94,7 @@ export const Heading = function Heading({
   return (
     <Text
       aria-level={level}
+      maxFontSizeMultiplier={HEADING_SCALE_CAP}
       ref={ref}
       role="heading"
       style={[

@@ -205,6 +205,7 @@ export function Brand({ night = false }: { night?: boolean }) {
           style={styles.signet}
         />
         <Txt
+          maxFontSizeMultiplier={1.3}
           style={[
             styles.brandName,
             { color: night ? colors.onNight : colors.ink },
@@ -215,6 +216,7 @@ export function Brand({ night = false }: { night?: boolean }) {
         </Txt>
         {width >= 1040 || width < 900 ? (
           <Txt
+            maxFontSizeMultiplier={1.3}
             style={[
               styles.brandOrg,
               { color: night ? colors.onNightSoft : colors.inkSoft },

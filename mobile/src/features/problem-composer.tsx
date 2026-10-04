@@ -166,6 +166,7 @@ function Words({ match }: { match: Match }) {
     <View style={styles.words}>
       <Text
         aria-level={1}
+        maxFontSizeMultiplier={1.3}
         nativeID={TITLE_ID}
         role="heading"
         style={[
@@ -187,6 +188,7 @@ function Words({ match }: { match: Match }) {
         aria-invalid={fieldError ? true : undefined}
         aria-labelledby={TITLE_ID}
         editable={!loading}
+        maxFontSizeMultiplier={1.5}
         maxLength={TEXT_MAX + 200}
         multiline
         onBlur={() => setFocused(false)}
