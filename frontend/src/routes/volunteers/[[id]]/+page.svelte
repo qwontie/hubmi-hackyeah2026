@@ -18,6 +18,7 @@
   import { live } from "$lib/live/stream.svelte";
   import { fold, whoLabel } from "$lib/opinions";
   import { volunteerLabel, volunteerStatuses } from "$lib/volunteers";
+  import People from "./people.svelte";
 
   let rows = $state<AdminVolunteer[]>([]);
   let counts = $state<VolunteerCounts | null>(null);
@@ -33,7 +34,9 @@
     volunteerStatuses.find((s) => s.id === params.get("status"))?.id ?? "all"
   );
   const innovation = $derived(params.get("innovation"));
+  const powiat = $derived(params.get("powiat"));
   const q = $derived(params.get("q") ?? "");
+  const listing = $derived(params.get("view") === "lista");
 
   $effect(() => {
     const next = q;
@@ -49,25 +52,36 @@
     next: {
       group?: VolunteerStatus | "all";
       innovation?: string | null;
+      powiat?: string | null;
       q?: string;
+      listing?: boolean;
     } = {}
   ) {
     const out = new URLSearchParams();
     const g = next.group ?? group;
     const inn = next.innovation === undefined ? innovation : next.innovation;
+    const pw = next.powiat === undefined ? powiat : next.powiat;
     const text = next.q ?? q;
+    const list = next.listing ?? listing;
+    if (list) {
+      out.set("view", "lista");
+    }
     if (g !== "all") {
       out.set("status", g);
     }
     if (inn) {
       out.set("innovation", inn);
     }
+    if (pw) {
+      out.set("powiat", pw);
+    }
     if (text) {
       out.set("q", text);
     }
-    const path = target
-      ? resolve("/volunteers/[[id]]", { id: target })
-      : resolve("/volunteers/[[id]]", {});
+    const path =
+      target && !list
+        ? resolve("/volunteers/[[id]]", { id: target })
+        : resolve("/volunteers/[[id]]", {});
     const s = out.toString();
     return s ? `${path}?${s}` : path;
   }
@@ -158,6 +172,9 @@
       if (innovation && r.innovation.slug !== innovation) {
         return false;
       }
+      if (powiat && r.powiat !== powiat) {
+        return false;
+      }
       if (!q) {
         return true;
       }
@@ -175,7 +192,7 @@
   );
 
   $effect(() => {
-    if (wide && loaded && !id && visible.length > 0) {
+    if (wide && loaded && !listing && !id && visible.length > 0) {
       goto(href(visible[0].id), {
         keepFocus: true,
         noScroll: true,
@@ -217,6 +234,26 @@
     goto(href(next.id), { noScroll: true, replaceState: true });
   }
 
+  const solutions = $derived(
+    [
+      ...new Map(rows.map((r) => [r.innovation.slug, r.innovation])).values(),
+    ].sort((a, b) => a.title.localeCompare(b.title, "pl"))
+  );
+
+  const powiats = $derived(
+    [...new Map(rows.map((r) => [r.powiat, r.powiat_name])).entries()]
+      .map(([slug, name]) => ({ name, slug }))
+      .sort((a, b) => a.name.localeCompare(b.name, "pl"))
+  );
+
+  function pick(next: { innovation?: string | null; powiat?: string | null }) {
+    goto(href(null, next), {
+      keepFocus: true,
+      noScroll: true,
+      replaceState: true,
+    });
+  }
+
   function keydown(event: KeyboardEvent) {
     const target = event.target as HTMLElement;
     if (
@@ -241,7 +278,7 @@
       j: 1,
       k: -1,
     };
-    if (event.key in step) {
+    if (event.key in step && !listing) {
       event.preventDefault();
       move(step[event.key]);
     }
@@ -260,7 +297,7 @@
 
 <svelte:window onkeydown={keydown} />
 
-<div class={["binder", id && "has-item"]}>
+<div class={["binder", id && !listing && "has-item"]}>
   <nav aria-label="Stan zgłoszeń" class="rail">
     <FolderTabs current={group} {tabs} />
   </nav>
@@ -281,6 +318,10 @@
             <a class="clear" href={href(null, { innovation: null })}
               >pokaż wszystkie</a
             >
+          {:else if listing}
+            Jedna osoba w&nbsp;jednym wierszu: na co się zgłosiła, w&nbsp;jakim
+            stanie są zgłoszenia, czy przysłała raport i&nbsp;kiedy był ostatni
+            kontakt.
           {:else}
             Osoby, które chcą sprawdzić innowację u&nbsp;siebie. Każde
             zgłoszenie czyta pracownik ROPS: pisze, przyjmuje albo odrzuca.
@@ -288,10 +329,27 @@
           {/if}
         </p>
       </div>
+      <nav aria-label="Widok" class="switch">
+        <a
+          aria-current={listing ? undefined : "page"}
+          data-sveltekit-noscroll
+          href={href(listing ? null : id, { listing: false })}
+          >Zgłoszenia</a
+        >
+        <a
+          aria-current={listing ? "page" : undefined}
+          data-sveltekit-noscroll
+          href={href(null, { listing: true })}
+          >Lista</a
+        >
+      </nav>
     </header>
 
-    <div class="work">
-      <section aria-label="Zgłoszenia wolontariuszy" class="register">
+    <div class={["work", listing && "listing"]}>
+      <section
+        aria-label={listing ? "Lista wolontariuszy" : "Zgłoszenia wolontariuszy"}
+        class="register"
+      >
         <div class="rhead">
           <label class="search">
             <span class="sr-only">Szukaj osoby, organizacji lub innowacji</span>
@@ -318,16 +376,52 @@
             >
             <kbd aria-hidden="true" class="max-[899px]:hidden">/</kbd>
           </label>
-          <span aria-live="polite" class="total tabular">
-            {visible.length}
-            {plural(visible.length, "zgłoszenie", "zgłoszenia", "zgłoszeń")}
-          </span>
+          {#if listing}
+            <label class="pick">
+              <span class="sr-only">Rozwiązanie</span>
+              <select
+                onchange={(event) =>
+                  pick({ innovation: event.currentTarget.value || null })}
+                value={innovation ?? ""}
+              >
+                <option value="">Wszystkie rozwiązania</option>
+                {#each solutions as s (s.slug)}
+                  <option value={s.slug}>{s.title}</option>
+                {/each}
+              </select>
+            </label>
+            <label class="pick">
+              <span class="sr-only">Powiat</span>
+              <select
+                onchange={(event) =>
+                  pick({ powiat: event.currentTarget.value || null })}
+                value={powiat ?? ""}
+              >
+                <option value="">Wszystkie powiaty</option>
+                {#each powiats as pw (pw.slug)}
+                  <option value={pw.slug}>{pw.name}</option>
+                {/each}
+              </select>
+            </label>
+          {:else}
+            <span aria-live="polite" class="total tabular">
+              {visible.length}
+              {plural(visible.length, "zgłoszenie", "zgłoszenia", "zgłoszeń")}
+            </span>
+          {/if}
         </div>
         <div class="scroll">
           {#if loadError && !loaded}
             <ErrorState error={loadError} retry={load} />
           {:else if !loaded}
             <p class="px-3 py-6 text-hm-ink-soft text-sm">Wczytywanie…</p>
+          {:else if listing}
+            <People
+              appHref={(target) => href(target, { listing: false })}
+              matched={visible}
+              onwritten={load}
+              {rows}
+            />
           {:else if visible.length === 0}
             <p class="px-3 py-6 text-hm-ink-soft text-sm">
               {rows.length === 0 ? "Nikt jeszcze nie zgłosił się jako wolontariusz. Zgłoszenia pojawią się tu same." : "Brak zgłoszeń w tym widoku."}
@@ -363,9 +457,9 @@
         </div>
       </section>
 
-      {#if id}
+      {#if id && !listing}
         <VolunteerSheet backHref={href(null)} {id} onchange={changed} />
-      {:else if wide}
+      {:else if wide && !listing}
         <div class="empty">
           <p class="text-hm-ink-soft text-sm">
             Wybierz zgłoszenie z&nbsp;listy.
@@ -410,6 +504,53 @@
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px 32px;
     align-items: end;
+  }
+
+  .switch {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    background: var(--hm-sunk);
+    border-radius: 10px;
+    box-shadow: var(--shadow-cladd-cut-outline);
+  }
+
+  .switch a {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--hm-ink-soft);
+    border-radius: 8px;
+  }
+
+  .switch a[aria-current="page"] {
+    color: var(--hm-ink);
+    background: var(--hm-paper);
+    box-shadow: var(--shadow-cladd-outline);
+  }
+
+  .work.listing {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pick select {
+    max-width: 260px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 13px;
+    color: var(--hm-ink);
+    background: var(--hm-sunk);
+    border: 0;
+    border-radius: 10px;
+    box-shadow: var(--shadow-cladd-cut-outline);
+  }
+
+  .pick select:focus-visible {
+    outline: 2px solid var(--hm-ring);
+    outline-offset: 2px;
   }
 
   .clear {
@@ -589,6 +730,22 @@
 
     .bhead {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    .switch {
+      justify-self: start;
+    }
+
+    .switch a,
+    .pick select {
+      height: 44px;
+    }
+
+    .pick,
+    .pick select {
+      flex: 1 1 100%;
+      width: 100%;
+      max-width: none;
     }
 
     .work {
