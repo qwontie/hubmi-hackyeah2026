@@ -14,6 +14,7 @@
   import NeedsMap from "$lib/components/hub/needs-map.svelte";
   import { nbsp, periodWords, plural } from "$lib/format";
   import { live } from "$lib/live/stream.svelte";
+  import Challenges from "./challenges.svelte";
 
   interface Ranked {
     count: number;
@@ -119,6 +120,12 @@
 
   const period = $derived(page.url.searchParams.get("period") ?? "30d");
 
+  function periodHref(id: string) {
+    const params = new URLSearchParams(page.url.searchParams);
+    params.set("period", id);
+    return `${resolve("/stats")}?${params}`;
+  }
+
   async function load(p: string) {
     try {
       stats = await api.get<Stats>("/admin/stats", { period: p });
@@ -207,7 +214,7 @@
           aria-current={p.id === period ? "true" : undefined}
           data-sveltekit-noscroll
           data-sveltekit-replacestate
-          href="{resolve('/stats')}?period={p.id}"
+          href={periodHref(p.id)}
           >{p.label}</a
         >
       {/each}
@@ -346,6 +353,8 @@
         {/if}
       </section>
     </div>
+
+    <Challenges />
 
     <div class="grid2">
       <section aria-labelledby="inn-h" class="panel">
