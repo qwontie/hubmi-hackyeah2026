@@ -1,5 +1,7 @@
 # HubMi
 
+![Python](https://img.shields.io/badge/python-%233670A0.svg?style=for-the-badge&logo=python&logoColor=ffdd54) ![Svelte](https://img.shields.io/badge/svelte-%23f1413d.svg?style=for-the-badge&logo=svelte&logoColor=white) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Google Gemini](https://img.shields.io/badge/google%20gemini-%238E75B2.svg?style=for-the-badge&logo=google%20gemini&logoColor=white)
+
 Platforma Małopolskiego Hubu Innowacji Społecznych (ROPS w Krakowie). Mieszkaniec, organizacja albo gmina opisuje problem własnymi słowami, a HubMi pokazuje pasujące innowacje społeczne z Biblioteki ROPS i jednym zdaniem tłumaczy, dlaczego pasują. Zgłoszenie trafia do panelu ROPS, gdzie pracownicy widzą, z czym ludzie przychodzą, grupują podobne sprawy i odpowiadają e-mailem.
 
 **Wdrożenie produkcyjne: [DEPLOYMENT.md](DEPLOYMENT.md).** Opisuje krok po kroku drogę od obecnej wersji demonstracyjnej do prawdziwej produkcji na serwerze ROPS lub Województwa.
