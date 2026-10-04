@@ -55,7 +55,8 @@ const FORMS = [
 const PROCESSORS = [
   "Google (Gemini API): dostaje tekst, który wpisujesz w wyszukiwanie, w zgłoszenie, w pomysł i w pomocników AI, żeby znaleźć pasujące rozwiązania i pomóc w opisie. Nie wysyłamy tam Twojego adresu e-mail.",
   "Resend: wysyła wiadomości e-mail, na przykład odpowiedź ROPS albo powiadomienie o naborze.",
-  "Serwer w Unii Europejskiej przechowuje dane serwisu. Cloudflare chroni stronę przed atakami i przekazuje ruch.",
+  "Serwer w Unii Europejskiej (firma Contabo) przechowuje dane serwisu.",
+  "Cloudflare chroni stronę przed atakami. Cały ruch, także treść formularzy, przechodzi przez jego serwery.",
 ];
 
 const DEVICE = [
@@ -168,8 +169,10 @@ export default function PrivacyScreen() {
         <Section title="Kto pomaga nam przetwarzać dane">
           <List items={PROCESSORS} />
           <Txt>
-            Google i Resend to firmy spoza Unii Europejskiej. Korzystamy z ich
-            standardowych umów o ochronie danych.
+            Google, Resend i Cloudflare to firmy spoza Unii Europejskiej. W
+            prototypie działamy na ich ogólnych warunkach ochrony danych. Zanim
+            serwis zacznie działać na stałe, ROPS musi podpisać z nimi umowy
+            powierzenia danych.
           </Txt>
           <Txt>
             Dyktowanie głosem działa w Twojej przeglądarce lub telefonie.
