@@ -256,6 +256,11 @@
             .filter(Boolean)
             .join(" · ")}
         </p>
+        <a
+          class="link inline-flex min-h-10 w-fit items-center text-[13px] md:min-h-0"
+          href="{resolve('/opinions')}?contact={detail.id}"
+          >Wszystko z&nbsp;tego adresu, usunięcie danych</a
+        >
       </header>
 
       <dl class="who">

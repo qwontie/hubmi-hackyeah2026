@@ -820,6 +820,14 @@ export interface ContactProfile {
 export const contactProfile = (email: string) =>
   api.post<ContactProfile>("/admin/contact-profile", { email });
 
+export interface ContactErasure {
+  erased: Record<string, number>;
+  total: number;
+}
+
+export const eraseContact = (email: string) =>
+  api.post<ContactErasure>("/admin/contacts/erase", { email });
+
 export interface GrantSubscriber {
   confirmed_at: string | null;
   consent_at: string;

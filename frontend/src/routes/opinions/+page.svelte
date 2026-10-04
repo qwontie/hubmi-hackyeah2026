@@ -93,9 +93,15 @@
   const openSlug = $derived(params.get("innovation"));
   const openNote = $derived(params.get("note"));
   const openContact = $derived(params.get("contact"));
+  let erasedContact = $state<{ id: string; email: string } | null>(null);
   const openEmail = $derived.by(() => {
     const found = signups.find((s) => s.id === openContact);
-    return found ? contactKey(found.contact_email) : null;
+    if (found) {
+      return contactKey(found.contact_email);
+    }
+    return erasedContact && erasedContact.id === openContact
+      ? erasedContact.email
+      : null;
   });
 
   function idOf(email: string): string | null {
@@ -793,6 +799,12 @@
           email={openEmail}
           innovationHref={(slug) =>
             href({ contact: null, innovation: slug, view: "votes" })}
+          onerased={() => {
+            if (openContact && openEmail) {
+              erasedContact = { email: openEmail, id: openContact };
+            }
+            load();
+          }}
           signups={signups.filter(sameContact)}
         />
       {:else if openSlug}

@@ -5,11 +5,14 @@
     type AdminTestSignup,
     type ContactProfile,
     contactProfile,
+    eraseContact,
   } from "$lib/api/admin";
+  import { ApiError } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
   import {
     dayWords,
     nbsp,
+    plural,
     powiatName,
     registerNumber,
     statusLabel,
@@ -24,12 +27,18 @@
     signups,
     backHref,
     innovationHref,
+    onerased,
   }: {
     email: string;
     signups: AdminTestSignup[];
     backHref: string;
     innovationHref: (slug: string) => string;
+    onerased: () => void;
   } = $props();
+
+  let confirming = $state(false);
+  let erasing = $state(false);
+  let erased = $state<number | null>(null);
 
   let profile = $state<ContactProfile | null>(null);
   let needsError = $state<Error | null>(null);
@@ -50,6 +59,8 @@
     const target = email;
     untrack(() => {
       profile = null;
+      confirming = false;
+      erased = null;
       loadNeeds(target);
     });
   });
@@ -91,6 +102,26 @@
     ].filter(Boolean)
   );
 
+  async function erase(event: MouseEvent) {
+    const anchor = event.currentTarget as HTMLElement;
+    erasing = true;
+    try {
+      const result = await eraseContact(address);
+      erased = result.total;
+      confirming = false;
+      onerased();
+      loadNeeds(email);
+    } catch (e) {
+      showTip(
+        anchor,
+        e instanceof ApiError ? e.message : "Brak połączenia z serwerem.",
+        "bad"
+      );
+    } finally {
+      erasing = false;
+    }
+  }
+
   function copy(event: MouseEvent) {
     const anchor = event.currentTarget as HTMLElement;
     navigator.clipboard
@@ -126,35 +157,39 @@
           {organizations.join(", ") || address}
         </h2>
         <p class="mt-1.5 text-[13px] text-hm-ink-soft">{meta.join(" · ")}</p>
-        <p class="mt-1.5 text-pretty text-[13px] text-hm-ink-soft">
-          Pisz tylko w&nbsp;sprawach, na które ta osoba dała zgodę: odpowiedź na
-          jej zgłoszenie albo wolontariat przy wybranym rozwiązaniu.
-        </p>
+        {#if erased === null}
+          <p class="mt-1.5 text-pretty text-[13px] text-hm-ink-soft">
+            Pisz tylko w&nbsp;sprawach, na które ta osoba dała zgodę: odpowiedź
+            na jej zgłoszenie albo wolontariat przy wybranym rozwiązaniu.
+          </p>
+        {/if}
       </div>
-      <div class="flex flex-wrap gap-2">
-        <a class="primary cladd-clickable" href="mailto:{address}">
-          <span class="flex items-center gap-2">
-            <svg
-              aria-hidden="true"
-              fill="none"
-              height="16"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.75"
-              viewBox="0 0 24 24"
-              width="16"
-            >
-              <rect height="14" rx="2.5" width="18" x="3" y="5" />
-              <path d="m4 7 8 6 8-6" />
-            </svg>
-            Otwórz w&nbsp;programie pocztowym
-          </span>
-        </a>
-        <button class="ghost cladd-clickable" onclick={copy} type="button">
-          <span>Kopiuj adres</span>
-        </button>
-      </div>
+      {#if erased === null}
+        <div class="flex flex-wrap gap-2">
+          <a class="primary cladd-clickable" href="mailto:{address}">
+            <span class="flex items-center gap-2">
+              <svg
+                aria-hidden="true"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.75"
+                viewBox="0 0 24 24"
+                width="16"
+              >
+                <rect height="14" rx="2.5" width="18" x="3" y="5" />
+                <path d="m4 7 8 6 8-6" />
+              </svg>
+              Otwórz w&nbsp;programie pocztowym
+            </span>
+          </a>
+          <button class="ghost cladd-clickable" onclick={copy} type="button">
+            <span>Kopiuj adres</span>
+          </button>
+        </div>
+      {/if}
     </header>
 
     <section aria-labelledby="c-signups-h">
@@ -283,6 +318,56 @@
         </ol>
       </section>
     {/if}
+
+    <section aria-labelledby="c-erase-h" class="erase">
+      <h3 class="mb-1.5 font-semibold text-[13px]" id="c-erase-h">
+        Prośba o&nbsp;usunięcie danych
+      </h3>
+      {#if erased !== null}
+        <p aria-live="polite" class="text-sm" role="status">
+          {erased > 0 ? `Adres usunięty z ${erased} ${plural(erased, "wpisu", "wpisów", "wpisów")}.` : "Tego adresu nie ma już w HubMi."}
+        </p>
+      {:else}
+        <p class="text-pretty text-[13px] text-hm-ink-soft">
+          Gdy ta osoba poprosi o&nbsp;usunięcie danych: jej zgłoszenia jako
+          wolontariusza i&nbsp;zapis na powiadomienia o&nbsp;naborach znikną
+          w&nbsp;całości, a&nbsp;potrzeby, pomysły i&nbsp;wnioski zostaną bez
+          adresu. Tego nie da się cofnąć.
+        </p>
+        <div class="mt-2.5 flex flex-wrap gap-2">
+          {#if confirming}
+            <button
+              class="bad cladd-clickable"
+              disabled={erasing}
+              onclick={erase}
+              type="button"
+            >
+              <span>{erasing ? "Usuwanie…" : `Tak, usuń ${address}`}</span>
+            </button>
+            <button
+              class="ghost cladd-clickable"
+              disabled={erasing}
+              onclick={() => {
+                confirming = false;
+              }}
+              type="button"
+            >
+              <span>Anuluj</span>
+            </button>
+          {:else}
+            <button
+              class="ghost cladd-clickable"
+              onclick={() => {
+                confirming = true;
+              }}
+              type="button"
+            >
+              <span>Usuń dane kontaktowe</span>
+            </button>
+          {/if}
+        </div>
+      {/if}
+    </section>
   </div>
 </article>
 
@@ -384,6 +469,31 @@
 
   .ghost:hover {
     background: var(--hm-stamp-wash);
+  }
+
+  .erase {
+    padding-top: 18px;
+    border-top: 1px solid var(--hm-rule);
+  }
+
+  .bad {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--hm-paper);
+    overflow-wrap: anywhere;
+    background: var(--hm-bad);
+    border-radius: 10px;
+  }
+
+  .bad:disabled,
+  .ghost:disabled {
+    cursor: default;
+    opacity: 0.6;
   }
 
   @media (max-width: 899px) {
