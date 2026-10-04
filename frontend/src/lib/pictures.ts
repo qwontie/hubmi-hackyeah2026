@@ -1,4 +1,4 @@
-import type { AdminInnovationDetail } from "$lib/api/admin";
+import type { AdminInnovationDetail, Page } from "$lib/api/admin";
 import { api } from "$lib/api/client";
 
 export interface PictureFields {
@@ -36,3 +36,35 @@ export const usePoolPicture = (slug: string, poolId: string) =>
     `/admin/innovations/${slug}/picture`,
     { pool_id: poolId }
   );
+
+export interface CheckedMark {
+  volunteer_checked?: boolean;
+  volunteer_reports?: number;
+}
+
+export async function listCheckedMarks(): Promise<Map<string, CheckedMark>> {
+  const first = await api.get<Page<CheckedMark & { slug: string }>>(
+    "/innovations",
+    { page: 1, per_page: 100 }
+  );
+  const pages = Math.ceil(first.total / 100);
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, pages - 1) }, (_, n) =>
+      api.get<Page<CheckedMark & { slug: string }>>("/innovations", {
+        page: n + 2,
+        per_page: 100,
+      })
+    )
+  );
+  return new Map(
+    [first, ...rest]
+      .flatMap((p) => p.items)
+      .map((i) => [
+        i.slug,
+        {
+          volunteer_checked: i.volunteer_checked,
+          volunteer_reports: i.volunteer_reports,
+        },
+      ])
+  );
+}

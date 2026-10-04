@@ -85,6 +85,14 @@
     }
   }
 
+  const checkedReports = $derived(
+    detail?.volunteer_reports ??
+      (reports ? reports.recommend.yes + reports.recommend.after_changes : 0)
+  );
+  const checked = $derived(
+    detail?.volunteer_checked ?? (reports !== null && checkedReports > 0)
+  );
+
   const demandTotal = $derived(
     (demand ?? []).reduce((sum, row) => sum + row.count, 0)
   );
@@ -271,10 +279,10 @@
           {detail.category.name}
           ·
           {detail.status === "published" ? "opublikowana" : "szkic, niewidoczna dla mieszkańców"}
-          {#if detail.volunteer_checked}
+          {#if checked}
             ·
             <span class="checked"
-              >Sprawdzone przez wolontariuszy{detail.volunteer_reports ? ` (${detail.volunteer_reports} ${plural(detail.volunteer_reports, "raport", "raporty", "raportów")})` : ""}</span
+              >Sprawdzone przez wolontariuszy{checkedReports ? ` (${checkedReports} ${plural(checkedReports, "raport", "raporty", "raportów")})` : ""}</span
             >
           {/if}
           {#if detail.source_url}

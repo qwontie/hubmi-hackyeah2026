@@ -21,13 +21,20 @@
   import type { FolderTab } from "$lib/components/hub/types";
   import { plural, when } from "$lib/format";
   import { live } from "$lib/live/stream.svelte";
-  import { hasPicture, onBroken, type PictureFields } from "$lib/pictures";
+  import {
+    type CheckedMark,
+    hasPicture,
+    listCheckedMarks,
+    onBroken,
+    type PictureFields,
+  } from "$lib/pictures";
   import { showTip } from "$lib/tip";
 
   type Item = AdminInnovation & PictureFields;
 
   let items = $state<Item[]>([]);
   let broken = $state<Record<string, boolean>>({});
+  let marks = $state<Map<string, CheckedMark>>(new Map());
   let categories = $state<Category[]>([]);
   let loadError = $state<Error | null>(null);
   let loaded = $state(false);
@@ -80,11 +87,13 @@
 
   async function load() {
     try {
-      const [all, cats, history] = await Promise.all([
+      const [all, cats, history, checked] = await Promise.all([
         listAllInnovations(),
         listCategories(),
         listImportRuns().catch(() => [] as ImportRun[]),
+        listCheckedMarks().catch(() => new Map<string, CheckedMark>()),
       ]);
+      marks = checked;
       items = all;
       categories = cats;
       runs = history;
@@ -173,7 +182,9 @@
     return [
       category === "all" ? item.category.name : "",
       item.edited_fields.length > 0 ? "zmieniona ręcznie" : "",
-      item.volunteer_checked ? "sprawdzone przez wolontariuszy" : "",
+      (item.volunteer_checked ?? marks.get(item.slug)?.volunteer_checked)
+        ? "sprawdzone przez wolontariuszy"
+        : "",
       hasPicture(item) ? "" : "bez obrazka",
     ]
       .filter(Boolean)
