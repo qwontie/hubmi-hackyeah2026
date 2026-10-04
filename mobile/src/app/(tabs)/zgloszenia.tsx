@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import Head from "expo-router/head";
-import { Mail, MessageSquareText, PenLine, Trash2 } from "lucide-react-native";
+import { Mail, MessageSquareText, Trash2 } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { APP_NAME } from "@/config";
@@ -136,15 +136,7 @@ export default function SubmissionsScreen() {
       {needs === null ? null : (
         <Sheet>
           {needs.length === 0 ? (
-            <View style={styles.empty}>
-              <Txt>Nie masz jeszcze zgłoszeń na tym urządzeniu.</Txt>
-              <Button
-                icon={PenLine}
-                label="Opisz problem"
-                onPress={() => router.navigate("/")}
-                variant="primary"
-              />
-            </View>
+            <Txt>Nie masz jeszcze zgłoszeń na tym urządzeniu.</Txt>
           ) : (
             <View role="list">
               {needs.map((need, index) => (
@@ -171,9 +163,6 @@ const styles = StyleSheet.create({
   confirm: {
     gap: space.md,
     width: "100%",
-  },
-  empty: {
-    gap: space.lg,
   },
   entry: {
     gap: space.lg,
