@@ -47,7 +47,7 @@
     { id: "recent", label: "Ostatnie" },
     { id: "fits", label: "Pasuje" },
     { id: "does_not_fit", label: "Nie pasuje" },
-    { id: "testers", label: "Chętni" },
+    { id: "testers", label: "Wolontariusze" },
   ];
   const signupSorts = [
     { id: "newest", label: "Najnowsze" },
@@ -664,7 +664,7 @@
                   >Nie pasuje</span
                 >
                 <span class="opt">Uwagi</span>
-                <span class={[sort === "testers" && "on"]}>Chętni</span>
+                <span class={[sort === "testers" && "on"]}>Wolontariusze</span>
               </div>
               <ol class="rows">
                 {#each votes as r (r.innovation.slug)}
@@ -705,7 +705,7 @@
                         {r.improvements}</span
                       >
                       <span class="num tabular"
-                        ><span class="sr-only">Chętni do testów: </span>
+                        ><span class="sr-only">Wolontariusze: </span>
                         {r.testers}</span
                       >
                     </a>
@@ -979,7 +979,7 @@
 
   .colhead {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 56px 76px 52px 56px;
+    grid-template-columns: minmax(0, 1fr) 56px 76px 52px 92px;
     gap: 4px;
   }
 
@@ -1027,7 +1027,7 @@
   }
 
   .vrow {
-    grid-template-columns: minmax(0, 1fr) 56px 76px 52px 56px;
+    grid-template-columns: minmax(0, 1fr) 56px 76px 52px 92px;
     gap: 4px;
   }
 
@@ -1139,7 +1139,7 @@
 
     .colhead,
     .vrow {
-      grid-template-columns: minmax(0, 1fr) 48px 64px 48px;
+      grid-template-columns: minmax(0, 1fr) 44px 68px 88px;
     }
 
     .opt,

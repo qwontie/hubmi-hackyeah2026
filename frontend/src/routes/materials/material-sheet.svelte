@@ -147,7 +147,9 @@
           run({ status: item.status === "published" ? "draft" : "published" }, event.currentTarget, item.status === "published" ? "Ukryto" : "Opublikowano")}
         type="button"
       >
-        <span>{item.status === "published" ? "Ukryj" : "Opublikuj"}</span>
+        <span
+          >{item.status === "published" ? "Ukryj przed mieszkańcami" : "Opublikuj"}</span
+        >
       </button>
       <button
         class="primary cladd-clickable"

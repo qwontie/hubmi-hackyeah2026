@@ -356,7 +356,7 @@
                           type="button"
                         >
                           <span
-                            >{c.status === "published" ? "Ukryj" : "Opublikuj"}</span
+                            >{c.status === "published" ? "Ukryj przed mieszkańcami" : "Opublikuj"}</span
                           >
                         </button>
                       </span>

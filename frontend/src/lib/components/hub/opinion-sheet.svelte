@@ -86,7 +86,7 @@
           <dd class="tabular">{row?.improvements ?? 0}</dd>
         </div>
         <div>
-          <dt>Chętni do testów</dt>
+          <dt>Wolontariusze</dt>
           <dd class="tabular">{row?.testers ?? 0}</dd>
         </div>
       </dl>
