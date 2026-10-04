@@ -14,8 +14,10 @@ from dependencies.container import container
 from services.ai import AiBudgetExceededError, AiUnavailableError
 from services.ai.costs import budget_limit, spent_last_day
 from services.library.images.pictures import UnusableImageError
-from services.library.images.service import find_image, spent_since, store
+from services.library.images.service import real_image, spent_since
 from services.library.images.sources import client
+from services.library.images.stock import give_stock, target
+from services.library.images.storage import store
 from utils.db import init_db, session_scope
 from utils.db.models import Innovation
 from utils.logging import setup_logging
@@ -27,18 +29,13 @@ def parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Give every innovation one picture: a photo from its ROPS brochure, "
-            "its video thumbnail, or a generated illustration"
+            "its video thumbnail, or a fitting picture from our own pool"
         )
     )
     parser.add_argument("--limit", type=int, default=None, help="process at most N")
     parser.add_argument("--slug", action="append", default=[], help="only this slug")
     parser.add_argument(
         "--force", action="store_true", help="redo innovations that have a picture"
-    )
-    parser.add_argument(
-        "--no-generate",
-        action="store_true",
-        help="use only ROPS photos and video thumbnails",
     )
     parser.add_argument(
         "--budget",
@@ -83,9 +80,7 @@ async def process(args: argparse.Namespace) -> int:
                 console.print("[red]daily AI budget is nearly used, run again later[/]")
                 break
             try:
-                chosen = await find_image(
-                    http, innovation, generate=not args.no_generate
-                )
+                chosen = await real_image(http, innovation)
             except AiBudgetExceededError:
                 console.print("[red]daily AI budget reached, run again later[/]")
                 break
@@ -93,8 +88,17 @@ async def process(args: argparse.Namespace) -> int:
                 failed += 1
                 console.print(f"[red]x[/] {innovation.slug}: {e!r}")
                 continue
+            if chosen is None and innovation.image_version is not None:
+                console.print(f"[dim]{index:>3}/{len(todo)}[/] {innovation.slug}: kept")
+                continue
             if chosen is None:
-                console.print(f"[dim]{index:>3}/{len(todo)}[/] {innovation.slug}: none")
+                async with session_scope() as session:
+                    reused = await give_stock(session, target(innovation))
+                kind = "stock" if reused else "none"
+                counts[kind] = counts.get(kind, 0) + 1
+                console.print(
+                    f"[dim]{index:>3}/{len(todo)}[/] {innovation.slug}: {kind}"
+                )
                 continue
             async with session_scope() as session:
                 version = await store(session, innovation.id, chosen)

@@ -11,6 +11,7 @@ from sqlmodel import col, or_, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from services.bus import bus
+from services.library.images.stock import fill_missing
 from utils.db import session_scope
 from utils.db.models.category import Category
 from utils.db.models.import_run import ImportRun, ImportStatus, ImportTrigger
@@ -170,6 +171,16 @@ async def _upsert_item(
         counters.skipped_edited += 1
 
 
+async def _give_pictures(session: AsyncSession) -> None:
+    try:
+        filled = await fill_missing(session)
+    except Exception:
+        await session.rollback()
+        logger.exception("import: stock pictures failed")
+        return
+    logger.info("import: %d innovations got a stock picture", filled)
+
+
 async def _close_stale_runs(session: AsyncSession, keep: uuid.UUID | None) -> None:
     stale = (
         await session.exec(
@@ -277,6 +288,7 @@ async def run_import(
                     await session.commit()
                     await session.refresh(run)
                 counters = Counters()
+                error = None
                 try:
                     async with PageFetcher(delay=delay, cache_dir=cache_dir) as fetcher:
                         await _crawl(session, fetcher, run, counters, progress)
@@ -285,8 +297,9 @@ async def run_import(
                 except Exception as e:
                     await session.rollback()
                     logger.exception("import failed")
-                    return await _finish(session, run, counters, error=repr(e)[:500])
-                return await _finish(session, run, counters)
+                    error = repr(e)[:500]
+                await _give_pictures(session)
+                return await _finish(session, run, counters, error=error)
         finally:
             await lock_session.scalar(
                 text("SELECT pg_advisory_unlock(:key)"), {"key": IMPORT_LOCK_KEY}

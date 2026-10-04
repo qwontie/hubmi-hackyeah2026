@@ -26,6 +26,7 @@ from services.ingest.parse import (
     parse_category,
     parse_item,
 )
+from services.library.images.stock import give_stock, target
 from utils.db import session_scope
 from utils.db.models import (
     Category,
@@ -376,19 +377,19 @@ async def add_innovation(job_id: str, url: str) -> dict[str, Any]:
             message = "Nieznana kategoria tej innowacji."
             raise AddError(message)
         _progress(job_id, "save")
-        session.add(
-            Innovation(
-                slug=item.slug,
-                source_url=item.source_url,
-                source_hash=item.content_hash(),
-                imported_at=datetime.now(UTC),
-                status=InnovationStatus.DRAFT,
-                **{name: getattr(item, name) for name in CONTENT_FIELDS},
-            )
+        innovation = Innovation(
+            slug=item.slug,
+            source_url=item.source_url,
+            source_hash=item.content_hash(),
+            imported_at=datetime.now(UTC),
+            status=InnovationStatus.DRAFT,
+            **{name: getattr(item, name) for name in CONTENT_FIELDS},
         )
+        session.add(innovation)
         await session.commit()
         _progress(job_id, "embedding")
         await refresh_embeddings(session)
+        await give_stock(session, target(innovation))
     return {"kind": "innovation", "slug": item.slug, "title": item.title}
 
 

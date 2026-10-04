@@ -71,6 +71,23 @@ class InnovationPage(BaseModel):
     per_page: int
 
 
+class PoolPicture(BaseModel):
+    id: str
+    title: str
+    category: CategoryRef
+    image_url: str
+    image_card_url: str
+    image_alt: str | None
+    image_source: str
+    image_label: str
+
+
+class PictureChoice(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    pool_id: Slug
+
+
 class InnovationQuery(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

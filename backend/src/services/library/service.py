@@ -17,6 +17,7 @@ from utils.db.models import AdminUser, Category, Innovation, InnovationStatus
 from utils.logging import logger
 
 from .images import image_fields
+from .images.stock import give_stock, in_pool, is_pool_picture, reuse, target
 from .schemas import (
     AdminInnovation,
     AdminInnovationDetail,
@@ -24,6 +25,8 @@ from .schemas import (
     InnovationChanges,
     InnovationCreate,
     InnovationQuery,
+    PictureChoice,
+    PoolPicture,
 )
 
 REQUIRED = frozenset(
@@ -43,6 +46,9 @@ SLUG_LIMIT = 80
 FOLD = str.maketrans({"ł": "l", "Ł": "L"})
 MISSING = "Nie znaleziono innowacji."
 UNKNOWN_CATEGORY = "Nieznana kategoria."
+POOL_FIELD = "pool_id"
+NOT_IN_POOL = "Tego obrazka nie ma w puli."
+SAME_PICTURE = "To jest obrazek tej innowacji."
 
 
 def slugify(title: str) -> str:
@@ -227,6 +233,8 @@ async def create(
     )
     await session.commit()
     await reembed(session)
+    innovation, _ = await find(session, innovation.slug)
+    await give_stock(session, target(innovation))
     return await announce(session, innovation.slug)
 
 
@@ -276,3 +284,53 @@ async def set_status(
     session: AsyncSession, admin: AdminUser, slug: str, status: InnovationStatus
 ) -> AdminInnovationDetail:
     return await update(session, admin, slug, InnovationChanges(status=status))
+
+
+async def picture_pool(session: AsyncSession) -> list[PoolPicture]:
+    result = await session.exec(
+        entity_select(Innovation, Category)
+        .join(Category, col(Category.slug) == col(Innovation.category_slug))
+        .where(*in_pool())
+        .order_by(
+            col(Category.position),
+            func.lower(col(Innovation.title)),
+            col(Innovation.id),
+        )
+    )
+    return [
+        PoolPicture.model_validate(
+            {
+                "id": innovation.slug,
+                "title": innovation.title,
+                "category": CategoryRef(slug=category.slug, name=category.name),
+                **image_fields(innovation),
+            }
+        )
+        for innovation, category in result.all()
+    ]
+
+
+async def set_picture(
+    session: AsyncSession, admin: AdminUser, slug: str, choice: PictureChoice
+) -> AdminInnovationDetail:
+    innovation, _ = await find(session, slug)
+    target_id = innovation.id
+    if choice.pool_id == slug:
+        raise invalid(POOL_FIELD, SAME_PICTURE)
+    donor = (
+        await session.exec(
+            entity_select(Innovation.id).where(col(Innovation.slug) == choice.pool_id)
+        )
+    ).first()
+    if donor is None or not await is_pool_picture(session, donor):
+        raise invalid(POOL_FIELD, NOT_IN_POOL)
+    version = await reuse(session, target_id, donor)
+    record(
+        session,
+        admin,
+        "innovation.picture",
+        target=("innovation", slug),
+        details={"pool_id": choice.pool_id, "version": version},
+    )
+    await session.commit()
+    return await announce(session, slug)

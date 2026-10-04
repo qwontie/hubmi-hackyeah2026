@@ -4,12 +4,14 @@ from pydantic import BaseModel
 
 from utils.db.models import ImageSource, Innovation
 
-SourceName = Literal["rops", "youtube", "generated"]
+SourceName = Literal["rops", "youtube", "generated", "stock"]
+STOCK = "stock"
 
 LABELS = {
     ImageSource.ROPS.value: "Zdjęcie z materiałów ROPS",
     ImageSource.YOUTUBE.value: "Kadr z filmu ROPS",
     ImageSource.GENERATED.value: "Ilustracja AI",
+    STOCK: "Ilustracja poglądowa",
 }
 
 

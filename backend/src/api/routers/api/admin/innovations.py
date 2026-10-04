@@ -12,6 +12,8 @@ from services.library.schemas import (
     InnovationCreate,
     InnovationPage,
     InnovationQuery,
+    PictureChoice,
+    PoolPicture,
 )
 from utils.db.models import InnovationStatus
 
@@ -33,6 +35,11 @@ async def create_innovation(
     body: InnovationCreate, admin: AdminPerson, session: FromDishka[AsyncSession]
 ) -> AdminInnovationDetail:
     return await service.create(session, admin, body)
+
+
+@router.get("/picture-pool")
+async def picture_pool(session: FromDishka[AsyncSession]) -> list[PoolPicture]:
+    return await service.picture_pool(session)
 
 
 @router.get("/{slug}")
@@ -65,3 +72,13 @@ async def unpublish(
     slug: str, admin: AdminPerson, session: FromDishka[AsyncSession]
 ) -> AdminInnovationDetail:
     return await service.set_status(session, admin, slug, InnovationStatus.DRAFT)
+
+
+@router.put("/{slug}/picture")
+async def set_picture(
+    slug: str,
+    body: PictureChoice,
+    admin: AdminPerson,
+    session: FromDishka[AsyncSession],
+) -> AdminInnovationDetail:
+    return await service.set_picture(session, admin, slug, body)
