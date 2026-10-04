@@ -161,7 +161,7 @@
   function hrefOf(result: IngestResult) {
     return result.kind === "innovation"
       ? resolve("/library/[[slug]]", { slug: result.slug })
-      : resolve("/knowledge/[[id]]", { id: result.id });
+      : resolve("/materials/[[id]]", { id: result.id });
   }
 
   const kindWord = (result: IngestResult) =>

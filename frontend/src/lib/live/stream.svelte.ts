@@ -29,7 +29,6 @@ const TOPICS = [
   "grant_call.updated",
   "ingest.progress",
   "ingest.finished",
-  "adaptation.created",
   "volunteer.created",
   "volunteer.updated",
   "volunteer.reported",

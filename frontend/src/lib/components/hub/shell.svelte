@@ -1,4 +1,11 @@
 <script lang="ts">
+  import BookOpen from "@lucide/svelte/icons/book-open";
+  import ChartColumn from "@lucide/svelte/icons/chart-column";
+  import ClipboardCheck from "@lucide/svelte/icons/clipboard-check";
+  import Inbox from "@lucide/svelte/icons/inbox";
+  import Lightbulb from "@lucide/svelte/icons/lightbulb";
+  import MessageSquare from "@lucide/svelte/icons/message-square";
+  import Users from "@lucide/svelte/icons/users";
   import type { Snippet } from "svelte";
   import { goto } from "$app/navigation";
   import { asset, resolve } from "$app/paths";
@@ -59,12 +66,10 @@
   );
   const opinionsPath = resolve("/opinions");
   const onOpinions = $derived(page.url.pathname.startsWith(opinionsPath));
-  const knowledgePath = resolve("/knowledge");
-  const onKnowledge = $derived(page.url.pathname.startsWith(knowledgePath));
-  const adaptationsPath = resolve("/adaptations/[[id]]", {});
   const volunteersPath = resolve("/volunteers/[[id]]", {});
   const onVolunteers = $derived(page.url.pathname.startsWith(volunteersPath));
-  const onAdaptations = $derived(page.url.pathname.startsWith(adaptationsPath));
+
+  const icon = { "aria-hidden": true, size: 16, strokeWidth: 1.75 } as const;
 
   const liveWords: Record<string, string> = {
     connecting: "Łączenie…",
@@ -131,12 +136,18 @@
       class="nav order-3 w-full min-w-0 overflow-x-auto min-[900px]:order-none min-[900px]:w-auto"
     >
       {#if expert}
-        <a aria-current={onExpert ? "page" : undefined} href={expertPath}
-          >Moje zadania</a
-        >
+        <a aria-current={onExpert ? "page" : undefined} href={expertPath}>
+          <ClipboardCheck {...icon} />
+          <span class="label">Moje zadania</span>
+        </a>
       {:else}
-        <a aria-current={onNeeds ? "page" : undefined} href={needsPath}>
-          Dziennik potrzeb
+        <a
+          aria-current={onNeeds ? "page" : undefined}
+          href={needsPath}
+          title="Dziennik potrzeb"
+        >
+          <Inbox {...icon} />
+          <span class="label">Dziennik potrzeb</span>
           {#if inbox.newCount > 0}
             <span class="font-semibold text-hm-stamp text-xs tabular"
               >{inbox.newCount}<span class="sr-only">
@@ -145,33 +156,46 @@
             >
           {/if}
         </a>
-        <a aria-current={onLibrary ? "page" : undefined} href={libraryPath}
-          >Biblioteka</a
+        <a
+          aria-current={onLibrary ? "page" : undefined}
+          href={libraryPath}
+          title="Biblioteka"
         >
-        <a aria-current={onKnowledge ? "page" : undefined} href={knowledgePath}
-          >Wiedza</a
-        >
+          <BookOpen {...icon} />
+          <span class="label">Biblioteka</span>
+        </a>
         <a
           aria-current={onIdeas || onGrants ? "page" : undefined}
           href={ideasPath}
-          >Pomysły i&nbsp;nabory</a
+          title="Pomysły i nabory"
         >
-        <a
-          aria-current={onAdaptations ? "page" : undefined}
-          href={adaptationsPath}
-          >Plany wdrożenia</a
-        >
+          <Lightbulb {...icon} />
+          <span class="label">Pomysły i&nbsp;nabory</span>
+        </a>
         <a
           aria-current={onVolunteers ? "page" : undefined}
           href={volunteersPath}
-          >Wolontariusze</a
+          title="Wolontariusze"
         >
-        <a aria-current={onOpinions ? "page" : undefined} href={opinionsPath}
-          >Opinie</a
+          <Users {...icon} />
+          <span class="label">Wolontariusze</span>
+        </a>
+        <a
+          aria-current={onOpinions ? "page" : undefined}
+          href={opinionsPath}
+          title="Opinie"
         >
-        <a aria-current={onStats ? "page" : undefined} href={statsPath}
-          >Statystyki</a
+          <MessageSquare {...icon} />
+          <span class="label">Opinie</span>
+        </a>
+        <a
+          aria-current={onStats ? "page" : undefined}
+          href={statsPath}
+          title="Statystyki"
         >
+          <ChartColumn {...icon} />
+          <span class="label">Statystyki</span>
+        </a>
       {/if}
     </nav>
     <div class="ml-auto flex items-center gap-4 text-[13px] text-hm-ink-soft">
@@ -230,6 +254,10 @@
     transition: background-color 150ms ease;
   }
 
+  .nav a :global(svg) {
+    flex: none;
+  }
+
   .nav a:hover {
     background: color-mix(in oklab, var(--hm-paper) 50%, transparent);
   }
@@ -281,6 +309,25 @@
 
   .signout:hover {
     background: color-mix(in oklab, var(--hm-paper) 60%, transparent);
+  }
+
+  @media (min-width: 900px) and (max-width: 1279px) {
+    .nav a {
+      gap: 6px;
+      padding: 0 11px;
+    }
+
+    .nav .label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      white-space: nowrap;
+      border: 0;
+      clip-path: inset(50%);
+    }
   }
 
   @media (max-width: 899px) {

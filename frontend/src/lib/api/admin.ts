@@ -848,74 +848,6 @@ export const grantSubscribers = (signal?: AbortSignal) =>
 export const removeGrantSubscriber = (id: string) =>
   api.del(`/admin/grant-subscribers/${id}`);
 
-export interface AdminAdaptation {
-  context: string;
-  created_at: string;
-  id: string;
-  innovation: { slug: string; title: string };
-  institution: { name: string; slug: string };
-  place: string;
-  powiat: string | null;
-  service_name: string;
-  share_path: string;
-}
-
-export interface AdaptationPlan {
-  combine: { lead: string | null; slug: string; title: string; why: string }[];
-  cost_drivers: string[];
-  local_context?: string | null;
-  local_facts?: {
-    label: string;
-    page?: number | null;
-    region_value?: number | null;
-    source_title?: string | null;
-    source_url?: string | null;
-    unit?: string | null;
-    value: number | string;
-    year?: number | null;
-  }[];
-  measures: string[];
-  partners: string[];
-  regional_challenges?: {
-    area?: string;
-    slug: string;
-    summary?: string;
-    title: string;
-  }[];
-  risks: { mitigation: string; risk: string }[];
-  service_name: string;
-  staff: string[];
-  steps: { description: string; title: string }[];
-  summary: string;
-  target_group: string;
-  to_check: string[];
-}
-
-export interface Adaptation {
-  context: string;
-  created_at: string;
-  id: string;
-  innovation: { slug: string; title: string };
-  institution: { name: string; slug: string };
-  place: string;
-  plan: AdaptationPlan;
-  powiat: string | null;
-  share_path: string;
-}
-
-export const listAdaptations = (
-  params: { innovation?: string; institution_type?: string; powiat?: string },
-  signal?: AbortSignal
-) =>
-  api.get<Page<AdminAdaptation>>(
-    "/admin/adaptations",
-    { per_page: 100, ...params },
-    signal
-  );
-
-export const getAdaptation = (id: string, signal?: AbortSignal) =>
-  api.get<Adaptation>(`/adaptations/${id}`, undefined, signal);
-
 export type VolunteerStatus =
   | "new"
   | "accepted"
@@ -1007,24 +939,6 @@ export const volunteerReports = (innovation: string, signal?: AbortSignal) =>
   api.get<VolunteerReports>(
     "/admin/volunteers/reports",
     { innovation },
-    signal
-  );
-
-export interface AdaptationVolunteers {
-  count: number;
-  innovation: { slug: string; title: string };
-  items: AdminVolunteer[];
-  powiat: string | null;
-  powiat_name: string | null;
-}
-
-export const adaptationVolunteers = (
-  adaptationId: string,
-  signal?: AbortSignal
-) =>
-  api.get<AdaptationVolunteers>(
-    `/admin/volunteers/for-adaptation/${adaptationId}`,
-    undefined,
     signal
   );
 
