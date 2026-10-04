@@ -1,5 +1,7 @@
 # HubMi
 
+![HubMi: panel ROPS i aplikacja dla mieszkańców](docs/banner.png)
+
 Platforma Małopolskiego Hubu Innowacji Społecznych (ROPS w Krakowie). Mieszkaniec, organizacja albo gmina opisuje problem własnymi słowami, a HubMi pokazuje pasujące innowacje społeczne z Biblioteki ROPS i jednym zdaniem tłumaczy, dlaczego pasują. Zgłoszenie trafia do panelu ROPS, gdzie pracownicy widzą, z czym ludzie przychodzą, grupują podobne sprawy i odpowiadają e-mailem.
 
 **Wdrożenie produkcyjne: [DEPLOYMENT.md](DEPLOYMENT.md).** Opisuje krok po kroku drogę od obecnej wersji demonstracyjnej do prawdziwej produkcji na serwerze ROPS lub Województwa.
