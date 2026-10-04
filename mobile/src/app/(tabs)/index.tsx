@@ -17,7 +17,6 @@ import { useMatch } from "@/hooks/use-match";
 import { useSetChromeTone } from "@/theme/chrome";
 import { useTheme } from "@/theme/settings";
 import { motion, space, tabBarSpace } from "@/theme/tokens";
-import { nightAttr } from "@/ui/night";
 import { nativeDriver } from "@/ui/rise";
 import { BackPill, WIDE_TOP } from "@/ui/screen";
 import { AccessButton, Brand } from "@/ui/shell";
@@ -35,7 +34,7 @@ function Dawn({ dawn, rise }: { dawn: Animated.Value; rise: Animated.Value }) {
         StyleSheet.absoluteFill,
         styles.dawn,
         {
-          backgroundColor: colors.night,
+          backgroundColor: colors.ground,
           opacity: dawn.interpolate({
             inputRange: [0, 0.82, 1],
             outputRange: [1, 1, 0],
@@ -43,10 +42,10 @@ function Dawn({ dawn, rise }: { dawn: Animated.Value; rise: Animated.Value }) {
         },
       ]}
     >
-      <Sky rise={rise} />
+      <Sky day rise={rise} />
       <Animated.View
         style={{
-          backgroundColor: colors.ground,
+          backgroundColor: colors.paper,
           borderRadius: reach,
           height: reach * 2,
           left: width / 2 - reach,
@@ -128,11 +127,8 @@ const chromeTone = (
   dawning: boolean,
   wide: boolean
 ) => {
-  const lit = wide ? ("split" as const) : ("day" as const);
-  if (!asking) {
-    return lit;
-  }
-  return done && !dawning ? lit : ("night" as const);
+  const lit = !asking || (done && !dawning);
+  return wide && lit ? ("split" as const) : ("day" as const);
 };
 
 export default function MatchScreen() {
@@ -210,12 +206,8 @@ export default function MatchScreen() {
   }
 
   return (
-    <View
-      role="main"
-      style={[styles.root, { backgroundColor: colors.night }]}
-      {...nightAttr(true)}
-    >
-      <Sky rise={rise} />
+    <View role="main" style={[styles.root, { backgroundColor: colors.ground }]}>
+      <Sky day rise={rise} />
       <ScrollView
         automaticallyAdjustKeyboardInsets
         contentContainerStyle={[
@@ -238,11 +230,11 @@ export default function MatchScreen() {
         >
           {wide ? null : (
             <View style={styles.top}>
-              <Brand night />
-              <AccessButton night />
+              <Brand />
+              <AccessButton />
             </View>
           )}
-          <BackPill label="Wróć" night onPress={leave} />
+          <BackPill label="Wróć" onPress={leave} />
           <ProblemComposer match={match} />
         </View>
       </ScrollView>

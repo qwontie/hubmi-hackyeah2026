@@ -54,6 +54,9 @@ const ERRORS: Record<string, string> = {
     "Przeglądarka nie pozwala na dyktowanie. Wpisz opis z klawiatury.",
 };
 
+const UNSUPPORTED =
+  "Ta przeglądarka nie przyjmuje dyktowania: otwórz stronę w Chrome, Edge lub Safari, a na telefonie użyj mikrofonu na klawiaturze.";
+
 export const useRecognition = (onText: (text: string) => void): Recognition => {
   const ctor = getCtor();
   const instance = useRef<SpeechRecognitionLike | null>(null);
@@ -78,6 +81,7 @@ export const useRecognition = (onText: (text: string) => void): Recognition => {
 
   const start = useCallback(() => {
     if (!ctor) {
+      setError(UNSUPPORTED);
       return;
     }
     instance.current?.abort();

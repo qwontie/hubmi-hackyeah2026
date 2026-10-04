@@ -7,18 +7,26 @@ const LIFT = [190, 210, 230];
 
 export const skyHeight = (wide: boolean) => (wide ? WIDE : NARROW).height;
 
-export function Sky({ rise }: { rise: Animated.Value }) {
+export function Sky({
+  day = false,
+  rise,
+}: {
+  day?: boolean;
+  rise: Animated.Value;
+}) {
   const { colors, wide } = useTheme();
   const { width } = useWindowDimensions();
   const shape = wide ? WIDE : NARROW;
-  const tones = [colors.nightRise, colors.dusk, colors.horizon];
+  const tones = day
+    ? [colors.tone, colors.paper]
+    : [colors.nightRise, colors.dusk, colors.horizon];
   return (
     <View
       aria-hidden
       pointerEvents="none"
       style={[styles.sky, { height: shape.height }]}
     >
-      {shape.discs.map((size, index) => (
+      {shape.discs.slice(0, tones.length).map((size, index) => (
         <Animated.View
           key={size}
           style={{

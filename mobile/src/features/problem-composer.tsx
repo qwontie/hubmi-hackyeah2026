@@ -23,8 +23,6 @@ type Match = ReturnType<typeof useMatch>;
 
 const TITLE_ID = "problem-title";
 const ERROR_ID = "problem-error";
-const WASH = "rgba(252, 252, 255, 0.14)";
-const HINT = "rgba(218, 219, 252, 0.72)";
 const QUESTION = "Opowiedz, co się dzieje.";
 
 const web = Platform.OS === "web";
@@ -48,15 +46,12 @@ const wordsSize = (length: number, wide: boolean, factor: number) => {
 };
 
 function Voice({ recognition }: { recognition: Recognition }) {
-  const { colors, reduceMotion } = useTheme();
-  if (!recognition.supported) {
-    if (web) {
-      return null;
-    }
+  const { borderWidth, colors, highContrast, reduceMotion } = useTheme();
+  if (!(recognition.supported || web)) {
     return (
       <View style={styles.voice}>
-        <Mic aria-hidden color={colors.onNightSoft} size={22} />
-        <Txt tone="onNightSoft" variant="small">
+        <Mic aria-hidden color={colors.inkSoft} size={22} />
+        <Txt tone="soft" variant="small">
           Można dyktować z klawiatury
         </Txt>
       </View>
@@ -77,17 +72,21 @@ function Voice({ recognition }: { recognition: Recognition }) {
       <View
         style={[
           styles.voiceDot,
-          { backgroundColor: listening ? colors.onNight : WASH },
+          {
+            backgroundColor: listening ? colors.stamp : colors.tone,
+            borderColor: colors.ink,
+            borderWidth: highContrast ? borderWidth : 0,
+          },
         ]}
       >
         <Icon
           aria-hidden
-          color={listening ? colors.night : colors.onNight}
+          color={listening ? colors.onStamp : colors.stamp}
           size={listening ? 20 : 26}
           strokeWidth={2.2}
         />
       </View>
-      <Txt tone="onNight" variant="label" weight="600">
+      <Txt tone="stamp" variant="label" weight="600">
         {listening ? "Zakończ dyktowanie" : "Powiedz"}
       </Txt>
     </Pressable>
@@ -102,7 +101,7 @@ function Feedback({ match }: { match: Match }) {
     <View aria-live="polite" style={styles.feedback}>
       {left ? (
         <Txt
-          tone={left.over ? "onNight" : "onNightSoft"}
+          tone={left.over ? "bad" : "soft"}
           variant="small"
           weight={left.over ? "600" : "400"}
         >
@@ -111,27 +110,18 @@ function Feedback({ match }: { match: Match }) {
       ) : null}
       {fieldError ? (
         <View style={styles.error}>
-          <CircleAlert aria-hidden color={colors.onNight} size={24} />
-          <Txt
-            nativeID={ERROR_ID}
-            style={styles.grow}
-            tone="onNight"
-            weight="600"
-          >
+          <CircleAlert aria-hidden color={colors.bad} size={24} />
+          <Txt nativeID={ERROR_ID} style={styles.grow} weight="600">
             {fieldError}
           </Txt>
         </View>
       ) : null}
       {recognition.listening ? (
-        <Txt tone="onNight" weight="500">
+        <Txt weight="500">
           Słucham. Mów po polsku, tekst pojawi się na ekranie.
         </Txt>
       ) : null}
-      {recognition.error ? (
-        <Txt tone="onNight" weight="600">
-          {recognition.error}
-        </Txt>
-      ) : null}
+      {recognition.error ? <Txt weight="600">{recognition.error}</Txt> : null}
       {state.kind === "error" ? (
         <Notice tone="error">
           <View style={styles.errorBody}>
@@ -147,7 +137,7 @@ function Feedback({ match }: { match: Match }) {
 }
 
 function Words({ match }: { match: Match }) {
-  const { colors, wide, roomy, type, highContrast } = useTheme();
+  const { colors, wide, roomy, type } = useTheme();
   const { width } = useWindowDimensions();
   const [focused, setFocused] = useState(false);
   const [height, setHeight] = useState(0);
@@ -172,7 +162,7 @@ function Words({ match }: { match: Match }) {
         style={[
           ease,
           {
-            color: typed ? colors.onNightSoft : colors.onNight,
+            color: typed ? colors.inkSoft : colors.ink,
             fontFamily: typed ? fonts["500"] : fonts["600"],
             fontSize: questionSize,
             letterSpacing: typed ? 0 : questionSize * -0.035,
@@ -211,19 +201,21 @@ function Words({ match }: { match: Match }) {
         placeholder={
           "Na przykład: mama z\u00a0demencją wychodzi z\u00a0domu i\u00a0się gubi."
         }
-        placeholderTextColor={highContrast ? colors.onNightSoft : HINT}
+        placeholderTextColor={colors.inkSoft}
         ref={inputRef}
-        selectionColor={colors.onNightSoft}
+        selectionColor={colors.horizon}
         style={[
           styles.input,
           {
-            borderBottomColor: focused ? colors.onNight : colors.glassNightEdge,
-            color: colors.onNight,
+            borderBottomColor: focused ? colors.ring : colors.ruleStrong,
+            borderBottomWidth: focused ? 3 : 2,
+            color: colors.ink,
             fontFamily: typed ? fonts["600"] : fonts["400"],
             fontSize: size,
             height: Math.max(floor, height),
             letterSpacing: typed ? size * -0.025 : 0,
             lineHeight: line,
+            paddingBottom: focused ? space.md - 1 : space.md,
           },
         ]}
         value={text}
@@ -241,7 +233,7 @@ export function ProblemComposer({ match }: { match: Match }) {
       <Words match={match} />
       <View aria-live="polite">
         {loading ? (
-          <Txt tone="onNightSoft" variant="lead">
+          <Txt tone="soft" variant="lead">
             Szukamy w bibliotece ROPS. To trwa zwykle kilka sekund.
           </Txt>
         ) : null}
@@ -256,12 +248,12 @@ export function ProblemComposer({ match }: { match: Match }) {
           onPress={submit}
           size="large"
           style={wide ? styles.submit : undefined}
-          variant="light"
+          variant="primary"
         />
         <Voice recognition={recognition} />
       </View>
       {wide && web ? (
-        <Txt tone="onNightSoft" variant="small">
+        <Txt tone="soft" variant="small">
           Enter szuka. Shift i Enter to nowa linia.
         </Txt>
       ) : null}
@@ -291,8 +283,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   input: {
-    borderBottomWidth: 2,
-    paddingBottom: space.md,
     paddingHorizontal: 0,
     paddingTop: space.xs,
     textAlignVertical: "top",
