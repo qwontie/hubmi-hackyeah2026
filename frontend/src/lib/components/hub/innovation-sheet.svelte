@@ -271,6 +271,12 @@
           {detail.category.name}
           ·
           {detail.status === "published" ? "opublikowana" : "szkic, niewidoczna dla mieszkańców"}
+          {#if detail.volunteer_checked}
+            ·
+            <span class="checked"
+              >Sprawdzone przez wolontariuszy{detail.volunteer_reports ? ` (${detail.volunteer_reports} ${plural(detail.volunteer_reports, "raport", "raporty", "raportów")})` : ""}</span
+            >
+          {/if}
           {#if detail.source_url}
             ·
             <a
@@ -517,6 +523,11 @@
     width: 100%;
     max-height: 220px;
     object-fit: contain;
+  }
+
+  .checked {
+    font-weight: 600;
+    color: var(--hm-ok);
   }
 
   .link {

@@ -103,6 +103,7 @@
   const offs = [
     live.on("innovation.updated", (data) => {
       const next = data as Item;
+      delete broken[next.slug];
       const index = items.findIndex((i) => i.slug === next.slug);
       if (index === -1) {
         items = [...items, next];
@@ -172,6 +173,7 @@
     return [
       category === "all" ? item.category.name : "",
       item.edited_fields.length > 0 ? "zmieniona ręcznie" : "",
+      item.volunteer_checked ? "sprawdzone przez wolontariuszy" : "",
       hasPicture(item) ? "" : "bez obrazka",
     ]
       .filter(Boolean)
@@ -237,6 +239,7 @@
   }
 
   function saved(next: Item) {
+    delete broken[next.slug];
     const index = items.findIndex((i) => i.slug === next.slug);
     if (index !== -1) {
       items[index] = { ...items[index], ...next };

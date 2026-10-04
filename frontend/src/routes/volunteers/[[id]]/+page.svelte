@@ -630,6 +630,7 @@
   }
 
   .total {
+    flex: none;
     white-space: nowrap;
   }
 

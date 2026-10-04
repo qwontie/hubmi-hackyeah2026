@@ -7,6 +7,8 @@ export interface PictureFields {
   image_label?: string | null;
   image_source?: string | null;
   image_url?: string | null;
+  volunteer_checked?: boolean;
+  volunteer_reports?: number;
 }
 
 export const hasPicture = (item: PictureFields) =>
