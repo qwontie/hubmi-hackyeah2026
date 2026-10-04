@@ -1,7 +1,10 @@
 <script lang="ts">
   import { asset } from "$app/paths";
 
-  let { variant = "bar" }: { variant?: "bar" | "stack" } = $props();
+  let {
+    demo = false,
+    variant = "bar",
+  }: { demo?: boolean; variant?: "bar" | "stack" } = $props();
 
   const links = [
     { href: "https://rops.krakow.pl/", label: "rops.krakow.pl" },
@@ -54,6 +57,9 @@
       <span class="sr-only">(otwiera się w nowej karcie)</span>
     </a>
   </div>
+  {#if demo}
+    <p class="demo">W bazie są dane pokazowe</p>
+  {/if}
   <nav aria-label="Strony ROPS" class="links">
     {#each links as l (l.href)}
       <a href={l.href} rel="noreferrer" target="_blank"
@@ -126,6 +132,10 @@
     width: 1px;
     height: 32px;
     background: var(--hm-rule);
+  }
+
+  .demo {
+    color: var(--hm-ink-soft);
   }
 
   .links {

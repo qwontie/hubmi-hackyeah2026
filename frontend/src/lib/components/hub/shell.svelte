@@ -6,6 +6,7 @@
   import Lightbulb from "@lucide/svelte/icons/lightbulb";
   import MessageSquare from "@lucide/svelte/icons/message-square";
   import Users from "@lucide/svelte/icons/users";
+  import WifiOff from "@lucide/svelte/icons/wifi-off";
   import type { Snippet } from "svelte";
   import { goto } from "$app/navigation";
   import { asset, resolve } from "$app/paths";
@@ -71,17 +72,6 @@
 
   const icon = { "aria-hidden": true, size: 16, strokeWidth: 1.75 } as const;
 
-  const liveWords: Record<string, string> = {
-    connecting: "Łączenie…",
-    offline: "Brak połączenia",
-    open: "Na żywo",
-  };
-  const liveDots: Record<string, string> = {
-    connecting: "bg-hm-warn",
-    offline: "bg-hm-bad",
-    open: "bg-hm-live",
-  };
-
   function skip(event: MouseEvent) {
     const main = document.querySelector<HTMLElement>("main");
     if (!main) {
@@ -124,11 +114,6 @@
       <span class="leading-tight">
         <b class="block font-semibold text-[15px] tracking-tight">HubMi</b>
         <span class="text-hm-ink-soft text-xs">ROPS Kraków</span>
-        {#if demo}
-          <span class="block text-hm-ink-soft text-xs min-[900px]:hidden"
-            >Dane pokazowe</span
-          >
-        {/if}
       </span>
     </a>
     <nav
@@ -199,13 +184,14 @@
       {/if}
     </nav>
     <div class="ml-auto flex items-center gap-4 text-[13px] text-hm-ink-soft">
-      {#if demo}
-        <span class="demo max-[899px]:hidden">W bazie są dane pokazowe</span>
-      {/if}
       {#if !expert}
-        <span class="flex items-center gap-2" role="status">
-          <i class={["size-[7px] rounded-full", liveDots[live.state]]}></i>
-          <span>{liveWords[live.state]}</span>
+        <span class="contents" role="status">
+          {#if live.state === "offline"}
+            <span class="offline">
+              <WifiOff {...icon} class="text-hm-bad" />
+              <span>Brak połączenia na żywo, odśwież stronę</span>
+            </span>
+          {/if}
         </span>
       {/if}
       <button
@@ -222,7 +208,7 @@
     </div>
   </header>
   {@render children()}
-  <RopsColophon />
+  <RopsColophon {demo} />
 </div>
 
 <style>
@@ -291,9 +277,12 @@
     translate: 0 0;
   }
 
-  .demo {
+  .offline {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
     font-size: 12px;
-    white-space: nowrap;
+    color: var(--hm-ink);
   }
 
   .signout {

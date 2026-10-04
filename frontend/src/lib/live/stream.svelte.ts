@@ -53,7 +53,9 @@ class LiveStream {
       withCredentials: true,
     });
     this.#source = source;
-    this.state = "connecting";
+    if (this.state !== "offline") {
+      this.state = "connecting";
+    }
     source.onopen = () => {
       if (this.#offlineTimer) {
         clearTimeout(this.#offlineTimer);
@@ -68,7 +70,9 @@ class LiveStream {
       this.state = "open";
     };
     source.onerror = () => {
-      this.state = "connecting";
+      if (this.state !== "offline") {
+        this.state = "connecting";
+      }
       this.#offlineTimer ??= setTimeout(() => {
         if (this.state !== "open") {
           this.state = "offline";
