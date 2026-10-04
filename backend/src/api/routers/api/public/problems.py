@@ -15,7 +15,7 @@ from services.problems import (
     problem_ideas,
     problem_innovations,
 )
-from services.tester.repository import vote_counts
+from services.search import innovation_signals
 
 from .common import categories_by_slug
 from .schemas import InnovationSummary, Problem, ProblemDetail, ProblemPage
@@ -60,11 +60,11 @@ async def problem(
         raise not_found(MISSING)
     innovations = await problem_innovations(session, problem_id)
     categories = await categories_by_slug(session)
-    votes = await vote_counts(session, [i.id for i in innovations])
+    signals = await innovation_signals(session, [i.id for i in innovations])
     return ProblemDetail(
         **Problem.build(row).model_dump(),
         innovations=[
-            InnovationSummary.build(i, categories, votes) for i in innovations
+            InnovationSummary.build(i, categories, signals) for i in innovations
         ],
         ideas=[ideas.public_view(i) for i in await problem_ideas(session, problem_id)],
     )

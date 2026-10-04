@@ -7,7 +7,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.limits import rate_limit
 from services.needs import SearchOutcome, search_need
-from services.tester.repository import vote_counts
+from services.search import badge_order, innovation_signals
 from utils.db import session_scope
 from utils.db.models import SearchLog
 from utils.logging import logger
@@ -47,17 +47,22 @@ async def match(body: MatchIn, session: FromDishka[AsyncSession]) -> MatchOut:
     outcome = await search_need(session, body.text)
     await log_search(outcome)
     categories = await categories_by_slug(session)
-    votes = await vote_counts(session, [r.hit.innovation.id for r in outcome.results])
+    signals = await innovation_signals(
+        session, [r.hit.innovation.id for r in outcome.results]
+    )
+    results = badge_order(outcome.results, signals, key=lambda r: r.hit.innovation.id)
     cluster = outcome.cluster
     return MatchOut(
         need=None,
         results=[
             MatchItem(
-                innovation=InnovationSummary.build(r.hit.innovation, categories, votes),
+                innovation=InnovationSummary.build(
+                    r.hit.innovation, categories, signals
+                ),
                 score=r.hit.score,
                 reason=r.reason,
             )
-            for r in outcome.results
+            for r in results
         ],
         similar_count=outcome.similar_count,
         cluster=ClusterRef(id=cluster.id, title=cluster.title, size=cluster.size)

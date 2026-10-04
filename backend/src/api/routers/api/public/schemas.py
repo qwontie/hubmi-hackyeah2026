@@ -10,6 +10,7 @@ from services.kreator import PublicIdea
 from services.library.images import SourceName, image_fields
 from services.needs import POWIATS
 from services.problems import ProblemRow
+from services.search import Signals
 from services.tester import Votes
 from utils.db.models.category import Category
 from utils.db.models.innovation import Innovation
@@ -81,6 +82,8 @@ class InnovationSummary(BaseModel):
     has_video: bool
     has_materials: bool
     votes: Votes
+    volunteer_checked: bool = False
+    volunteer_reports: int = 0
     image_url: str | None = None
     image_card_url: str | None = None
     image_alt: str | None = None
@@ -92,9 +95,10 @@ class InnovationSummary(BaseModel):
         cls,
         innovation: Innovation,
         categories: dict[str, Category],
-        votes: Mapping[uuid.UUID, Votes],
+        signals: Mapping[uuid.UUID, Signals],
     ) -> "InnovationSummary":
         category = categories.get(innovation.category_slug)
+        found = signals.get(innovation.id) or Signals()
         return cls(
             slug=innovation.slug,
             title=innovation.title,
@@ -105,7 +109,9 @@ class InnovationSummary(BaseModel):
             ),
             has_video=bool(innovation.video_url),
             has_materials=bool(innovation.materials_url),
-            votes=votes.get(innovation.id) or Votes(),
+            votes=Votes(up=found.up, down=found.down),
+            volunteer_checked=found.checked,
+            volunteer_reports=found.reports,
             **image_fields(innovation),
         )
 
@@ -131,9 +137,9 @@ class InnovationDetail(InnovationSummary):
         cls,
         innovation: Innovation,
         categories: dict[str, Category],
-        votes: Mapping[uuid.UUID, Votes],
+        signals: Mapping[uuid.UUID, Signals],
     ) -> "InnovationDetail":
-        summary = InnovationSummary.build(innovation, categories, votes)
+        summary = InnovationSummary.build(innovation, categories, signals)
         return cls(
             **summary.model_dump(),
             what_it_is=innovation.what_it_is,

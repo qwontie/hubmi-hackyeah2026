@@ -64,6 +64,7 @@ TITLE_MIN = 5
 ESSENCE_MIN = 20
 FOR_WHOM_MIN = 3
 DRAFT_MIN = 20
+ESSENCE_WORDS = 2
 ASSIST_CANDIDATES = 5
 OFF_TOPIC = "Opisz pomysł, który pomoże ludziom albo społeczności."
 EMAIL_NEEDED = "Podaj adres e-mail, abyśmy mogli odpisać."
@@ -158,7 +159,9 @@ async def create_idea(
     body: IdeaIn, request: Request, session: FromDishka[AsyncSession]
 ) -> IdeaCreated:
     title = required_text("title", body.title, minimum=TITLE_MIN).replace("\n", " ")
-    essence = required_text("essence", body.essence, minimum=ESSENCE_MIN)
+    essence = required_text(
+        "essence", body.essence, minimum=ESSENCE_MIN, words=ESSENCE_WORDS
+    )
     for_whom = required_text("for_whom", body.for_whom, minimum=FOR_WHOM_MIN)
     canvas = clean_canvas(body.canvas)
     powiat_name("powiat", body.powiat)
@@ -218,7 +221,7 @@ async def assist_idea(
     error = None
     if len(own) < DRAFT_MIN:
         error = text_too_short("essence", DRAFT_MIN)
-    elif not is_meaningful(own):
+    elif not is_meaningful(own, words=ESSENCE_WORDS):
         error = unclear("essence")
     if error is not None:
         raise error
@@ -294,7 +297,9 @@ async def patch_idea(
         )
         reembed = True
     if "essence" in fields and body.essence is not None:
-        idea.essence = required_text("essence", body.essence, minimum=ESSENCE_MIN)
+        idea.essence = required_text(
+            "essence", body.essence, minimum=ESSENCE_MIN, words=ESSENCE_WORDS
+        )
         reembed = True
     if "for_whom" in fields and body.for_whom is not None:
         idea.for_whom = required_text("for_whom", body.for_whom, minimum=FOR_WHOM_MIN)

@@ -10,9 +10,12 @@ from api.limits import rate_limit
 from services.ai import AiBudgetExceededError, AiUnavailableError
 from services.library.images.service import stored_image
 from services.needs import POWIATS
-from services.search import search_query
-from services.tester.repository import vote_counts
-from utils.db.models.feedback import VOTE_KINDS, Feedback, FeedbackKind
+from services.search import (
+    innovation_signals,
+    reports_by_innovation,
+    search_query,
+    votes_by_innovation,
+)
 from utils.db.models.innovation import Innovation, InnovationStatus
 
 from .common import categories_by_slug, translate
@@ -51,10 +54,11 @@ async def list_innovations(
         except (AiUnavailableError, AiBudgetExceededError) as e:
             raise translate(e) from e
         window = hits[(page - 1) * per_page : page * per_page]
-        votes = await vote_counts(session, [h.innovation.id for h in window])
+        signals = await innovation_signals(session, [h.innovation.id for h in window])
         return InnovationPage(
             items=[
-                InnovationSummary.build(h.innovation, categories, votes) for h in window
+                InnovationSummary.build(h.innovation, categories, signals)
+                for h in window
             ],
             total=len(hits),
             page=page,
@@ -64,31 +68,29 @@ async def list_innovations(
     if category:
         filters.append(col(Innovation.category_slug) == category)
     total = (await session.exec(select(func.count()).where(*filters))).one()
-    net = (
-        select(
-            col(Feedback.innovation_id).label("innovation_id"),
-            (
-                func.count().filter(col(Feedback.kind) == FeedbackKind.FITS)
-                - func.count().filter(col(Feedback.kind) == FeedbackKind.DOES_NOT_FIT)
-            ).label("net"),
-        )
-        .where(col(Feedback.kind).in_(VOTE_KINDS))
-        .group_by(col(Feedback.innovation_id))
-        .subquery()
-    )
+    votes = votes_by_innovation()
+    reports = reports_by_innovation()
+    up = func.coalesce(votes.c.up, 0)
+    down = func.coalesce(votes.c.down, 0)
     rows = (
         await session.exec(
             select(Innovation)
-            .outerjoin(net, net.c.innovation_id == Innovation.id)
+            .outerjoin(votes, votes.c.innovation_id == Innovation.id)
+            .outerjoin(reports, reports.c.innovation_id == Innovation.id)
             .where(*filters)
-            .order_by(func.coalesce(net.c.net, 0).desc(), func.lower(Innovation.title))
+            .order_by(
+                (func.coalesce(reports.c.reports, 0) > 0).desc(),
+                up.desc(),
+                (up - down).desc(),
+                func.lower(Innovation.title),
+            )
             .offset((page - 1) * per_page)
             .limit(per_page)
         )
     ).all()
-    votes = await vote_counts(session, [row.id for row in rows])
+    signals = await innovation_signals(session, [row.id for row in rows])
     return InnovationPage(
-        items=[InnovationSummary.build(row, categories, votes) for row in rows],
+        items=[InnovationSummary.build(row, categories, signals) for row in rows],
         total=int(total),
         page=page,
         per_page=per_page,
@@ -112,7 +114,7 @@ async def get_innovation(
     return InnovationDetail.build_detail(
         innovation,
         await categories_by_slug(session),
-        await vote_counts(session, [innovation.id]),
+        await innovation_signals(session, [innovation.id]),
     )
 
 

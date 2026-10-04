@@ -9,10 +9,9 @@ from pydantic_ai.settings import ModelSettings
 from services.ai import run_agent
 from utils.db.models.innovation import Innovation
 
-from .hybrid import Hit, cache_key
+from .hybrid import SIMILARITY_FLOOR, Hit, cache_key
 
 MAX_PICKS = 5
-FALLBACK_FLOOR = 0.64
 MAX_FIELD = 500
 
 
@@ -164,7 +163,7 @@ def fallback_reason(innovation: Innovation) -> str:
 def _plausible(hit: Hit) -> bool:
     if hit.similarity == 0:
         return hit.keyword > 0
-    return hit.similarity >= FALLBACK_FLOOR
+    return hit.similarity >= SIMILARITY_FLOOR
 
 
 def fallback(hits: list[Hit], limit: int = 3) -> list[Reasoned]:

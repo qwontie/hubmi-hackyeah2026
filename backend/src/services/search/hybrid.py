@@ -18,6 +18,7 @@ SHORT_KEYWORD_BONUS = 0.12
 LONG_KEYWORD_BONUS = 0.04
 CANDIDATES = 20
 QUERY_CACHE_SIZE = 512
+SIMILARITY_FLOOR = 0.64
 
 
 @dataclass(slots=True)
@@ -26,6 +27,10 @@ class Hit:
     score: float
     similarity: float
     keyword: float
+
+
+def is_relevant(hit: Hit) -> bool:
+    return hit.keyword > 0 or hit.similarity >= SIMILARITY_FLOOR
 
 
 _query_cache: OrderedDict[str, list[float]] = OrderedDict()
@@ -128,7 +133,8 @@ async def search_query(
     session: AsyncSession, text: str, *, limit: int = 10, category: str | None = None
 ) -> list[Hit]:
     vector = await cached_query_embedding(text, kind="embed_search")
-    return await hybrid_search(session, text, vector, limit=limit, category=category)
+    hits = await hybrid_search(session, text, vector, limit=limit, category=category)
+    return [hit for hit in hits if is_relevant(hit)]
 
 
 async def nearest_innovations(

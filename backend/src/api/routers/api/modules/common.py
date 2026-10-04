@@ -61,11 +61,11 @@ def text_too_short(field: str, minimum: int) -> ApiError:
     )
 
 
-def required_text(field: str, value: str, *, minimum: int) -> str:
+def required_text(field: str, value: str, *, minimum: int, words: int = 1) -> str:
     text = clean(value)
     if len(text) < minimum:
         raise text_too_short(field, minimum)
-    if not is_meaningful(text):
+    if not is_meaningful(text, words=words):
         raise unclear(field)
     return text
 
