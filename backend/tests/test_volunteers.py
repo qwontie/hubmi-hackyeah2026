@@ -9,6 +9,7 @@ import pytest
 from fastapi import Response
 from pydantic import SecretStr
 from sqlmodel import col, delete
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.errors import ApiError
 from api.routers.api.modules import volunteers as routes
@@ -17,7 +18,13 @@ from services.mail import Delivery, DeliveryStatus, Email, Mailer
 from services.mail.templates import StaffItemKind
 from services.mail.watch import staff_item
 from services.tester import volunteers
-from services.tester.schemas import AcceptIn, RejectIn, ReportIn, VolunteerIn
+from services.tester.schemas import (
+    AcceptIn,
+    AdminVolunteer,
+    RejectIn,
+    ReportIn,
+    VolunteerIn,
+)
 from services.tester.volunteers import Action, InvalidTransitionError, next_status
 from utils.db import session_scope
 from utils.db.models import AdminAction, AdminRole, AdminUser, Category, Innovation
@@ -218,6 +225,40 @@ async def test_full_flow_through_the_token_form(world: World) -> None:
         locked = await routes.volunteer(signup_id, session, None, token)
         assert not locked.editable
         assert locked.report is not None
+
+
+async def listed(world: World, session: AsyncSession) -> AdminVolunteer:
+    page = await routes.list_volunteers(
+        _admin=world.admin, session=session, innovation=world.innovation.slug
+    )
+    assert page.total == 1
+    return page.items[0]
+
+
+async def test_last_contact_follows_letters_and_report(world: World) -> None:
+    async with session_scope() as session:
+        created = await routes.apply(
+            world.innovation.slug,
+            application("kontakt@example.org"),
+            Response(),
+            session,
+            world.mailer,
+        )
+        assert (await listed(world, session)).last_contact_at is None
+
+        detail = await routes.accept(
+            created.id, AcceptIn(), world.admin, session, world.mailer
+        )
+        letter_at = detail.messages[0].created_at
+        assert detail.last_contact_at == letter_at
+        assert (await listed(world, session)).last_contact_at == letter_at
+
+        token = volunteers.report_token(created.id)
+        await routes.put_report(created.id, report(), session, token)
+        reported = await listed(world, session)
+        assert reported.report is not None
+        assert reported.last_contact_at == reported.report.updated_at
+        assert reported.report.updated_at > letter_at
 
 
 async def test_reject_fills_the_reason_into_the_letter(world: World) -> None:

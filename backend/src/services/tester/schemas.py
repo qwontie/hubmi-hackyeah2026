@@ -155,6 +155,7 @@ class AdminVolunteer(BaseModel):
     decision_reason: str | None
     decided_at: datetime | None
     report: VolunteerReportOut | None
+    last_contact_at: datetime | None
     created_at: datetime
     updated_at: datetime
 

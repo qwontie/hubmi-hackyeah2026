@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import func, or_
+from sqlalchemy import Label, func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -108,8 +108,18 @@ def report_out(report: VolunteerReport | None) -> VolunteerReportOut | None:
     )
 
 
+def last_contact(
+    last_message_at: datetime | None, report: VolunteerReport | None
+) -> datetime | None:
+    moments = [last_message_at, report.updated_at if report else None]
+    return max((m for m in moments if m is not None), default=None)
+
+
 def admin_volunteer(
-    signup: TestSignup, innovation: Innovation, report: VolunteerReport | None
+    signup: TestSignup,
+    innovation: Innovation,
+    report: VolunteerReport | None,
+    last_message_at: datetime | None = None,
 ) -> AdminVolunteer:
     return AdminVolunteer(
         id=signup.id,
@@ -124,6 +134,7 @@ def admin_volunteer(
         decision_reason=signup.decision_reason,
         decided_at=signup.decided_at,
         report=report_out(report),
+        last_contact_at=last_contact(last_message_at, report),
         created_at=signup.created_at,
         updated_at=signup.updated_at,
     )
@@ -144,9 +155,19 @@ def volunteer_view(
     )
 
 
-def joined() -> Select[tuple[TestSignup, Innovation, VolunteerReport]]:
+def last_message_at() -> Label[datetime]:
     return (
-        select(TestSignup, Innovation, VolunteerReport)
+        select(func.max(VolunteerMessage.created_at))
+        .where(col(VolunteerMessage.signup_id) == col(TestSignup.id))
+        .correlate(TestSignup)
+        .scalar_subquery()
+        .label("last_message_at")
+    )
+
+
+def joined() -> Select[tuple[TestSignup, Innovation, VolunteerReport, datetime]]:
+    return (
+        select(TestSignup, Innovation, VolunteerReport, last_message_at())
         .join(Innovation, col(Innovation.id) == col(TestSignup.innovation_id))
         .outerjoin(
             VolunteerReport, col(VolunteerReport.signup_id) == col(TestSignup.id)
@@ -154,11 +175,18 @@ def joined() -> Select[tuple[TestSignup, Innovation, VolunteerReport]]:
     )
 
 
+async def load_row(
+    session: AsyncSession, signup_id: uuid.UUID
+) -> tuple[TestSignup, Innovation, VolunteerReport | None, datetime | None] | None:
+    row = (await session.exec(joined().where(TestSignup.id == signup_id))).first()
+    return None if row is None else (row[0], row[1], row[2], row[3])
+
+
 async def load(
     session: AsyncSession, signup_id: uuid.UUID
 ) -> tuple[TestSignup, Innovation, VolunteerReport | None] | None:
-    row = (await session.exec(joined().where(TestSignup.id == signup_id))).first()
-    return None if row is None else (row[0], row[1], row[2])
+    row = await load_row(session, signup_id)
+    return None if row is None else row[:3]
 
 
 async def open_application(
@@ -290,15 +318,13 @@ async def messages_of(
 async def detail(
     session: AsyncSession, signup_id: uuid.UUID
 ) -> AdminVolunteerDetail | None:
-    row = await load(session, signup_id)
+    row = await load_row(session, signup_id)
     if row is None:
         return None
-    signup, innovation, report = row
-    base = admin_volunteer(signup, innovation, report)
     return AdminVolunteerDetail(
-        **base.model_dump(),
+        **admin_volunteer(*row).model_dump(),
         messages=await messages_of(session, signup_id),
-        drafts=drafts(innovation),
+        drafts=drafts(row[1]),
     )
 
 
