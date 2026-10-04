@@ -245,7 +245,8 @@
         <h3 class="font-semibold text-base">{shown.name}</h3>
         <p class="text-sm">
           <b class="tabular text-[26px] tracking-tight">{shown.needs_count}</b>
-          {plural(shown.needs_count, "potrzeba", "potrzeby", "potrzeb")},
+          {plural(shown.needs_count, "potrzeba", "potrzeby", "potrzeb")}
+          od początku,
           {shown.needs_recent}
           w&nbsp;ostatnich {data.recent_days} dniach
         </p>
@@ -268,7 +269,7 @@
         <span>0</span><span>{max}</span>
       </div>
       <p class="text-hm-ink-soft text-xs">
-        Razem
+        Razem od początku
         {data.needs_total}{data.needs_without_powiat > 0 ? `, w tym ${data.needs_without_powiat} bez powiatu` : ""}.
         Granice: GUGiK (PRG).
       </p>

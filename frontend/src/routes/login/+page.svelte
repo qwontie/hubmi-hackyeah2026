@@ -108,6 +108,10 @@
         </p>
       {/if}
     </div>
+    <p class="text-pretty text-hm-ink-soft text-hm-sm">
+      Tylko dla pracowników ROPS. Panel ustawia jeden niezbędny plik cookie
+      sesji, żeby utrzymać logowanie.
+    </p>
   </form>
   <RopsColophon variant="stack" />
 </main>

@@ -240,7 +240,7 @@
       {#if canvasRows.length > 0}
         <section aria-labelledby="canvas-h">
           <h3 class="mb-1.5 font-semibold text-[13px]" id="canvas-h">
-            Kanwa innowacji
+            Kanwa pomysłu
           </h3>
           <dl class="canvas">
             {#each canvasRows as row (row.label)}

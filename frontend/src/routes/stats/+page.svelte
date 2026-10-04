@@ -287,7 +287,8 @@
 
     <section aria-labelledby="map-h" class="panel">
       <h2 class="h" id="map-h">
-        Potrzeby w&nbsp;powiatach <span class="win">{window}</span>
+        Potrzeby w&nbsp;powiatach
+        <span class="win">od początku</span>
       </h2>
       <NeedsMap days={Number.parseInt(period, 10) || 30} />
     </section>

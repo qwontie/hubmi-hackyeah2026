@@ -536,6 +536,8 @@
           <p class="mt-1.5 max-w-[70ch] text-pretty text-hm-ink-soft text-sm">
             Osoby, które poprosiły o&nbsp;e-mail, gdy ruszy nowy nabór.
             Powiadomienie wychodzi samo przy publikacji i&nbsp;otwarciu naboru.
+            Adres służy tylko do tych powiadomień. „Wypisz” zatrzymuje wysyłkę,
+            adres zostaje w&nbsp;historii.
           </p>
         </div>
         {#if subscribers}

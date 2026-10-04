@@ -93,7 +93,7 @@
       await navigator.clipboard.writeText(emails.join(", "));
       showTip(
         button,
-        `Skopiowano ${emails.length} ${plural(emails.length, "adres", "adresy", "adresów")}`
+        `Skopiowano ${emails.length} ${plural(emails.length, "adres", "adresy", "adresów")}. Wklej w pole UDW.`
       );
     } catch {
       showTip(button, "Przeglądarka nie pozwoliła skopiować.", "bad");
@@ -167,6 +167,11 @@
     <span>Kopiuj widoczne adresy e-mail</span>
   </button>
 </div>
+<p class="px-1 pb-2 text-pretty text-hm-ink-soft text-xs">
+  Adresy tylko do kontaktu w&nbsp;sprawie wolontariatu przy tych rozwiązaniach,
+  na to osoby dały zgodę. Wklejaj je w&nbsp;pole UDW, żeby nikt nie zobaczył
+  cudzego adresu.
+</p>
 
 {#if people.length === 0}
   <p class="px-3 py-6 text-hm-ink-soft text-sm">

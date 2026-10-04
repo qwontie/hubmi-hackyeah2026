@@ -126,6 +126,10 @@
           {organizations.join(", ") || address}
         </h2>
         <p class="mt-1.5 text-[13px] text-hm-ink-soft">{meta.join(" · ")}</p>
+        <p class="mt-1.5 text-pretty text-[13px] text-hm-ink-soft">
+          Pisz tylko w&nbsp;sprawach, na które ta osoba dała zgodę: odpowiedź na
+          jej zgłoszenie albo wolontariat przy wybranym rozwiązaniu.
+        </p>
       </div>
       <div class="flex flex-wrap gap-2">
         <a class="primary cladd-clickable" href="mailto:{address}">

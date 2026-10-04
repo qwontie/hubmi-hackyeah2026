@@ -14,7 +14,7 @@
       label: "Kontakt",
     },
     {
-      href: "https://rops.krakow.pl/polityka-prywatnosci",
+      href: "/prywatnosc",
       label: "Polityka prywatności",
     },
   ];
