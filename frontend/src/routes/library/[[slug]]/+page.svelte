@@ -21,9 +21,13 @@
   import type { FolderTab } from "$lib/components/hub/types";
   import { plural, when } from "$lib/format";
   import { live } from "$lib/live/stream.svelte";
+  import { hasPicture, onBroken, type PictureFields } from "$lib/pictures";
   import { showTip } from "$lib/tip";
 
-  let items = $state<AdminInnovation[]>([]);
+  type Item = AdminInnovation & PictureFields;
+
+  let items = $state<Item[]>([]);
+  let broken = $state<Record<string, boolean>>({});
   let categories = $state<Category[]>([]);
   let loadError = $state<Error | null>(null);
   let loaded = $state(false);
@@ -98,7 +102,7 @@
 
   const offs = [
     live.on("innovation.updated", (data) => {
-      const next = data as AdminInnovation;
+      const next = data as Item;
       const index = items.findIndex((i) => i.slug === next.slug);
       if (index === -1) {
         items = [...items, next];
@@ -159,9 +163,19 @@
     }),
   ]);
 
-  function noteFor(list: AdminInnovation[]): string {
+  function noteFor(list: Item[]): string {
     const d = list.filter((i) => i.status === "draft").length;
     return d > 0 ? `${d} ${plural(d, "szkic", "szkice", "szkiców")}` : "";
+  }
+
+  function metaFor(item: Item): string {
+    return [
+      category === "all" ? item.category.name : "",
+      item.edited_fields.length > 0 ? "zmieniona ręcznie" : "",
+      hasPicture(item) ? "" : "bez obrazka",
+    ]
+      .filter(Boolean)
+      .join(" · ");
   }
 
   const normalize = (text: string) =>
@@ -222,7 +236,7 @@
     }
   }
 
-  function saved(next: AdminInnovation) {
+  function saved(next: Item) {
     const index = items.findIndex((i) => i.slug === next.slug);
     if (index !== -1) {
       items[index] = { ...items[index], ...next };
@@ -370,13 +384,28 @@
                   data-sveltekit-replacestate
                   href={href(item.slug)}
                 >
+                  <span aria-hidden="true" class="thumb">
+                    {#if hasPicture(item) && !broken[item.slug]}
+                      <img
+                        alt=""
+                        decoding="async"
+                        height="36"
+                        loading="lazy"
+                        src={item.image_card_url}
+                        width="48"
+                        {@attach onBroken(() => {
+                          broken[item.slug] = true;
+                        })}
+                      >
+                    {/if}
+                  </span>
                   <span class="grid min-w-0 gap-[3px]">
                     <span class="font-semibold text-sm">{item.title}</span>
                     {#if item.lead}
                       <span class="lead">{item.lead}</span>
                     {/if}
                     <span class="text-hm-ink-soft text-xs">
-                      {category === "all" ? item.category.name : ""}{category === "all" && item.edited_fields.length > 0 ? " · " : ""}{item.edited_fields.length > 0 ? "zmieniona ręcznie" : ""}
+                      {metaFor(item)}
                     </span>
                   </span>
                   <span class="st"
@@ -568,7 +597,7 @@
 
   .row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
     gap: 12px;
     align-items: baseline;
     padding: 11px 12px;
@@ -589,6 +618,24 @@
     background: var(--hm-stamp-wash);
     border-bottom-color: transparent;
     border-radius: 12px;
+  }
+
+  .thumb {
+    align-self: start;
+    width: 48px;
+    height: 36px;
+    margin-top: 2px;
+    overflow: hidden;
+    background: var(--hm-sunk);
+    border-radius: 6px;
+    box-shadow: var(--shadow-cladd-cut-outline);
+  }
+
+  .thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .lead {

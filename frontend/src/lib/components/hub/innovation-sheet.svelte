@@ -15,6 +15,7 @@
   import { ApiError } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
   import { plural, when } from "$lib/format";
+  import { hasPicture, onBroken, type PictureFields } from "$lib/pictures";
   import { showTip } from "$lib/tip";
   import { recommendLabel } from "$lib/volunteers";
 
@@ -60,7 +61,15 @@
     who_can_use: "kto może skorzystać",
   };
 
-  let detail = $state<AdminInnovationDetail | null>(null);
+  const pictureKind: Record<string, string> = {
+    generated: "Ilustracja wygenerowana przez AI",
+    rops: "Zdjęcie z materiałów ROPS",
+    stock: "Obrazek z puli, użyty ponownie",
+    youtube: "Kadr z filmu ROPS",
+  };
+
+  let detail = $state<(AdminInnovationDetail & PictureFields) | null>(null);
+  let pictureBroken = $state(false);
   let demand = $state<DemandRow[] | null>(null);
   let reports = $state<VolunteerReports | null>(null);
 
@@ -97,7 +106,10 @@
     };
   }
 
-  function fill(item: AdminInnovationDetail) {
+  function fill(item: AdminInnovationDetail & PictureFields) {
+    if (item.image_url !== detail?.image_url) {
+      pictureBroken = false;
+    }
     detail = item;
     const next = blank();
     for (const key of Object.keys(next) as Field[]) {
@@ -219,7 +231,11 @@
 
 <article aria-labelledby="innovation-title" class="sheet">
   {#if detail}
-    <form class="grid max-w-[680px] gap-5" id="innovation-form" onsubmit={save}>
+    <form
+      class="grid max-w-[680px] grid-cols-[minmax(0,1fr)] gap-5"
+      id="innovation-form"
+      onsubmit={save}
+    >
       <a class="back" href={backHref}>
         <svg
           aria-hidden="true"
@@ -268,6 +284,45 @@
           </p>
         {/if}
       </header>
+
+      <figure class="picture">
+        {#if hasPicture(detail) && !pictureBroken}
+          <a
+            class="frame"
+            href={detail.image_url}
+            rel="noopener"
+            target="_blank"
+          >
+            <img
+              alt={detail.image_alt ?? ""}
+              decoding="async"
+              src={detail.image_url}
+              {@attach onBroken(() => {
+                pictureBroken = true;
+              })}
+            >
+          </a>
+          <figcaption class="grid gap-1 text-[13px]">
+            <span class="font-semibold"
+              >{(detail.image_source && pictureKind[detail.image_source]) || detail.image_label || "Obrazek"}</span
+            >
+            <span class="text-hm-ink-soft"
+              >Opis dla czytników ekranu:
+              {detail.image_alt || "brak opisu"}</span
+            >
+          </figcaption>
+        {:else}
+          <p class="text-[13px] text-hm-ink-soft">
+            {#if hasPicture(detail) && detail.status !== "published"}
+              Obrazek jest gotowy, pokaże się tu po publikacji.
+            {:else if hasPicture(detail)}
+              Nie udało się wczytać obrazka.
+            {:else}
+              To rozwiązanie nie ma jeszcze obrazka.
+            {/if}
+          </p>
+        {/if}
+      </figure>
 
       {#each sections as section (section.key)}
         <div class="grid gap-1.5">
@@ -408,6 +463,7 @@
     display: block;
     resize: none;
     field-sizing: content;
+    contain: inline-size;
     line-height: 1.25;
     width: 100%;
     padding: 2px 0;
@@ -425,6 +481,29 @@
     box-shadow: 0 2px 0 var(--hm-ring);
   }
 
+  .picture {
+    display: grid;
+    grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+    margin: 0;
+  }
+
+  .frame {
+    display: block;
+    overflow: hidden;
+    background: var(--hm-sunk);
+    border-radius: 12px;
+    box-shadow: var(--shadow-cladd-cut-outline);
+  }
+
+  .frame img {
+    display: block;
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+  }
+
   .link {
     color: var(--hm-stamp);
     text-decoration: underline;
@@ -432,6 +511,7 @@
   }
 
   .well {
+    contain: inline-size;
     width: 100%;
     border: 0;
     border-radius: 12px;
@@ -521,6 +601,16 @@
 
   .ghost:hover {
     background: var(--hm-stamp-wash);
+  }
+
+  @media (max-width: 1199px) {
+    .picture {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .frame {
+      max-width: 420px;
+    }
   }
 
   @media (max-width: 899px) {
