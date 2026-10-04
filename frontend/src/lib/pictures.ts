@@ -1,3 +1,6 @@
+import type { AdminInnovationDetail } from "$lib/api/admin";
+import { api } from "$lib/api/client";
+
 export interface PictureFields {
   image_alt?: string | null;
   image_card_url?: string | null;
@@ -16,3 +19,18 @@ export const onBroken = (fail: () => void) => (node: HTMLImageElement) => {
   node.addEventListener("error", fail);
   return () => node.removeEventListener("error", fail);
 };
+
+export interface PoolPicture extends PictureFields {
+  category: { name: string; slug: string };
+  id: string;
+  title: string;
+}
+
+export const listPicturePool = () =>
+  api.get<PoolPicture[]>("/admin/innovations/picture-pool");
+
+export const usePoolPicture = (slug: string, poolId: string) =>
+  api.put<AdminInnovationDetail & PictureFields>(
+    `/admin/innovations/${slug}/picture`,
+    { pool_id: poolId }
+  );

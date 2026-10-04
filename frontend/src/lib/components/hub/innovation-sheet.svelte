@@ -14,6 +14,7 @@
   } from "$lib/api/admin";
   import { ApiError } from "$lib/api/client";
   import ErrorState from "$lib/components/error-state.svelte";
+  import PicturePool from "$lib/components/hub/picture-pool.svelte";
   import { plural, when } from "$lib/format";
   import { hasPicture, onBroken, type PictureFields } from "$lib/pictures";
   import { showTip } from "$lib/tip";
@@ -197,6 +198,11 @@
     }
   }
 
+  function picked(item: AdminInnovationDetail & PictureFields) {
+    fill(item);
+    onsaved(item);
+  }
+
   async function togglePublish(event: MouseEvent) {
     if (!detail) {
       return;
@@ -285,7 +291,9 @@
         {/if}
       </header>
 
-      <figure class="picture">
+      <div
+        class={["picture", !(hasPicture(detail) && !pictureBroken) && "bare"]}
+      >
         {#if hasPicture(detail) && !pictureBroken}
           <a
             class="frame"
@@ -302,27 +310,31 @@
               })}
             >
           </a>
-          <figcaption class="grid gap-1 text-[13px]">
-            <span class="font-semibold"
-              >{(detail.image_source && pictureKind[detail.image_source]) || detail.image_label || "Obrazek"}</span
-            >
-            <span class="text-hm-ink-soft"
-              >Opis dla czytników ekranu:
-              {detail.image_alt || "brak opisu"}</span
-            >
-          </figcaption>
-        {:else}
-          <p class="text-[13px] text-hm-ink-soft">
-            {#if hasPicture(detail) && detail.status !== "published"}
-              Obrazek jest gotowy, pokaże się tu po publikacji.
-            {:else if hasPicture(detail)}
-              Nie udało się wczytać obrazka.
-            {:else}
-              To rozwiązanie nie ma jeszcze obrazka.
-            {/if}
-          </p>
         {/if}
-      </figure>
+        <div class="grid content-start justify-items-start gap-1 text-[13px]">
+          {#if hasPicture(detail) && !pictureBroken}
+            <p class="font-semibold">
+              {(detail.image_source && pictureKind[detail.image_source]) || detail.image_label || "Obrazek"}
+            </p>
+            <p class="text-hm-ink-soft">
+              Opis dla czytników ekranu:
+              {detail.image_alt || "brak opisu"}
+            </p>
+          {:else}
+            <p class="text-hm-ink-soft">
+              {hasPicture(detail) ? "Nie udało się wczytać obrazka." : "To rozwiązanie nie ma jeszcze obrazka."}
+            </p>
+          {/if}
+          <span class="mt-2">
+            <PicturePool
+              category={detail.category.slug}
+              label={hasPicture(detail) ? "Zmień obrazek" : "Wybierz obrazek z puli"}
+              onpicked={picked}
+              slug={detail.slug}
+            />
+          </span>
+        </div>
+      </div>
 
       {#each sections as section (section.key)}
         <div class="grid gap-1.5">
@@ -486,7 +498,10 @@
     grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
     gap: 16px;
     align-items: start;
-    margin: 0;
+  }
+
+  .picture.bare {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .frame {
