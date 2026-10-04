@@ -231,7 +231,7 @@ async def test_staff_replace_a_picture_from_the_pool(pool: Pool) -> None:
             session, pool.admin, pool.copy.slug, PictureChoice(pool_id=pool.photo.slug)
         )
     assert updated.image_source == "stock"
-    assert updated.image_url == f"/api/innovations/{pool.copy.slug}/image?v=2"
+    assert updated.image_url == f"/api/admin/innovations/{pool.copy.slug}/image?v=2"
     _, image = await picture(pool.copy.id)
     assert image.image == f"full {pool.photo.slug}".encode()
     assert image.version == 2

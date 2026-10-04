@@ -15,11 +15,17 @@ LABELS = {
 }
 
 
-def image_url(slug: str, version: int | None, *, card: bool = False) -> str | None:
+PUBLIC_BASE = "/api/innovations"
+ADMIN_BASE = "/api/admin/innovations"
+
+
+def image_url(
+    slug: str, version: int | None, *, card: bool = False, base: str = PUBLIC_BASE
+) -> str | None:
     if version is None:
         return None
     size = "&size=card" if card else ""
-    return f"/api/innovations/{slug}/image?v={version}{size}"
+    return f"{base}/{slug}/image?v={version}{size}"
 
 
 class ImageFields(BaseModel):
@@ -30,14 +36,14 @@ class ImageFields(BaseModel):
     image_label: str | None = None
 
 
-def image_fields(innovation: Innovation) -> dict[str, Any]:
+def image_fields(innovation: Innovation, base: str = PUBLIC_BASE) -> dict[str, Any]:
     version = innovation.image_version
     source = innovation.image_source if version is not None else None
     if version is None or source not in LABELS:
         return ImageFields().model_dump()
     return ImageFields(
-        image_url=image_url(innovation.slug, version),
-        image_card_url=image_url(innovation.slug, version, card=True),
+        image_url=image_url(innovation.slug, version, base=base),
+        image_card_url=image_url(innovation.slug, version, card=True, base=base),
         image_alt=innovation.image_alt,
         image_source=cast("SourceName", source),
         image_label=LABELS[source],

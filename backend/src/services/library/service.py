@@ -17,6 +17,7 @@ from utils.db.models import AdminUser, Category, Innovation, InnovationStatus
 from utils.logging import logger
 
 from .images import image_fields
+from .images.links import ADMIN_BASE
 from .images.stock import give_stock, in_pool, is_pool_picture, reuse, target
 from .schemas import (
     AdminInnovation,
@@ -67,7 +68,7 @@ def summary(innovation: Innovation, category: Category) -> AdminInnovation:
         status=innovation.status,
         has_video=bool(innovation.video_url),
         has_materials=bool(innovation.materials_url),
-        **image_fields(innovation),
+        **image_fields(innovation, ADMIN_BASE),
         source_url=innovation.source_url,
         edited_fields=list(innovation.edited_fields),
         edited_at=innovation.edited_at,
@@ -303,7 +304,7 @@ async def picture_pool(session: AsyncSession) -> list[PoolPicture]:
                 "id": innovation.slug,
                 "title": innovation.title,
                 "category": CategoryRef(slug=category.slug, name=category.name),
-                **image_fields(innovation),
+                **image_fields(innovation, ADMIN_BASE),
             }
         )
         for innovation, category in result.all()
