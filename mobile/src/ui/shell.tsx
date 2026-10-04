@@ -20,6 +20,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { APP_NAME } from "@/config";
 import { A11yButton, A11yPanel } from "@/features/a11y-controls";
+import { focusElement } from "@/lib/a11y";
 import { useChromeTone } from "@/theme/chrome";
 import { useTheme } from "@/theme/settings";
 import { minTarget, radius, space } from "@/theme/tokens";
@@ -351,11 +352,7 @@ export function SkipLink() {
       onPress={() => {
         const main = document.querySelector('[role="main"]');
         const heading = document.querySelector('[role="heading"]');
-        const target = (heading ?? main) as HTMLElement | null;
-        if (target) {
-          target.setAttribute("tabindex", "-1");
-          target.focus();
-        }
+        focusElement(heading ?? main);
       }}
       role="button"
       style={[

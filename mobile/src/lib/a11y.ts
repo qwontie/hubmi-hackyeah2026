@@ -1,7 +1,7 @@
 import { AccessibilityInfo, findNodeHandle, Platform } from "react-native";
 
 const WIDE = 900;
-const UNDER_NAV = 120;
+const UNDER_NAV = 160;
 const UNDER_PILL = 76;
 
 export const focusElement = (node: unknown) => {

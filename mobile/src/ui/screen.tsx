@@ -190,6 +190,16 @@ export const Screen = function Screen({
     tabs && !wide ? tabBarSpace + insets.bottom : space.xxxl + insets.bottom;
   return (
     <View role="main" style={[styles.root, { backgroundColor: colors.ground }]}>
+      {hasBar ? (
+        <TopBar
+          back={back}
+          backFallback={backFallback}
+          night={night && !boxed}
+          top={chromeTop}
+          trailing={trailing}
+          width={width}
+        />
+      ) : null}
       <ScrollView
         automaticallyAdjustKeyboardInsets
         contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}
@@ -231,16 +241,6 @@ export const Screen = function Screen({
           </View>
         </View>
       </ScrollView>
-      {hasBar ? (
-        <TopBar
-          back={back}
-          backFallback={backFallback}
-          night={night && !boxed}
-          top={chromeTop}
-          trailing={trailing}
-          width={width}
-        />
-      ) : null}
     </View>
   );
 };
@@ -251,6 +251,7 @@ const styles = StyleSheet.create({
     left: 0,
     position: "absolute",
     right: 0,
+    zIndex: 1,
   },
   barRow: {
     alignItems: "center",
