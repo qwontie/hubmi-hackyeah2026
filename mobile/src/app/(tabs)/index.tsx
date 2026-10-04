@@ -217,6 +217,7 @@ export default function MatchScreen() {
     >
       <Sky rise={rise} />
       <ScrollView
+        automaticallyAdjustKeyboardInsets
         contentContainerStyle={[
           styles.content,
           {
@@ -225,6 +226,7 @@ export default function MatchScreen() {
           },
           wide && styles.contentWide,
         ]}
+        keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
       >
         <View

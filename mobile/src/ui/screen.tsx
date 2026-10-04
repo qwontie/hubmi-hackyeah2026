@@ -186,7 +186,9 @@ export const Screen = function Screen({
   return (
     <View role="main" style={[styles.root, { backgroundColor: colors.ground }]}>
       <ScrollView
+        automaticallyAdjustKeyboardInsets
         contentContainerStyle={[styles.content, { paddingBottom: bottomSpace }]}
+        keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
         ref={ref}
         scrollIndicatorInsets={{ bottom: tabs ? tabBarSpace : 0 }}

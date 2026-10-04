@@ -205,7 +205,9 @@ export function MatchResults({
       >
         {band}
         <ScrollView
+          automaticallyAdjustKeyboardInsets
           contentContainerStyle={styles.scrollWide}
+          keyboardDismissMode="interactive"
           keyboardShouldPersistTaps="handled"
           style={styles.fill}
         >
@@ -217,9 +219,11 @@ export function MatchResults({
 
   return (
     <ScrollView
+      automaticallyAdjustKeyboardInsets
       contentContainerStyle={{
         paddingBottom: tabBarSpace + insets.bottom,
       }}
+      keyboardDismissMode="interactive"
       keyboardShouldPersistTaps="handled"
       style={[styles.fill, { backgroundColor: colors.ground }]}
     >
