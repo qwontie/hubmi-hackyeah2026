@@ -71,7 +71,7 @@ const TOGETHER = [
   ],
 ];
 
-const fold = (text: string) =>
+export const fold = (text: string) =>
   text.toLowerCase().normalize("NFD").replace(MARKS, "").replaceAll("ł", "l");
 
 const fits = (word: string, pattern: string) =>
