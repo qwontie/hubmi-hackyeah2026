@@ -230,7 +230,12 @@ export default function MapScreen() {
   ) : null;
 
   return (
-    <Screen tabs title="Mapa potrzeb" width={wide ? 1180 : undefined}>
+    <Screen
+      back="Szukaj"
+      backFallback="/"
+      title="Mapa potrzeb"
+      width={wide ? 1180 : undefined}
+    >
       <Head>
         <title>{`Mapa potrzeb · ${APP_NAME}`}</title>
       </Head>

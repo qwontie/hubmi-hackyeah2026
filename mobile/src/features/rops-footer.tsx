@@ -74,10 +74,10 @@ function FooterLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-function PrivacyLink() {
+function InnerLink({ href, label }: { href: string; label: string }) {
   const [hovered, setHovered] = useState(false);
   return (
-    <Link asChild href={PRIVACY_PATH}>
+    <Link asChild href={href}>
       <Pressable
         onHoverIn={() => setHovered(true)}
         onHoverOut={() => setHovered(false)}
@@ -90,7 +90,7 @@ function PrivacyLink() {
           variant="detail"
           weight="600"
         >
-          Polityka prywatności
+          {label}
         </Txt>
       </Pressable>
     </Link>
@@ -131,7 +131,8 @@ export function RopsFooter() {
         {LINKS.map((link) => (
           <FooterLink href={link.href} key={link.href} label={link.label} />
         ))}
-        <PrivacyLink />
+        <InnerLink href="/mapa" label="Mapa potrzeb" />
+        <InnerLink href={PRIVACY_PATH} label="Polityka prywatności" />
       </View>
       {demo ? (
         <Txt tone="soft" variant="small">

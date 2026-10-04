@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { ArrowRight, Check, CircleAlert, MapPin, X } from "lucide-react-native";
+import { ArrowRight, Check, CircleAlert } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   Pressable,
@@ -9,14 +9,13 @@ import {
   View,
 } from "react-native";
 import { TEXT_MAX } from "@/config";
+import { PowiatPicker } from "@/features/powiat-picker";
 import { OthersDataHint, PrivacyNote } from "@/features/privacy-note";
 import { Stamp } from "@/features/stamp";
 import { Trap } from "@/features/trap";
 import type { RegistrationForm } from "@/hooks/use-match";
 import { usePowiats } from "@/hooks/use-powiats";
 import { focusElement } from "@/lib/a11y";
-import { fold } from "@/lib/crisis";
-import type { SelectOption } from "@/lib/options";
 import { useTheme } from "@/theme/settings";
 import { fonts, minTarget, radius, space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
@@ -31,9 +30,6 @@ export interface Registration {
 }
 
 const EMAIL_ID = "unsolved-email";
-const POWIAT_ID = "unsolved-powiat";
-const SHOWN = 5;
-const ROW_HOVER = "rgba(252, 252, 255, 0.12)";
 const TEXT_ID = "unsolved-text";
 const HINT = "rgba(218, 219, 252, 0.72)";
 
@@ -79,153 +75,6 @@ function Consent({ fields }: { fields: RegistrationForm }) {
         na moje zgłoszenie.
       </Txt>
     </Pressable>
-  );
-}
-
-function PowiatMatch({
-  label,
-  onPress,
-}: {
-  label: string;
-  onPress: () => void;
-}) {
-  const { colors } = useTheme();
-  const [hovered, setHovered] = useState(false);
-  return (
-    <Pressable
-      onHoverIn={() => setHovered(true)}
-      onHoverOut={() => setHovered(false)}
-      onPress={onPress}
-      role="button"
-      style={[
-        styles.match,
-        {
-          backgroundColor: hovered ? ROW_HOVER : "transparent",
-          borderBottomColor: colors.glassNightEdge,
-        },
-      ]}
-    >
-      <MapPin aria-hidden color={colors.onNightSoft} size={20} />
-      <Txt style={styles.grow} tone="onNight" variant="label" weight="600">
-        {label}
-      </Txt>
-    </Pressable>
-  );
-}
-
-function PowiatChoice({
-  onChange,
-  options,
-  value,
-}: {
-  onChange: (slug: string) => void;
-  options: SelectOption[];
-  value: string;
-}) {
-  const { colors, lineHeight, type } = useTheme();
-  const [query, setQuery] = useState("");
-  const [focused, setFocused] = useState(false);
-  const input = useRef<TextInput>(null);
-  const cleared = useRef(false);
-  const chosen = options.find((option) => option.value === value);
-
-  useEffect(() => {
-    if (!chosen && cleared.current) {
-      cleared.current = false;
-      input.current?.focus();
-    }
-  }, [chosen]);
-
-  const wanted = fold(query.trim());
-  const matches = wanted
-    ? options
-        .filter((option) => fold(option.label).includes(wanted))
-        .slice(0, SHOWN)
-    : [];
-  const pick = (slug: string) => {
-    setQuery("");
-    onChange(slug);
-  };
-
-  return (
-    <View style={styles.column}>
-      <Txt nativeID={POWIAT_ID} tone="onNight" variant="label" weight="600">
-        Powiat
-        <Txt tone="onNightSoft" variant="label">
-          {" "}
-          (nieobowiązkowo)
-        </Txt>
-      </Txt>
-      {chosen ? (
-        <View style={styles.chosen}>
-          <Check aria-hidden color={colors.onNight} size={22} />
-          <Txt style={styles.grow} tone="onNight" variant="lead" weight="600">
-            {chosen.label}
-          </Txt>
-          <Pressable
-            aria-label={`Usuń wybór: ${chosen.label}`}
-            onPress={() => {
-              cleared.current = true;
-              onChange("");
-            }}
-            role="button"
-            style={styles.clear}
-          >
-            <X aria-hidden color={colors.onNight} size={22} />
-          </Pressable>
-        </View>
-      ) : (
-        <>
-          <TextInput
-            aria-labelledby={POWIAT_ID}
-            autoComplete="off"
-            autoCorrect={false}
-            onBlur={() => setFocused(false)}
-            onChangeText={setQuery}
-            onFocus={() => setFocused(true)}
-            onSubmitEditing={() => {
-              const [first] = matches;
-              if (first) {
-                pick(first.value);
-              }
-            }}
-            placeholder="Wpisz nazwę, np. Tarnów"
-            placeholderTextColor={HINT}
-            ref={input}
-            selectionColor={colors.onNightSoft}
-            style={[
-              styles.input,
-              {
-                borderBottomColor: focused
-                  ? colors.onNight
-                  : colors.glassNightEdge,
-                color: colors.onNight,
-                fontFamily: fonts["500"],
-                fontSize: type.lead,
-                lineHeight: lineHeight(type.lead),
-              },
-            ]}
-            value={query}
-          />
-          {wanted ? (
-            <View aria-label="Pasujące powiaty" role="list">
-              {matches.map((option) => (
-                <PowiatMatch
-                  key={option.value}
-                  label={option.label}
-                  onPress={() => pick(option.value)}
-                />
-              ))}
-              {matches.length === 0 ? (
-                <Txt tone="onNightSoft" variant="label">
-                  Nie ma takiego powiatu w Małopolsce.
-                </Txt>
-              ) : null}
-            </View>
-          ) : null}
-        </>
-      )}
-    </View>
   );
 }
 
@@ -288,7 +137,7 @@ function Step({ registration }: { registration: Registration }) {
       <View style={[styles.form, wide && styles.formWide]}>
         <View style={[styles.column, wide && styles.columnWide]}>
           {powiats.options.length > 0 ? (
-            <PowiatChoice
+            <PowiatPicker
               onChange={fields.setPowiat}
               options={powiats.options}
               value={fields.powiat}
@@ -490,19 +339,6 @@ const styles = StyleSheet.create({
     minHeight: minTarget,
     paddingHorizontal: space.md,
   },
-  chosen: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: space.sm + 2,
-    minHeight: minTarget + 4,
-  },
-  clear: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    height: minTarget,
-    justifyContent: "center",
-    width: minTarget,
-  },
   column: {
     gap: space.md,
   },
@@ -546,14 +382,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: space.sm,
     minHeight: minTarget,
-  },
-  match: {
-    alignItems: "center",
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    gap: space.sm + 2,
-    minHeight: minTarget + 4,
-    paddingHorizontal: space.xs,
   },
   problem: {
     alignItems: "flex-start",

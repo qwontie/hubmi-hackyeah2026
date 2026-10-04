@@ -5,7 +5,6 @@ import {
   HandHeart,
   Library,
   type LucideIcon,
-  Map as MapIcon,
   MessageSquareText,
   Search,
 } from "lucide-react-native";
@@ -28,7 +27,7 @@ import { Glass } from "./glass";
 import { nightAttr } from "./night";
 import { Txt } from "./text";
 
-type TabHref = "/" | "/mapa" | "/biblioteka" | "/dzialaj" | "/zgloszenia";
+type TabHref = "/" | "/biblioteka" | "/dzialaj" | "/zgloszenia";
 
 export interface TabItem {
   href: TabHref;
@@ -45,13 +44,6 @@ export const TABS: TabItem[] = [
     label: "Szukaj",
     name: "index",
     sf: { default: "magnifyingglass", selected: "magnifyingglass" },
-  },
-  {
-    href: "/mapa",
-    icon: MapIcon,
-    label: "Mapa",
-    name: "mapa",
-    sf: { default: "map", selected: "map.fill" },
   },
   {
     href: "/biblioteka",
