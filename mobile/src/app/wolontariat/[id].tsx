@@ -2,10 +2,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
 import { BookOpen, Send } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
-import type { VolunteerRecommend } from "@/api/types";
+import type { VolunteerRecommend, VolunteerReport } from "@/api/types";
 import { APP_NAME } from "@/config";
 import { ChoiceGrid } from "@/features/volunteer";
 import { useVolunteerReport } from "@/hooks/use-volunteer";
+import { useTheme } from "@/theme/settings";
 import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
 import { TextField } from "@/ui/field";
@@ -90,6 +91,42 @@ function Form({ report }: { report: ReturnType<typeof useVolunteerReport> }) {
   );
 }
 
+function Sent({ report }: { report: VolunteerReport }) {
+  const { colors } = useTheme();
+  const answers = [
+    ["Co zrobiłeś lub zrobiłaś?", report.activity],
+    ["Ile osób wzięło udział?", String(report.participants)],
+    ["Co zadziałało?", report.worked],
+    ["Co nie zadziałało?", report.not_worked],
+    [
+      "Czy polecasz to rozwiązanie innym?",
+      RECOMMEND.find((option) => option.value === report.recommend)?.label ??
+        "",
+    ],
+  ];
+  return (
+    <Sheet>
+      <Heading level={2}>Twój raport</Heading>
+      <View role="list">
+        {answers.map(([question, answer], index) => (
+          <View
+            key={question}
+            role="listitem"
+            style={[
+              styles.answer,
+              { borderTopColor: colors.rule },
+              index === 0 && styles.first,
+            ]}
+          >
+            <Txt weight="600">{question}</Txt>
+            <Txt>{answer}</Txt>
+          </View>
+        ))}
+      </View>
+    </Sheet>
+  );
+}
+
 export default function VolunteerReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const report = useVolunteerReport(id);
@@ -147,9 +184,12 @@ export default function VolunteerReportScreen() {
           {load.view.editable ? (
             <Form report={report} />
           ) : (
-            <Notice tone="info">
-              {CLOSED_WORDS[load.view.status] ?? CLOSED_WORDS.closed}
-            </Notice>
+            <>
+              <Notice tone="info">
+                {CLOSED_WORDS[load.view.status] ?? CLOSED_WORDS.closed}
+              </Notice>
+              {load.view.report ? <Sent report={load.view.report} /> : null}
+            </>
           )}
         </>
       ) : null}
@@ -158,6 +198,14 @@ export default function VolunteerReportScreen() {
 }
 
 const styles = StyleSheet.create({
+  answer: {
+    borderTopWidth: 1,
+    gap: space.xs,
+    paddingVertical: space.md,
+  },
+  first: {
+    borderTopWidth: 0,
+  },
   group: {
     gap: space.sm,
   },
