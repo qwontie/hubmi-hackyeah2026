@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { PowiatField } from "@/features/powiat-field";
+import { PrivacyNote } from "@/features/privacy-note";
 import { Trap } from "@/features/trap";
 import { TESTER_ROLES } from "@/hooks/use-tester";
 import { useVolunteer } from "@/hooks/use-volunteer";
@@ -196,6 +197,7 @@ function VolunteerForm({
         label="Zgadzam się, żeby ROPS w Krakowie użył mojego adresu e-mail do kontaktu w sprawie wolontariatu przy tym rozwiązaniu."
         onChange={volunteer.setConsent}
       />
+      <PrivacyNote />
       <Trap onChange={volunteer.setWebsite} value={volunteer.website} />
       {volunteer.error ? <Notice tone="error">{volunteer.error}</Notice> : null}
       <View style={styles.row}>

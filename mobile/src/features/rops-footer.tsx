@@ -1,6 +1,8 @@
 import { Image } from "expo-image";
+import { Link } from "expo-router";
 import { useState } from "react";
 import { Linking, Platform, Pressable, StyleSheet, View } from "react-native";
+import { PRIVACY_PATH } from "@/features/privacy-note";
 import { useMeta } from "@/hooks/use-meta";
 import { useTheme } from "@/theme/settings";
 import { minTarget, space } from "@/theme/tokens";
@@ -18,7 +20,6 @@ const LINKS = [
     href: `${ROPS}/kontakt/regionalny-osrodek-polityki-spolecznej-w-krakowie`,
     label: "Kontakt",
   },
-  { href: `${ROPS}/polityka-prywatnosci`, label: "Polityka prywatności" },
 ];
 
 const FOOTER_NOTE =
@@ -73,6 +74,29 @@ function FooterLink({ href, label }: { href: string; label: string }) {
   );
 }
 
+function PrivacyLink() {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link asChild href={PRIVACY_PATH}>
+      <Pressable
+        onHoverIn={() => setHovered(true)}
+        onHoverOut={() => setHovered(false)}
+        role="link"
+        style={styles.link}
+      >
+        <Txt
+          style={{ textDecorationLine: hovered ? "underline" : "none" }}
+          tone="stamp"
+          variant="detail"
+          weight="600"
+        >
+          Polityka prywatności
+        </Txt>
+      </Pressable>
+    </Link>
+  );
+}
+
 export function RopsFooter() {
   const { colors, dark, highContrast } = useTheme();
   const meta = useMeta();
@@ -107,6 +131,7 @@ export function RopsFooter() {
         {LINKS.map((link) => (
           <FooterLink href={link.href} key={link.href} label={link.label} />
         ))}
+        <PrivacyLink />
       </View>
       {demo ? (
         <Txt tone="soft" variant="small">

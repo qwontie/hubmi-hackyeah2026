@@ -8,6 +8,7 @@ import { APP_NAME } from "@/config";
 import { IdeaAssistant } from "@/features/idea-assistant";
 import { IdeaGrantAction } from "@/features/idea-visualisation";
 import { InnovationRow } from "@/features/innovation-row";
+import { PrivacyNote } from "@/features/privacy-note";
 import { Stamp } from "@/features/stamp";
 import { useIdeaForm } from "@/hooks/use-idea";
 import { usePowiats } from "@/hooks/use-powiats";
@@ -259,6 +260,7 @@ export default function IdeaScreen() {
                 onChange={(value) => set({ consent: value })}
               />
             ) : null}
+            <PrivacyNote />
             {error ? <Notice tone="error">{error}</Notice> : null}
             <Button
               busy={busy}

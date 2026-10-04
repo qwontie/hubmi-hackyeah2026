@@ -4,6 +4,7 @@ import { Send } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import type { ExpertAnswerView, PublicIdea } from "@/api/types";
 import { APP_NAME } from "@/config";
+import { PrivacyNote } from "@/features/privacy-note";
 import { Trap } from "@/features/trap";
 import { useExpertAnswer } from "@/hooks/use-expert-answer";
 import { formatDate } from "@/lib/plural";
@@ -138,6 +139,7 @@ export default function ExpertAnswerScreen() {
               onChangeText={expert.setBody}
               value={expert.body}
             />
+            <PrivacyNote text="Odpowiedź trafi do ROPS w Krakowie." />
             <Trap onChange={expert.setWebsite} value={expert.website} />
             {expert.error ? <Notice tone="error">{expert.error}</Notice> : null}
             {expert.sent ? (

@@ -2,6 +2,7 @@ import { MapPin, Send } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { DemoTag } from "@/features/demo-tag";
 import { PowiatField } from "@/features/powiat-field";
+import { PrivacyNote } from "@/features/privacy-note";
 import { Trap } from "@/features/trap";
 import { demandWords, useDemand } from "@/hooks/use-demand";
 import { space } from "@/theme/tokens";
@@ -66,6 +67,7 @@ export function DemandBlock({ slug }: { slug: string }) {
               onChange={demand.setConsent}
             />
           ) : null}
+          <PrivacyNote />
           <Trap onChange={demand.setWebsite} value={demand.website} />
           {demand.error ? <Notice tone="error">{demand.error}</Notice> : null}
           <View style={styles.row}>

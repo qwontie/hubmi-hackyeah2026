@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { TEXT_MAX } from "@/config";
+import { OthersDataHint, PrivacyNote } from "@/features/privacy-note";
 import { Stamp } from "@/features/stamp";
 import { Trap } from "@/features/trap";
 import type { RegistrationForm } from "@/hooks/use-match";
@@ -282,6 +283,7 @@ function Step({ registration }: { registration: Registration }) {
           value={fields.text}
         />
         <Problem text={fields.errors.text} />
+        <OthersDataHint night />
       </View>
       <View style={[styles.form, wide && styles.formWide]}>
         <View style={[styles.column, wide && styles.columnWide]}>
@@ -331,6 +333,7 @@ function Step({ registration }: { registration: Registration }) {
           <Problem text={fields.errors.email} />
           {fields.email.trim().length > 0 ? <Consent fields={fields} /> : null}
           <Problem text={fields.errors.consent} />
+          <PrivacyNote night />
         </View>
       </View>
       <Trap onChange={fields.setWebsite} value={fields.website} />

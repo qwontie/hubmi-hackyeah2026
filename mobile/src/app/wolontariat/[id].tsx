@@ -4,6 +4,7 @@ import { BookOpen, Send } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import type { VolunteerRecommend, VolunteerReport } from "@/api/types";
 import { APP_NAME } from "@/config";
+import { PrivacyNote } from "@/features/privacy-note";
 import { ChoiceGrid } from "@/features/volunteer";
 import { useVolunteerReport } from "@/hooks/use-volunteer";
 import { useTheme } from "@/theme/settings";
@@ -72,6 +73,7 @@ function Form({ report }: { report: ReturnType<typeof useVolunteerReport> }) {
         options={RECOMMEND}
         value={report.recommend}
       />
+      <PrivacyNote text="Raport trafi do ROPS w Krakowie." />
       {report.error ? <Notice tone="error">{report.error}</Notice> : null}
       {report.saved ? (
         <Notice title="Zapisaliśmy raport" tone="success">

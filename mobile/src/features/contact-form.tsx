@@ -1,5 +1,6 @@
 import { Send } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
+import { PrivacyNote } from "@/features/privacy-note";
 import { useContactForm } from "@/hooks/use-contact";
 import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
@@ -63,6 +64,7 @@ export function ContactForm({
           onChange={setConsent}
         />
       ) : null}
+      <PrivacyNote />
       {error ? <Notice tone="error">{error}</Notice> : null}
       <Button
         busy={busy}

@@ -19,6 +19,7 @@ import {
 import type { ApplicationSection, GrantApplication } from "@/api/types";
 import { API_BASE, APP_NAME } from "@/config";
 import { applicationState } from "@/features/grant-application";
+import { PrivacyNote } from "@/features/privacy-note";
 import { Stamp } from "@/features/stamp";
 import {
   isPlaceholder,
@@ -193,6 +194,7 @@ function Contact({ form }: { form: Form }) {
             onChange={form.setConsent}
           />
         ) : null}
+        <PrivacyNote />
       </View>
     </Sheet>
   );

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Platform, StyleSheet, type TextInput, View } from "react-native";
 import { ApiError, api, errorMessage } from "@/api/client";
 import { APP_NAME } from "@/config";
+import { PrivacyNote } from "@/features/privacy-note";
 import { EMAIL_INVALID, isEmail } from "@/lib/validation";
 import { space } from "@/theme/tokens";
 import { Button } from "@/ui/button";
@@ -165,6 +166,7 @@ export default function GrantNotificationsScreen() {
           label="Zgadzam się na wiadomości o naborach. Zapis mogę wyłączyć linkiem w każdej wiadomości."
           onChange={setConsent}
         />
+        <PrivacyNote />
         <Button
           busy={busy}
           disabled={busy}
