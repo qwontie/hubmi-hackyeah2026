@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { APP_NAME } from "@/config";
-import { A11yButton, A11yPanel } from "@/features/a11y-controls";
+import { A11yButton, A11yPanel, useA11yInline } from "@/features/a11y-controls";
 import { focusElement } from "@/lib/a11y";
 import { useChromeTone } from "@/theme/chrome";
 import { useTheme } from "@/theme/settings";
@@ -311,6 +311,7 @@ function WideLink({
 export function WideChrome() {
   const { wide } = useTheme();
   const { night, brandNight } = useChromeInk();
+  const inline = useA11yInline();
   if (!wide) {
     return null;
   }
@@ -318,7 +319,7 @@ export function WideChrome() {
     <View pointerEvents="box-none" style={styles.wide} {...nightAttr(night)}>
       <Brand night={brandNight} />
       <View style={styles.wideRight}>
-        <WideA11y />
+        {inline ? null : <WideA11y />}
         <Glass
           aria-label="Menu główne"
           night={night}
