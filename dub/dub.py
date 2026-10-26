@@ -1,165 +1,66 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["faster-whisper>=1.1", "requests>=2.32"]
+# dependencies = ["requests>=2.32"]
 # ///
-"""Cheap voice-over dub: whisper -> google translate -> old ElevenLabs voices -> ffmpeg.
+"""Dub audio or video with the ElevenLabs Dubbing API (dubbing_v1).
 
-uv run dub/dub.py INPUT [--to ru] [--out DIR] [--subs translated.ru.srt]
-Needs ELEVENLABS_API_KEY for the voice. Without it, writes only the translated .srt.
+uv run dub/dub.py INPUT [--to ru] [--from auto] [--out DIR]
+Needs ELEVENLABS_API_KEY with the dubbing permission.
 """
 
 import argparse
-import json
+import mimetypes
 import os
-import subprocess
 import sys
-import tempfile
+import time
 from pathlib import Path
 
 import requests
 
-ELEVEN = "https://api.elevenlabs.io/v1"
-VOICE = "pNInz6obpgDQGcFmaJgB"  # Adam, the classic 2023 voice
-VIDEO_EXT = {".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v"}
-
-
-def run(*cmd: str) -> str:
-    return subprocess.run(cmd, check=True, capture_output=True, text=True).stdout
-
-
-def duration(path: Path) -> float:
-    out = run("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", str(path))
-    return float(json.loads(out)["format"]["duration"])
-
-
-def transcribe(audio: Path, model: str) -> tuple[str, list[dict]]:
-    from faster_whisper import WhisperModel
-
-    import numpy as np
-
-    # Decode with ffmpeg ourselves: faster-whisper's own PyAV decoding breaks across av releases.
-    pcm = subprocess.run(
-        ["ffmpeg", "-i", str(audio), "-f", "s16le", "-ac", "1", "-ar", "16000", "-"], check=True, capture_output=True
-    ).stdout
-    samples = np.frombuffer(pcm, np.int16).astype(np.float32) / 32768
-    whisper = WhisperModel(model, device="cpu", compute_type="int8")
-    segments, info = whisper.transcribe(samples, vad_filter=True)
-    return info.language, [{"start": s.start, "end": s.end, "text": s.text.strip()} for s in segments if s.text.strip()]
-
-
-def translate(text: str, source: str, target: str) -> str:
-    """Google's free endpoint; MyMemory when Google rate-limits this IP."""
-    r = requests.get(
-        "https://translate.googleapis.com/translate_a/single",
-        params={"client": "gtx", "sl": source, "tl": target, "dt": "t", "q": text},
-        timeout=30,
-    )
-    if r.ok and "json" in r.headers.get("content-type", ""):
-        return "".join(part[0] for part in r.json()[0] if part[0])
-    r = requests.get(
-        "https://api.mymemory.translated.net/get", params={"q": text, "langpair": f"{source}|{target}"}, timeout=30
-    )
-    r.raise_for_status()
-    return r.json()["responseData"]["translatedText"]
-
-
-def speak(text: str, target: str, key: str, dest: Path) -> None:
-    model = "eleven_monolingual_v1" if target == "en" else "eleven_multilingual_v1"
-    r = requests.post(
-        f"{ELEVEN}/text-to-speech/{VOICE}",
-        headers={"xi-api-key": key},
-        json={"text": text, "model_id": model, "voice_settings": {"stability": 0.3, "similarity_boost": 0.5}},
-        timeout=120,
-    )
-    if r.status_code != 200:
-        sys.exit(f"elevenlabs {r.status_code}: {r.text[:300]}")
-    dest.write_bytes(r.content)
-
-
-def srt_time(t: float) -> str:
-    ms = round(t * 1000)
-    return f"{ms // 3600000:02}:{ms // 60000 % 60:02}:{ms // 1000 % 60:02},{ms % 1000:03}"
-
-
-def write_srt(segments: list[dict], field: str, dest: Path) -> None:
-    lines = [f"{i}\n{srt_time(s['start'])} --> {srt_time(s['end'])}\n{s[field]}\n" for i, s in enumerate(segments, 1)]
-    dest.write_text("\n".join(lines))
-
-
-def read_srt(path: Path) -> list[dict]:
-    def secs(t: str) -> float:
-        h, m, rest = t.strip().split(":")
-        return int(h) * 3600 + int(m) * 60 + float(rest.replace(",", "."))
-
-    segments = []
-    for block in path.read_text().strip().split("\n\n"):
-        _, times, *text = block.strip().splitlines()
-        start, end = times.split("-->")
-        segments.append({"start": secs(start), "end": secs(end), "dub": " ".join(text)})
-    return segments
-
-
-def fit(clip: Path, slot: float, dest: Path) -> float:
-    """Speed the clip up to fit its slot, at most 1.8x. Returns the new length."""
-    length = duration(clip)
-    speed = min(max(length / slot, 1.0), 1.8) if slot > 0 else 1.0
-    run("ffmpeg", "-y", "-i", str(clip), "-filter:a", f"atempo={speed:.3f}", "-ar", "44100", "-ac", "1", str(dest))
-    return length / speed
+API = "https://api.elevenlabs.io/v1/dubbing"
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("input", type=Path)
-    ap.add_argument("--to", default=None, help="target language, default ru (en if the source is Russian)")
+    ap.add_argument("--to", default="ru", help="target language code")
+    ap.add_argument("--from", dest="source", default="auto", help="source language code")
     ap.add_argument("--out", type=Path, default=Path("/mnt/user-data/outputs"))
-    ap.add_argument("--whisper", default="small")
-    ap.add_argument("--subs", type=Path, help="voice this translated .srt instead of transcribing and translating")
     args = ap.parse_args()
 
+    key = os.environ.get("ELEVENLABS_API_KEY") or sys.exit("ELEVENLABS_API_KEY is not set")
+    headers = {"xi-api-key": key}
     src: Path = args.input.resolve()
+    mime = mimetypes.guess_type(src.name)[0] or "video/mp4"
+
+    with src.open("rb") as f:
+        r = requests.post(
+            API,
+            headers=headers,
+            files={"file": (src.name, f, mime)},
+            # Free plan only allows watermarked video dubs.
+            data={"target_lang": args.to, "source_lang": args.source, "watermark": "true"},
+            timeout=600,
+        )
+    if not r.ok:
+        sys.exit(f"elevenlabs {r.status_code}: {r.text[:300]}")
+    job = r.json()["dubbing_id"]
+    print(f"dubbing {job}, about {r.json().get('expected_duration_sec', 0):.0f}s", file=sys.stderr)
+
+    while True:
+        status = requests.get(f"{API}/{job}", headers=headers, timeout=60).json()
+        if status["status"] == "dubbed":
+            break
+        if status["status"] == "failed" or status.get("error"):
+            sys.exit(f"dubbing failed: {status.get('error')}")
+        time.sleep(10)
+
+    r = requests.get(f"{API}/{job}/audio/{args.to}", headers=headers, timeout=600)
+    r.raise_for_status()
+    ext = mimetypes.guess_extension(r.headers.get("content-type", "").split(";")[0]) or src.suffix
     args.out.mkdir(parents=True, exist_ok=True)
-    key = os.environ.get("ELEVENLABS_API_KEY", "")
-    tmp = Path(tempfile.mkdtemp(prefix="dub-"))
-
-    if args.subs:
-        # Already translated subtitles, named <anything>.<lang>.srt
-        segments, target = read_srt(args.subs), args.to or args.subs.suffixes[-2].lstrip(".")
-    else:
-        audio = tmp / "orig.wav"
-        run("ffmpeg", "-y", "-i", str(src), "-vn", "-ac", "1", "-ar", "16000", str(audio))
-        lang, segments = transcribe(audio, args.whisper)
-        target = args.to or ("en" if lang == "ru" else "ru")
-        print(f"source {lang}, target {target}, {len(segments)} segments", file=sys.stderr)
-        try:
-            for s in segments:
-                s["dub"] = translate(s["text"], lang, target)
-        except requests.HTTPError as e:
-            src_srt = args.out / f"{src.stem}.{lang}.srt"
-            write_srt(segments, "text", src_srt)
-            sys.exit(f"translation failed ({e}); translate {src_srt} by hand and rerun with --subs")
-        srt = args.out / f"{src.stem}.{target}.srt"
-        write_srt(segments, "dub", srt)
-        print(srt)
-    if not key:
-        sys.exit("ELEVENLABS_API_KEY is not set, wrote only the subtitles")
-
-    # One voice over the ducked original, each line no earlier than the previous one ends.
-    inputs, filters, cursor = ["-i", str(src)], [], 0.0
-    for i, s in enumerate(segments):
-        raw, clip = tmp / f"{i}.mp3", tmp / f"{i}.wav"
-        speak(s["dub"], target, key, raw)
-        nxt = segments[i + 1]["start"] if i + 1 < len(segments) else s["end"] + 2
-        start = max(s["start"], cursor)
-        cursor = start + fit(raw, nxt - start, clip)
-        inputs += ["-i", str(clip)]
-        filters.append(f"[{i + 1}:a]adelay={round(start * 1000)}:all=1[d{i}]")
-    voices = "".join(f"[d{i}]" for i in range(len(segments)))
-    filters.append(f"[0:a]volume=0.2[bg];[bg]{voices}amix=inputs={len(segments) + 1}:normalize=0:duration=first[out]")
-
-    is_video = src.suffix.lower() in VIDEO_EXT
-    dest = args.out / f"{src.stem}.dub.{target}.{'mp4' if is_video else 'mp3'}"
-    codec = ["-map", "0:v", "-c:v", "copy", "-c:a", "aac"] if is_video else ["-c:a", "libmp3lame", "-q:a", "3"]
-    run("ffmpeg", "-y", *inputs, "-filter_complex", ";".join(filters), "-map", "[out]", *codec, str(dest))
+    dest = args.out / f"{src.stem}.dub.{args.to}{ext}"
+    dest.write_bytes(r.content)
     print(dest)
 
 
