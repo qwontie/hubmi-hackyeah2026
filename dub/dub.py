@@ -4,7 +4,7 @@
 # ///
 """Dub audio or video with the ElevenLabs Dubbing API (dubbing_v1).
 
-uv run dub/dub.py INPUT [--to ru] [--from auto] [--out DIR]
+uv run dub/dub.py INPUT [--to ru] [--from auto] [--speakers N] [--out DIR]
 Needs ELEVENLABS_API_KEY with the dubbing permission.
 """
 
@@ -25,6 +25,7 @@ def main() -> None:
     ap.add_argument("input", type=Path)
     ap.add_argument("--to", default="ru", help="target language code")
     ap.add_argument("--from", dest="source", default="auto", help="source language code")
+    ap.add_argument("--speakers", type=int, default=0, help="number of speakers, 0 lets ElevenLabs detect")
     ap.add_argument("--out", type=Path, default=Path("/mnt/user-data/outputs"))
     args = ap.parse_args()
 
@@ -39,7 +40,7 @@ def main() -> None:
             headers=headers,
             files={"file": (src.name, f, mime)},
             # Free plan only allows watermarked video dubs.
-            data={"target_lang": args.to, "source_lang": args.source, "watermark": "true"},
+            data={"target_lang": args.to, "source_lang": args.source, "watermark": "true", "num_speakers": args.speakers},
             timeout=600,
         )
     if not r.ok:
